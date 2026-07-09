@@ -1,0 +1,62 @@
+import 'dart:developer';
+
+import 'package:flutter_sixvalley_ecommerce/data/model/api_response.dart';
+import 'package:flutter_sixvalley_ecommerce/data/model/error_response.dart';
+import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
+import 'package:flutter_sixvalley_ecommerce/main.dart';
+import 'package:flutter_sixvalley_ecommerce/features/auth/controllers/auth_controller.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_sixvalley_ecommerce/common/basewidget/show_custom_snakbar_widget.dart';
+import 'package:provider/provider.dart';
+
+class ApiChecker {
+  static void checkApi(ApiResponseModel apiResponse, {bool firebaseResponse = false, bool useOverlay = false, BuildContext? overlayContext}) {
+
+    final String errorStr = apiResponse.error?.toString() ?? '';
+    if (errorStr.isEmpty) return;
+
+    void showError(String? message) {
+      if (useOverlay && overlayContext != null) {
+        showOverlaySnackBar(overlayContext, message, snackBarType: SnackBarType.error);
+      } else {
+        showCustomSnackBarWidget(message, Get.context!, snackBarType: SnackBarType.error);
+      }
+    }
+
+    dynamic errorResponse = apiResponse.error is String ? apiResponse.error :  ErrorResponse.fromJson(apiResponse.error);
+    if(apiResponse.error == "Failed to load data - status code: 401") {
+      Provider.of<AuthController>(Get.context!,listen: false).clearSharedData();
+    } else if(apiResponse.response?.statusCode == 500) {
+        showError(getTranslated('internal_server_error', Get.context!));
+    } else if(apiResponse.response?.statusCode == 503) {
+        showError(apiResponse.response?.data['message']);
+    } else {
+      log("API_RESPONSE.ERROR${apiResponse.error}");
+      String? errorMessage = apiResponse.error.toString();
+      if (apiResponse.error is String) {
+        errorMessage = apiResponse.error.toString();
+      } else {
+        log(errorResponse.toString());
+        //errorMessage = errorResponse.errors?[0].message;
+      }
+      showError(firebaseResponse ? errorResponse?.replaceAll('_', ' ') : errorMessage);
+    }
+  }
+
+
+  static ErrorResponse getError(ApiResponseModel apiResponse){
+    ErrorResponse error;
+
+    try{
+      error = ErrorResponse.fromJson(apiResponse.response?.data);
+    }catch(e){
+      if(apiResponse.error is String){
+        error = ErrorResponse(errors: [Errors(code: '', message: apiResponse.error.toString())]);
+
+      }else{
+        error = ErrorResponse.fromJson(apiResponse.error);
+      }
+    }
+    return error;
+  }
+}
