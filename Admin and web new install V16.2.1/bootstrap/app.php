@@ -13,6 +13,7 @@ use App\Http\Middleware\MaintenanceModeMiddleware;
 use App\Http\Middleware\ModulePermissionMiddleware;
 use App\Http\Middleware\SellerApiAuthMiddleware;
 use App\Http\Middleware\SellerMiddleware;
+use App\Http\Middleware\VerifyMpesaCallbackIp;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -94,6 +95,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'apiGuestCheck' => APIGuestMiddleware::class,
             'logUserBrowsingNavigation' => \App\Http\Middleware\LogUserBrowsingNavigationMiddleware::class,
             'detectMobile' => \App\Http\Middleware\DetectMobile::class,
+            'mpesa.ip' => VerifyMpesaCallbackIp::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

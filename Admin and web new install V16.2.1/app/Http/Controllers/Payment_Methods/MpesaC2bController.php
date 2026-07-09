@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -52,7 +53,7 @@ class MpesaC2bController extends Controller
         return 'MS' . strtoupper(substr(str_replace('-', '', $paymentId), -8));
     }
 
-    private function findByShortReference(string $reference): ?PaymentRequest
+    private function findByShortReference(string $reference, bool $lock = false): ?PaymentRequest
     {
         $hex = strtolower(preg_replace('/[^A-Za-z0-9]/', '', $reference));
         if (str_starts_with($hex, 'ms')) {
@@ -62,9 +63,14 @@ class MpesaC2bController extends Controller
             return null;
         }
 
-        return $this->payment::whereRaw("REPLACE(id, '-', '') LIKE ?", ['%' . $hex])
-            ->where('is_paid', 0)
-            ->first();
+        $query = $this->payment::whereRaw("REPLACE(id, '-', '') LIKE ?", ['%' . $hex])
+            ->where('is_paid', 0);
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
     }
 
     private function getAccessToken(): ?string
@@ -161,40 +167,42 @@ class MpesaC2bController extends Controller
         $transAmount = $request->input('TransAmount');
         $transId = $request->input('TransID');
 
-        $data = $this->findByShortReference($billRefNumber);
+        return DB::transaction(function () use ($billRefNumber, $transAmount, $transId) {
+            $data = $this->findByShortReference($billRefNumber, lock: true);
 
-        if (!$data) {
-            // Money has already moved at this point; we cannot reject a Confirmation.
-            // Log for manual admin reconciliation instead.
-            Log::warning('Mpesa C2B confirmation for unknown or already-paid reference, funds received but no order matched.', [
-                'bill_ref_number' => $billRefNumber,
-                'trans_id' => $transId,
-                'trans_amount' => $transAmount,
+            if (!$data) {
+                // Money has already moved at this point; we cannot reject a Confirmation.
+                // Log for manual admin reconciliation instead.
+                Log::warning('Mpesa C2B confirmation for unknown or already-paid reference, funds received but no order matched.', [
+                    'bill_ref_number' => $billRefNumber,
+                    'trans_id' => $transId,
+                    'trans_amount' => $transAmount,
+                ]);
+                return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
+            }
+
+            if ($transAmount === null || abs((float)$transAmount - (float)$data->payment_amount) > 1) {
+                Log::warning('Mpesa C2B amount mismatch, payment not marked as paid.', [
+                    'payment_id' => $data->id,
+                    'expected' => $data->payment_amount,
+                    'paid' => $transAmount,
+                ]);
+                return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
+            }
+
+            $this->payment::where(['id' => $data->id])->update([
+                'payment_method' => 'mpesa_c2b',
+                'is_paid' => 1,
+                'transaction_id' => $transId,
             ]);
+
+            $paidData = $this->payment::where(['id' => $data->id])->first();
+            if (isset($paidData) && function_exists($paidData->success_hook)) {
+                call_user_func($paidData->success_hook, $paidData);
+            }
+
             return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
-        }
-
-        if ($transAmount === null || abs((float)$transAmount - (float)$data->payment_amount) > 1) {
-            Log::warning('Mpesa C2B amount mismatch, payment not marked as paid.', [
-                'payment_id' => $data->id,
-                'expected' => $data->payment_amount,
-                'paid' => $transAmount,
-            ]);
-            return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
-        }
-
-        $this->payment::where(['id' => $data->id])->update([
-            'payment_method' => 'mpesa_c2b',
-            'is_paid' => 1,
-            'transaction_id' => $transId,
-        ]);
-
-        $paidData = $this->payment::where(['id' => $data->id])->first();
-        if (isset($paidData) && function_exists($paidData->success_hook)) {
-            call_user_func($paidData->success_hook, $paidData);
-        }
-
-        return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Success']);
+        });
     }
 
     public function status(Request $request): JsonResponse

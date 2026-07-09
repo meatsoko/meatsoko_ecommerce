@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -186,49 +187,51 @@ class MpesaStkController extends Controller
             return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
         }
 
-        $data = $this->payment::where(['id' => $payment_id])->where(['is_paid' => 0])->first();
-        if (!$data) {
-            return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
-        }
-
-        $additionalData = json_decode($data->additional_data, true) ?? [];
-        if (($additionalData['mpesa_checkout_request_id'] ?? null) !== ($callback['CheckoutRequestID'] ?? null)) {
-            Log::warning('Mpesa STK callback CheckoutRequestID mismatch', ['payment_id' => $payment_id]);
-            return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
-        }
-
-        if (($callback['ResultCode'] ?? null) !== 0) {
-            if (isset($data->failure_hook) && function_exists($data->failure_hook)) {
-                call_user_func($data->failure_hook, $data);
+        return DB::transaction(function () use ($payment_id, $callback) {
+            $data = $this->payment::where(['id' => $payment_id])->where(['is_paid' => 0])->lockForUpdate()->first();
+            if (!$data) {
+                return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
             }
-            return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
-        }
 
-        $items = collect($callback['CallbackMetadata']['Item'] ?? [])->keyBy('Name');
-        $paidAmount = $items->get('Amount')['Value'] ?? null;
-        $receiptNumber = $items->get('MpesaReceiptNumber')['Value'] ?? null;
+            $additionalData = json_decode($data->additional_data, true) ?? [];
+            if (($additionalData['mpesa_checkout_request_id'] ?? null) !== ($callback['CheckoutRequestID'] ?? null)) {
+                Log::warning('Mpesa STK callback CheckoutRequestID mismatch', ['payment_id' => $payment_id]);
+                return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
+            }
 
-        if ($paidAmount === null || abs((float)$paidAmount - (float)$data->payment_amount) > 1) {
-            Log::warning('Mpesa STK amount mismatch, payment not marked as paid.', [
-                'payment_id' => $payment_id,
-                'expected' => $data->payment_amount,
-                'paid' => $paidAmount,
+            if (($callback['ResultCode'] ?? null) !== 0) {
+                if (isset($data->failure_hook) && function_exists($data->failure_hook)) {
+                    call_user_func($data->failure_hook, $data);
+                }
+                return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
+            }
+
+            $items = collect($callback['CallbackMetadata']['Item'] ?? [])->keyBy('Name');
+            $paidAmount = $items->get('Amount')['Value'] ?? null;
+            $receiptNumber = $items->get('MpesaReceiptNumber')['Value'] ?? null;
+
+            if ($paidAmount === null || abs((float)$paidAmount - (float)$data->payment_amount) > 1) {
+                Log::warning('Mpesa STK amount mismatch, payment not marked as paid.', [
+                    'payment_id' => $payment_id,
+                    'expected' => $data->payment_amount,
+                    'paid' => $paidAmount,
+                ]);
+                return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
+            }
+
+            $this->payment::where(['id' => $payment_id])->update([
+                'payment_method' => 'mpesa_stk',
+                'is_paid' => 1,
+                'transaction_id' => $receiptNumber,
             ]);
+
+            $paidData = $this->payment::where(['id' => $payment_id])->first();
+            if (isset($paidData) && function_exists($paidData->success_hook)) {
+                call_user_func($paidData->success_hook, $paidData);
+            }
+
             return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
-        }
-
-        $this->payment::where(['id' => $payment_id])->update([
-            'payment_method' => 'mpesa_stk',
-            'is_paid' => 1,
-            'transaction_id' => $receiptNumber,
-        ]);
-
-        $paidData = $this->payment::where(['id' => $payment_id])->first();
-        if (isset($paidData) && function_exists($paidData->success_hook)) {
-            call_user_func($paidData->success_hook, $paidData);
-        }
-
-        return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
+        });
     }
 
     public function status(Request $request): JsonResponse

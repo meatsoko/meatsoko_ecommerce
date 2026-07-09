@@ -472,7 +472,8 @@ if (!$isGatewayPublished) {
             Route::post('push', [MpesaStkController::class, 'stkPush'])->name('push')
                 ->withoutMiddleware([VerifyCsrfToken::class]);
             Route::post('callback/{payment_id}', [MpesaStkController::class, 'callback'])->name('callback')
-                ->withoutMiddleware([VerifyCsrfToken::class]);
+                ->withoutMiddleware([VerifyCsrfToken::class])
+                ->middleware(['mpesa.ip', 'throttle:60,1']);
             Route::get('status', [MpesaStkController::class, 'status'])->name('status');
         });
 
@@ -480,9 +481,11 @@ if (!$isGatewayPublished) {
         Route::group(['prefix' => 'mpesa-c2b', 'as' => 'mpesa-c2b.'], function () {
             Route::get('pay', [MpesaC2bController::class, 'index'])->name('pay');
             Route::post('validation', [MpesaC2bController::class, 'validation'])->name('validation')
-                ->withoutMiddleware([VerifyCsrfToken::class]);
+                ->withoutMiddleware([VerifyCsrfToken::class])
+                ->middleware(['mpesa.ip', 'throttle:60,1']);
             Route::post('confirmation', [MpesaC2bController::class, 'confirmation'])->name('confirmation')
-                ->withoutMiddleware([VerifyCsrfToken::class]);
+                ->withoutMiddleware([VerifyCsrfToken::class])
+                ->middleware(['mpesa.ip', 'throttle:60,1']);
             Route::get('status', [MpesaC2bController::class, 'status'])->name('status');
         });
 
