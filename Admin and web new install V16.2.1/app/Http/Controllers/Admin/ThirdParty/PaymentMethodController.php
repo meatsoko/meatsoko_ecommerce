@@ -8,11 +8,13 @@ use App\Contracts\Repositories\OfflinePaymentMethodRepositoryInterface;
 use App\Contracts\Repositories\SettingRepositoryInterface;
 use App\Enums\GlobalConstant;
 use App\Http\Controllers\BaseController;
+use App\Http\Controllers\Payment_Methods\MpesaC2bController;
 use App\Http\Requests\Admin\PaymentMethodUpdateRequest;
 use App\Services\SettingService;
 use App\Traits\PaymentGatewayTrait;
 use App\Traits\Processor;
 use Devrabiul\ToastMagic\Facades\ToastMagic;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\View\View;
@@ -189,5 +191,30 @@ class PaymentMethodController extends BaseController
         updateSetupGuideCacheKey(key: 'digital_payment_setup', panel: 'admin');
         ToastMagic::success(translate('Updated_successfully'));
         return redirect()->route('admin.third-party.payment-method.index');
+    }
+
+    public function registerC2bUrls(MpesaC2bController $mpesaC2bController): JsonResponse
+    {
+        $result = $mpesaC2bController->registerUrls()->getData(true);
+
+        if (($result['status'] ?? 0) != 1) {
+            return response()->json([
+                'status' => 0,
+                'message' => $result['message'] ?? translate('failed_to_register_mpesa_c2b_urls_with_safaricom'),
+            ]);
+        }
+
+        $safaricomResponse = $result['response'] ?? [];
+        if (($safaricomResponse['ResponseCode'] ?? null) == '0') {
+            return response()->json([
+                'status' => 1,
+                'message' => translate('mpesa_c2b_urls_registered_successfully_with_safaricom'),
+            ]);
+        }
+
+        return response()->json([
+            'status' => 0,
+            'message' => $safaricomResponse['ResponseDescription'] ?? translate('failed_to_register_mpesa_c2b_urls_with_safaricom'),
+        ]);
     }
 }

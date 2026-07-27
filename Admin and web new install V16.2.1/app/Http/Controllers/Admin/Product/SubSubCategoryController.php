@@ -18,7 +18,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Rap2hpoutre\FastExcel\FastExcel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SubSubCategoryController extends BaseController
 {
@@ -122,6 +124,46 @@ class SubSubCategoryController extends BaseController
             'inactive' => $inactive,
         ]), 'sub-sub-category-list.xlsx'
         );
+    }
+
+    public function getImportView(): View
+    {
+        return view('admin-views.category.bulk-import', [
+            'position' => 2,
+            'pageTitle' => translate('sub_Sub_Category_Bulk_Import'),
+            'formAction' => route('admin.sub-sub-category.import.store'),
+            'templateAction' => route('admin.sub-sub-category.import-template'),
+            'backRoute' => route('admin.sub-sub-category.view'),
+            'importErrors' => session('category_import_errors', []),
+        ]);
+    }
+
+    public function downloadImportTemplate(): StreamedResponse
+    {
+        return (new FastExcel(collect($this->categoryService->getImportTemplateSample(2))))
+            ->download('sub-sub-category-import-template.xlsx');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate(['categories_file' => 'required']);
+
+        $result = $this->categoryService->getImportBulkCategoryData(request: $request, position: 2);
+        if (!$result['status']) {
+            ToastMagic::error($result['message']);
+            return back();
+        }
+
+        foreach ($result['rows'] as $row) {
+            $this->categoryRepo->add(data: $row);
+        }
+
+        if (count($result['errors'])) {
+            session()->flash('category_import_errors', $result['errors']);
+        }
+
+        ToastMagic::success(count($result['rows']) . ' ' . translate('categories_imported_successfully'));
+        return redirect()->route('admin.sub-sub-category.import');
     }
 
 }

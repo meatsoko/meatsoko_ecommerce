@@ -146,6 +146,19 @@
                             </div>
                         </div>
 
+                        @if($gateway->key_name === 'mpesa_c2b')
+                            <div class="mb-4">
+                                <button type="button" class="btn btn-outline-primary w-100 mpesa-c2b-register-urls-btn"
+                                        data-url="{{ route('admin.third-party.payment-method.register-c2b-urls') }}">
+                                    <i class="fi fi-rr-refresh"></i>
+                                    {{ translate('register_urls_with_safaricom') }}
+                                </button>
+                                <p class="fs-12 mt-2 text-body-light mb-0">
+                                    {{ translate('save_the_shortcode_and_credentials_below_first,_then_click_this_button_to_register_the_confirmation_and_validation_webhook_urls_with_safaricom') }}
+                                </p>
+                            </div>
+                        @endif
+
                         @if($gateway->key_name === 'paystack')
                             @php($skip=['gateway', 'mode', 'status', 'supported_country', 'callback_url'])
                         @else

@@ -18,7 +18,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Rap2hpoutre\FastExcel\FastExcel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SubCategoryController extends BaseController
 {
@@ -155,6 +157,46 @@ class SubCategoryController extends BaseController
             'inactive' => $inactive,
         ]), 'sub-category-list.xlsx'
         );
+    }
+
+    public function getImportView(): View
+    {
+        return view('admin-views.category.bulk-import', [
+            'position' => 1,
+            'pageTitle' => translate('sub_Category_Bulk_Import'),
+            'formAction' => route('admin.sub-category.import.store'),
+            'templateAction' => route('admin.sub-category.import-template'),
+            'backRoute' => route('admin.sub-category.view'),
+            'importErrors' => session('category_import_errors', []),
+        ]);
+    }
+
+    public function downloadImportTemplate(): StreamedResponse
+    {
+        return (new FastExcel(collect($this->categoryService->getImportTemplateSample(1))))
+            ->download('sub-category-import-template.xlsx');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate(['categories_file' => 'required']);
+
+        $result = $this->categoryService->getImportBulkCategoryData(request: $request, position: 1);
+        if (!$result['status']) {
+            ToastMagic::error($result['message']);
+            return back();
+        }
+
+        foreach ($result['rows'] as $row) {
+            $this->categoryRepo->add(data: $row);
+        }
+
+        if (count($result['errors'])) {
+            session()->flash('category_import_errors', $result['errors']);
+        }
+
+        ToastMagic::success(count($result['rows']) . ' ' . translate('categories_imported_successfully'));
+        return redirect()->route('admin.sub-category.import');
     }
 
     public function loadMoreCategories(Request $request): JsonResponse

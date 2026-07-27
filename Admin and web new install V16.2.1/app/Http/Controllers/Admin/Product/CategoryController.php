@@ -22,7 +22,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Modules\TaxModule\app\Traits\VatTaxManagement;
+use Rap2hpoutre\FastExcel\FastExcel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CategoryController extends BaseController
 {
@@ -235,5 +237,47 @@ class CategoryController extends BaseController
             'category_wise_tax' => $categoryWiseTax,
         ]), 'category-list.xlsx'
         );
+    }
+
+    public function getImportView(): View
+    {
+        return view('admin-views.category.bulk-import', [
+            'position' => 0,
+            'pageTitle' => translate('category_Bulk_Import'),
+            'formAction' => route('admin.category.import.store'),
+            'templateAction' => route('admin.category.import-template'),
+            'backRoute' => route('admin.category.view'),
+            'importErrors' => session('category_import_errors', []),
+        ]);
+    }
+
+    public function downloadImportTemplate(): StreamedResponse
+    {
+        return (new FastExcel(collect($this->categoryService->getImportTemplateSample(0))))
+            ->download('category-import-template.xlsx');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate(['categories_file' => 'required']);
+
+        $result = $this->categoryService->getImportBulkCategoryData(request: $request, position: 0);
+        if (!$result['status']) {
+            ToastMagic::error($result['message']);
+            return back();
+        }
+
+        foreach ($result['rows'] as $row) {
+            $this->categoryRepo->add(data: $row);
+        }
+
+        updateSetupGuideCacheKey(key: 'category_setup', panel: 'admin');
+
+        if (count($result['errors'])) {
+            session()->flash('category_import_errors', $result['errors']);
+        }
+
+        ToastMagic::success(count($result['rows']) . ' ' . translate('categories_imported_successfully'));
+        return redirect()->route('admin.category.import');
     }
 }

@@ -311,6 +311,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
             Route::post('delete', 'delete')->name('delete');
             Route::post('status', 'updateStatus')->name('status');
             Route::get('export', 'getExportList')->name('export');
+            Route::get('import', 'getImportView')->name('import');
+            Route::get('import-template', 'downloadImportTemplate')->name('import-template');
+            Route::post('import', 'import')->name('import.store');
         });
     });
 
@@ -323,6 +326,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
             Route::post('update/{id}', 'update');
             Route::post('delete', 'delete')->name('delete');
             Route::get('export', 'getExportList')->name('export');
+            Route::get('import', 'getImportView')->name('import');
+            Route::get('import-template', 'downloadImportTemplate')->name('import-template');
+            Route::post('import', 'import')->name('import.store');
             Route::post('load-more-categories', 'loadMoreCategories')->name('load-more-categories');
         });
     });
@@ -336,6 +342,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
             Route::post('delete', 'delete')->name('delete');
             Route::post('get-sub-category', 'getSubCategory')->name('getSubCategory');
             Route::get('export', 'getExportList')->name('export');
+            Route::get('import', 'getImportView')->name('import');
+            Route::get('import-template', 'downloadImportTemplate')->name('import-template');
+            Route::post('import', 'import')->name('import.store');
         });
     });
 
@@ -849,6 +858,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
                     Route::get('/', 'index')->name('index');
                     Route::put('addon-payment-set', 'UpdatePaymentConfig')->name('addon-payment-set');
                     Route::post('payment-status', 'UpdateStatus')->name('payment-status');
+                    Route::post('register-c2b-urls', 'registerC2bUrls')->name('register-c2b-urls');
                 });
             });
 
