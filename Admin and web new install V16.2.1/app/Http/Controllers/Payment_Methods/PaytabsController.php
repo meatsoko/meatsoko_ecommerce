@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Traits\Processor;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class Paytabs
@@ -161,17 +162,37 @@ class PaytabsController extends Controller
         ];
         $verify_result = $plugin->send_api_request($request_url, $data);
         $is_success = $verify_result['payment_result']['response_status'] === 'A';
-        if ($is_success) {
-            $this->payment::where(['id' => $request['payment_id']])->update([
-                'payment_method' => 'paytabs',
-                'is_paid' => 1,
-                'transaction_id' => $transRef,
-            ]);
-            $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
-            if (isset($payment_data) && function_exists($payment_data->success_hook)) {
-                call_user_func($payment_data->success_hook, $payment_data);
+        $payment_data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid' => 0])->first();
+
+        // cart_id was already set to payment_id at checkout; cross-checking the
+        // verified transaction's own cart_id/cart_amount (from Paytabs' server-side
+        // query, not the callback body) against this payment_id closes the gap
+        // where a verified-but-unrelated tranRef could be pointed at any payment_id.
+        if ($payment_data
+            && $is_success
+            && (string)($verify_result['cart_id'] ?? '') === (string)$payment_data->id
+            && abs((float)($verify_result['cart_amount'] ?? 0) - (float)$payment_data->payment_amount) < 0.01
+            && !$this->payment::where('transaction_id', $transRef)->exists()
+        ) {
+            $updated = false;
+            DB::transaction(function () use ($payment_data, $transRef, &$updated) {
+                $locked = $this->payment::where(['id' => $payment_data->id])->lockForUpdate()->first();
+                if ($locked && !$locked->is_paid) {
+                    $locked->payment_method = 'paytabs';
+                    $locked->is_paid = 1;
+                    $locked->transaction_id = $transRef;
+                    $locked->save();
+                    $updated = true;
+                }
+            });
+
+            if ($updated) {
+                $data2 = $this->payment::where(['id' => $payment_data->id])->first();
+                if (isset($data2) && function_exists($data2->success_hook)) {
+                    call_user_func($data2->success_hook, $data2);
+                }
+                return $this->payment_response($data2,'success');
             }
-            return $this->payment_response($payment_data,'success');
         }
         $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
         if (isset($payment_data) && function_exists($payment_data->failure_hook)) {

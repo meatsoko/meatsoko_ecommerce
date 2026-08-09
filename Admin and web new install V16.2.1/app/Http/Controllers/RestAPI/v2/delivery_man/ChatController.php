@@ -9,6 +9,7 @@ use App\Http\Requests\API\v2\DeliveryMan\DeliveryManSendMessageRequest;
 use App\Models\Chatting;
 use App\Models\Seller;
 use App\Models\User;
+use App\Utils\ContactLeakDetector;
 use App\Utils\FileManagerLogic;
 use App\Utils\Helpers;
 use App\Utils\ImageManager;
@@ -220,6 +221,8 @@ class ChatController extends Controller
         $chatting->attachment = json_encode($attachment);
         $chatting->sent_by_delivery_man = 1;
         $chatting->seen_by_delivery_man = 1;
+        $chatting->flag_reason = ContactLeakDetector::scan($request->message);
+        $chatting->flagged = $chatting->flag_reason !== null;
 
         if ($type == 'seller') {
             $chatting->seller_id = $request->id;

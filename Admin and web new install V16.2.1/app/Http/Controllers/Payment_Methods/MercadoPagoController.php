@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -70,18 +71,25 @@ class MercadoPagoController extends Controller
         ]);
 
         // Fetch current payment request
-        $paymentRequest = $this->paymentRequest->where('id', $request['payment_id'])->first();
+        $paymentRequest = $this->paymentRequest->where('id', $request['payment_id'])->where('is_paid', 0)->first();
+        if (!$paymentRequest) {
+            return response()->json(['status' => 'fail'], 404);
+        }
 
         // New DX Payment Client
         $client = new PaymentClient();
 
         try {
             // Create Payment
+            // transaction_amount is charged using the amount stored server-side
+            // against this payment_id — never the client-supplied value — so a
+            // tampered request can't get this order marked paid for less than
+            // it actually costs.
             $payment = $client->create([
                 "token" => $request['token'],
                 "issuer_id" => $request['issuer_id'] ?? null,
                 "payment_method_id" => $request['payment_method_id'],
-                "transaction_amount" => (float)$request['transaction_amount'],
+                "transaction_amount" => (float)$paymentRequest->payment_amount,
                 "installments" => (int)($request['installments'] ?? 1),
                 "external_reference" => $paymentRequest->id, // important!
                 "payer" => [
@@ -101,17 +109,28 @@ class MercadoPagoController extends Controller
             ], 500);
         }
 
-        if ($payment->status == 'approved') {
-            $this->paymentRequest::where(['id' => $paymentRequest->id])->update([
-                'payment_method' => 'mercadopago',
-                'is_paid' => 1,
-                'transaction_id' => $payment->id,
-            ]);
-            $data = $this->paymentRequest::where(['id' => $request['payment_id']])->first();
-            if (isset($data) && function_exists($data->success_hook)) {
-                call_user_func($data->success_hook, $data);
+        if ($payment->status == 'approved'
+            && !$this->paymentRequest::where('transaction_id', $payment->id)->exists()
+        ) {
+            $updated = false;
+            DB::transaction(function () use ($paymentRequest, $payment, &$updated) {
+                $locked = $this->paymentRequest::where(['id' => $paymentRequest->id])->lockForUpdate()->first();
+                if ($locked && !$locked->is_paid) {
+                    $locked->payment_method = 'mercadopago';
+                    $locked->is_paid = 1;
+                    $locked->transaction_id = $payment->id;
+                    $locked->save();
+                    $updated = true;
+                }
+            });
+
+            if ($updated) {
+                $data = $this->paymentRequest::where(['id' => $request['payment_id']])->first();
+                if (isset($data) && function_exists($data->success_hook)) {
+                    call_user_func($data->success_hook, $data);
+                }
+                return response()->json(['status' => 'success']);
             }
-            return response()->json(['status' => 'success']);
         }
         return response()->json(['status' => 'fail']);
     }

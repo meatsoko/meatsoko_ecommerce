@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Traits\Processor;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -128,13 +129,24 @@ class BkashPaymentController extends Controller
         curl_close($url);
 
         $obj = json_decode($resultdata);
+
+        // Record bKash's own paymentID against this payment_id at creation time,
+        // so callback() can confirm the paymentID being executed is the one that
+        // was actually created for THIS payment — not an unrelated one an
+        // attacker completed for themselves and replayed here.
+        if (isset($obj->paymentID)) {
+            $this->payment::where(['id' => $request['payment_id']])->update(['attribute_id' => $obj->paymentID]);
+        }
+
         return redirect()->away($obj->{'bkashURL'});
     }
 
     public function callback(Request $request)
     {
         $paymentID = $_GET['paymentID'];
-        $auth = $_GET['token'];
+        $auth = session()->get('token'); // use our own server-stored auth token, never a client-supplied one
+        $payment_data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid' => 0])->first();
+
         $request_body = array(
             'paymentID' => $paymentID
         );
@@ -158,28 +170,38 @@ class BkashPaymentController extends Controller
         curl_close($url);
         $obj = json_decode($resultdata);
 
-        if ($obj->statusCode == '0000') {
+        if ($payment_data
+            && $obj->statusCode == '0000'
+            && $paymentID === $payment_data->attribute_id
+            && abs((float)$obj->amount - (float)$payment_data->payment_amount) < 0.01
+            && !$this->payment::where('transaction_id', $obj->trxID ?? null)->exists()
+        ) {
+            $updated = false;
+            DB::transaction(function () use ($payment_data, $obj, &$updated) {
+                $locked = $this->payment::where(['id' => $payment_data->id])->lockForUpdate()->first();
+                if ($locked && !$locked->is_paid) {
+                    $locked->payment_method = 'bkash';
+                    $locked->is_paid = 1;
+                    $locked->transaction_id = $obj->trxID ?? null;
+                    $locked->save();
+                    $updated = true;
+                }
+            });
 
-            $this->payment::where(['id' => $request['payment_id']])->update([
-                'payment_method' => 'bkash',
-                'is_paid' => 1,
-                'transaction_id' => $obj->trxID ?? null,
-            ]);
-
-            $data = $this->payment::where(['id' => $request['payment_id']])->first();
-
-            if (isset($data) && function_exists($data->success_hook)) {
-                call_user_func($data->success_hook, $data);
+            if ($updated) {
+                $data = $this->payment::where(['id' => $request['payment_id']])->first();
+                if (isset($data) && function_exists($data->success_hook)) {
+                    call_user_func($data->success_hook, $data);
+                }
+                return $this->payment_response($data,'success');
             }
-
-            return $this->payment_response($data,'success');
-        } else {
-            $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
-            if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
-                call_user_func($payment_data->failure_hook, $payment_data);
-            }
-            return $this->payment_response($payment_data,'fail');
         }
+
+        $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
+        if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
+            call_user_func($payment_data->failure_hook, $payment_data);
+        }
+        return $this->payment_response($payment_data,'fail');
     }
 
 

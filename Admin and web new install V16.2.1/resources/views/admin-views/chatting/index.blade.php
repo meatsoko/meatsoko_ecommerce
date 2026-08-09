@@ -8,11 +8,14 @@
 
 @section('content')
     <div class="content container-fluid">
-        <div class="mb-3">
+        <div class="mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h2 class="h1 mb-0 text-capitalize d-flex align-items-center gap-2">
                 <img src="{{asset('public/assets/back-end/img/support-ticket.png')}}" alt="">
                 {{translate('chatting_List')}}
             </h2>
+            <a href="{{ route('admin.messages.flagged') }}" class="btn btn-outline-danger">
+                <i class="fi fi-rr-flag"></i> {{translate('flagged_Messages')}}
+            </a>
         </div>
 
         <div class="row">

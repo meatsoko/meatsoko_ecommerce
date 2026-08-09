@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use stdClass;
 use Symfony\Component\Process\Exception\InvalidArgumentException;
@@ -325,22 +326,76 @@ class LiqPayController extends Controller
 
     public function callback(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
-        if ($request['status'] == 'success') {
-            $this->payment::where(['id' => $request['payment_id']])->update([
-                'payment_method' => 'liqpay',
-                'is_paid' => 1,
-                'transaction_id' => $request['transaction_id'],
-            ]);
-            $data = $this->payment::where(['id' => $request['payment_id']])->first();
-            if (isset($data) && function_exists($data->success_hook)) {
-                call_user_func($data->success_hook, $data);
+        // Previously this trusted a flat, unsigned `status` request param — a plain
+        // GET to this URL with status=success was enough to mark any payment_id
+        // paid. LiqPay's actual IPN sends `data` (base64 JSON) + `signature`
+        // (sha1(private_key+data+private_key)); only a verified, decoded payload
+        // is trusted below, and order_id (bound to attribute_id at checkout
+        // initiation) ties it back to this specific payment_id.
+        $decoded = $this->decodeAndVerifyLiqPayCallback($request);
+        $payment_data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid' => 0])->first();
+
+        if ($payment_data
+            && $decoded
+            && ($decoded['status'] ?? null) === 'success'
+            && (string)($decoded['order_id'] ?? '') === (string)$payment_data->attribute_id
+            && abs((float)($decoded['amount'] ?? 0) - (float)$payment_data->payment_amount) < 0.01
+            && !$this->payment::where('transaction_id', $decoded['transaction_id'] ?? null)->exists()
+        ) {
+            $updated = false;
+            DB::transaction(function () use ($payment_data, $decoded, &$updated) {
+                $locked = $this->payment::where(['id' => $payment_data->id])->lockForUpdate()->first();
+                if ($locked && !$locked->is_paid) {
+                    $locked->payment_method = 'liqpay';
+                    $locked->is_paid = 1;
+                    $locked->transaction_id = $decoded['transaction_id'] ?? null;
+                    $locked->save();
+                    $updated = true;
+                }
+            });
+
+            if ($updated) {
+                $data = $this->payment::where(['id' => $payment_data->id])->first();
+                if (isset($data) && function_exists($data->success_hook)) {
+                    call_user_func($data->success_hook, $data);
+                }
+                return $this->payment_response($data,'success');
             }
-            return $this->payment_response($data,'success');
         }
         $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
         if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
             call_user_func($payment_data->failure_hook, $payment_data);
         }
         return $this->payment_response($payment_data,'fail');
+    }
+
+    private function decodeAndVerifyLiqPayCallback(Request $request): ?array
+    {
+        $data = $request->input('data');
+        $signature = $request->input('signature');
+        if (!$data || !$signature) {
+            return null;
+        }
+
+        $config = $this->payment_config('liqpay', 'payment_config');
+        $values = null;
+        if (!is_null($config) && $config->mode == 'live') {
+            $values = json_decode($config->live_values);
+        } elseif (!is_null($config) && $config->mode == 'test') {
+            $values = json_decode($config->test_values);
+        }
+
+        if (!$values || empty($values->private_key)) {
+            return null;
+        }
+
+        $privateKey = $values->private_key;
+        $expectedSignature = base64_encode(sha1($privateKey . $data . $privateKey, true));
+
+        if (!hash_equals($expectedSignature, $signature)) {
+            return null;
+        }
+
+        return json_decode(base64_decode($data), true);
     }
 }

@@ -267,18 +267,24 @@ class ChattingController extends BaseController
         ];
     }
 
+    /**
+     * Customer-facing chat data for the vendor/rider/admin on the other side
+     * of the conversation. Deliberately excludes phone/contact — this endpoint
+     * is what keeps buyers and vendors talking on-platform instead of moving
+     * to a direct call/WhatsApp, so it must never hand out raw contact info.
+     */
     private function getUserData($type, $user): array
     {
         if ($type == 'vendor') {
-            $userData = ['name' => $user['name'], 'phone' => $user['contact']];
+            $userData = ['name' => $user['name']];
             $userData['image'] = getStorageImages(path: $user->image_full_url, type: 'shop');
             $userData['temporary-close-status'] = (int)checkVendorAbility(type: 'vendor', status: 'temporary_close', vendor: $user);
         } elseif ($type == 'delivery-man') {
-            $userData = ['name' => $user['f_name'] . ' ' . $user['l_name'], 'phone' => $user['country_code'] . $user['phone']];
+            $userData = ['name' => $user['f_name'] . ' ' . $user['l_name']];
             $userData['image'] = getStorageImages(path: $user->image_full_url, type: 'avatar');
             $userData['temporary-close-status'] = '';
         } else {
-            $userData = ['name' => getInHouseShopConfig(key: 'name'), 'phone' => ''];
+            $userData = ['name' => getInHouseShopConfig(key: 'name')];
             $userData['image'] = getStorageImages(path: getInHouseShopConfig(key: 'image_full_url'), type: 'shop');
             $userData['temporary-close-status'] = (int)checkVendorAbility(type: 'inhouse', status: 'temporary_close');
         }

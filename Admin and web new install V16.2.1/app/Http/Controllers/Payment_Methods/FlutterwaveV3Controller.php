@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Traits\Processor;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class FlutterwaveV3Controller extends Controller
@@ -135,19 +136,36 @@ class FlutterwaveV3Controller extends Controller
             curl_close($curl);
 
             $res = json_decode($response);
-            if ($res->status) {
-                $amountPaid = $res->data->charged_amount;
-                $amountToPay = $res->data->meta->price;
-                if ($amountPaid >= $amountToPay) {
+            $payment_data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid' => 0])->first();
 
-                    $this->payment::where(['id' => $request['payment_id']])->update([
-                        'payment_method' => 'flutterwave',
-                        'is_paid' => 1,
-                        'transaction_id' => $txid,
-                    ]);
+            // The previous amount check compared the verified transaction against
+            // its OWN meta.price — meta is client-supplied at initialize() and
+            // echoed back verbatim, so it proved nothing. Comparing against the
+            // PaymentRequest's actual stored amount, plus checking that the
+            // verified transaction's description (set server-side to payment_id
+            // at initialize) matches this payment_id, plus blocking transaction_id
+            // reuse, is what actually stops a different verified transaction being
+            // replayed here.
+            if ($payment_data
+                && $res->status
+                && ($res->data->customizations->description ?? null) === $payment_data->id
+                && $res->data->charged_amount >= (float)$payment_data->payment_amount
+                && !$this->payment::where('transaction_id', $txid)->exists()
+            ) {
+                $updated = false;
+                DB::transaction(function () use ($payment_data, $txid, &$updated) {
+                    $locked = $this->payment::where(['id' => $payment_data->id])->lockForUpdate()->first();
+                    if ($locked && !$locked->is_paid) {
+                        $locked->payment_method = 'flutterwave';
+                        $locked->is_paid = 1;
+                        $locked->transaction_id = $txid;
+                        $locked->save();
+                        $updated = true;
+                    }
+                });
 
+                if ($updated) {
                     $data = $this->payment::where(['id' => $request['payment_id']])->first();
-
                     if (isset($data) && function_exists($data->success_hook)) {
                         call_user_func($data->success_hook, $data);
                     }

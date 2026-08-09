@@ -448,7 +448,6 @@ $(document).ready(function () {
                     $("#chatting-messages-section").empty().html(response.chattingMessages);
                     $(".profile-image").attr("src", response.userData.image);
                     $(".profile-name").html(response.userData.name);
-                    $("#profile_phone").html(response.userData.phone);
                     if (
                         parseInt(response.userData["temporary-close-status"]) === 1
                     ) {

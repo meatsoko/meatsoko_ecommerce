@@ -11,6 +11,7 @@ use App\Models\DeliveryMan;
 use App\Models\Seller;
 use App\Models\Shop;
 use App\Models\User;
+use App\Utils\ContactLeakDetector;
 use App\Utils\FileManagerLogic;
 use App\Utils\Helpers;
 use App\Utils\ImageManager;
@@ -225,6 +226,8 @@ class ChatController extends Controller
         $chatting->sent_by_seller = 1;
         $chatting->seen_by_seller = 1;
         $chatting->shop_id = $shop_id;
+        $chatting->flag_reason = ContactLeakDetector::scan($request['message']);
+        $chatting->flagged = $chatting->flag_reason !== null;
 
         if ($type == 'delivery-man') {
             $chatting->delivery_man_id = $request->id;

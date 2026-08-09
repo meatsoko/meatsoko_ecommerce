@@ -4,10 +4,29 @@ namespace App\Services;
 
 use App\Enums\GlobalConstant;
 use App\Traits\FileManagerTrait;
+use App\Utils\ContactLeakDetector;
 
 class ChattingService
 {
     use FileManagerTrait;
+
+    /**
+     * Scans a chat message for off-platform contact-sharing attempts (phone
+     * numbers, WhatsApp/Telegram links, "call me on..." phrasing) and returns
+     * the flag fields to merge into the chatting row. Flags for admin review
+     * rather than blocking — a missed off-platform handoff costs more than an
+     * occasional false positive.
+     *
+     * @return array{flagged: bool, flag_reason: string|null}
+     */
+    private function flagFields(?string $message): array
+    {
+        $reason = ContactLeakDetector::scan($message);
+        return [
+            'flagged' => $reason !== null,
+            'flag_reason' => $reason,
+        ];
+    }
 
     /**
      * @param object $request
@@ -51,7 +70,7 @@ class ChattingService
      */
     public function getDeliveryManChattingData(object $request, string|int $shopId, string|int $vendorId): array
     {
-        return [
+        return array_merge([
             'delivery_man_id' => $request['delivery_man_id'],
             'seller_id' => $vendorId,
             'shop_id' => $shopId,
@@ -62,7 +81,7 @@ class ChattingService
             'seen_by_delivery_man' => 0,
             'notification_receiver' => 'deliveryman',
             'created_at' => now(),
-        ];
+        ], $this->flagFields($request['message']));
     }
 
     /**
@@ -73,7 +92,7 @@ class ChattingService
      */
     public function getCustomerChattingData(object $request, string|int $shopId, string|int $vendorId): array
     {
-        return [
+        return array_merge([
             'user_id' => $request['user_id'],
             'seller_id' => $vendorId,
             'shop_id' => $shopId,
@@ -84,7 +103,7 @@ class ChattingService
             'seen_by_customer' => 0,
             'notification_receiver' => 'customer',
             'created_at' => now(),
-        ];
+        ], $this->flagFields($request->message));
     }
 
     /**
@@ -95,7 +114,7 @@ class ChattingService
     public function addChattingData(object $request, string $type): array
     {
         $attachment = $this->getAttachment(request: $request);
-        return [
+        return array_merge([
             'delivery_man_id' => $type == 'delivery-man' ? $request['delivery_man_id'] : null,
             'user_id' => $type == 'customer' ? $request['user_id'] : null,
             'admin_id' => 0,
@@ -107,12 +126,12 @@ class ChattingService
             'seen_by_delivery_man' => $type == 'delivery-man' ? 0 : null,
             'notification_receiver' => $type == 'delivery-man' ? 'deliveryman' : 'customer',
             'created_at' => now(),
-        ];
+        ], $this->flagFields($request['message']));
     }
 
     public function addChattingDataForWeb(object $request, string|int $userId, string $type, string|int|null $shopId = null, string|int|null $vendorId = null, ?int $adminId = null, ?int $deliveryManId = null): array
     {
-        return [
+        return array_merge([
             'user_id' => $userId,
             'seller_id' => $vendorId,
             'shop_id' => $shopId,
@@ -127,6 +146,6 @@ class ChattingService
             'seen_by_delivery_man' => $type == 'deliveryman' ? 0 : null,
             'notification_receiver' => $type,
             'created_at' => now(),
-        ];
+        ], $this->flagFields($request->message));
     }
 }

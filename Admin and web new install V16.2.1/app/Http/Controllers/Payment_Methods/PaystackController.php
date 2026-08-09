@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class PaystackController extends Controller
@@ -100,21 +101,41 @@ class PaystackController extends Controller
     public function handleGatewayCallback(Request $request): Redirector|RedirectResponse
     {
         $paymentDetails = self::getPayStackPaymentData(request: $request);
+        $paymentId = $paymentDetails['data']['metadata']['payment_id'] ?? null;
+        $payment_data = $paymentId ? $this->payment::where(['id' => $paymentId])->where(['is_paid' => 0])->first() : null;
 
-        if ($paymentDetails['status'] == true) {
-            $this->payment::where(['id' => $paymentDetails['data']['metadata']['payment_id']])->update([
-                'payment_method' => 'paystack',
-                'is_paid' => 1,
-                'transaction_id' => $request['trxref'],
-            ]);
-            $data = $this->payment::where(['id' => $paymentDetails['data']['metadata']['payment_id']])->first();
-            if (isset($data) && function_exists($data->success_hook)) {
-                call_user_func($data->success_hook, $data);
+        // metadata.payment_id is only trustworthy here because it comes from
+        // Paystack's own verified transaction record (set server-side at
+        // initialize()), not from the callback request. Added as defense-in-depth:
+        // the paid amount must match what this payment actually expects, and the
+        // gateway reference can't be reused across a different payment_id.
+        if ($payment_data
+            && $paymentDetails['status'] == true
+            && abs(((int)($paymentDetails['data']['amount'] ?? 0)) - (int)round($payment_data->payment_amount * 100)) <= 1
+            && !$this->payment::where('transaction_id', $request['trxref'])->exists()
+        ) {
+            $updated = false;
+            DB::transaction(function () use ($payment_data, $request, &$updated) {
+                $locked = $this->payment::where(['id' => $payment_data->id])->lockForUpdate()->first();
+                if ($locked && !$locked->is_paid) {
+                    $locked->payment_method = 'paystack';
+                    $locked->is_paid = 1;
+                    $locked->transaction_id = $request['trxref'];
+                    $locked->save();
+                    $updated = true;
+                }
+            });
+
+            if ($updated) {
+                $data = $this->payment::where(['id' => $paymentId])->first();
+                if (isset($data) && function_exists($data->success_hook)) {
+                    call_user_func($data->success_hook, $data);
+                }
+                return $this->payment_response($data, 'success');
             }
-            return $this->payment_response($data, 'success');
         }
 
-        $payment_data = $this->payment::where(['id' => $paymentDetails['data']['metadata']['payment_id']])->first();
+        $payment_data = $paymentId ? $this->payment::where(['id' => $paymentId])->first() : null;
         if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
             call_user_func($payment_data->failure_hook, $payment_data);
         }

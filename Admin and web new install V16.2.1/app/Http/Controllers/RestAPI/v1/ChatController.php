@@ -11,6 +11,7 @@ use App\Models\DeliveryMan;
 use App\Models\Seller;
 use App\Models\Shop;
 use App\Models\User;
+use App\Utils\ContactLeakDetector;
 use App\Utils\FileManagerLogic;
 use App\Utils\Helpers;
 use App\Utils\ImageManager;
@@ -20,6 +21,24 @@ use Illuminate\Support\Facades\Validator;
 
 class ChatController extends Controller
 {
+    /**
+     * These chat endpoints are customer-facing — the "other side" of the
+     * conversation (seller/shop/delivery man) is always eager-loaded as a
+     * full Eloquent model. Strip contact fields before serialization so the
+     * customer app never receives a vendor's or rider's raw phone/email —
+     * chat is the on-platform channel, it must not leak the means to go
+     * around it.
+     */
+    private function maskChatParticipantContact($chatting): void
+    {
+        if (!$chatting) {
+            return;
+        }
+        $chatting->sellerInfo?->makeHidden(['phone', 'email']);
+        $chatting->sellerInfo?->shops?->each(fn($shop) => $shop->makeHidden(['contact', 'address']));
+        $chatting->deliveryMan?->makeHidden(['phone', 'email']);
+    }
+
     public function list(Request $request, $type):JsonResponse
     {
         $admin_size = 0;
@@ -64,6 +83,7 @@ class ChatController extends Controller
                 ->first();
 
             $user_chatting->unseen_message_count = Chatting::where(['user_id' => $user_chatting->user_id, 'admin_id' => $user_chatting->admin_id, 'seen_by_customer' => '0'])->count();
+            $this->maskChatParticipantContact($user_chatting);
             $chats[] = $user_chatting;
         }
 
@@ -76,6 +96,7 @@ class ChatController extends Controller
                     ->first();
 
                 $user_chatting->unseen_message_count = Chatting::where(['user_id' => $user_chatting->user_id, $id_param => $user_chatting->$id_param, 'seen_by_customer' => '0'])->count();
+                $this->maskChatParticipantContact($user_chatting);
                 $chats[] = $user_chatting;
             }
         }
@@ -147,6 +168,7 @@ class ChatController extends Controller
 
                     if ($user_chatting) {
                         $user_chatting->unseen_message_count = Chatting::where(['user_id' => $user_chatting->user_id, $id_param => $user_chatting->$id_param, 'seen_by_customer' => '0'])->count();
+                        $this->maskChatParticipantContact($user_chatting);
                     }
                     $chats[] = $user_chatting;
                 }
@@ -183,6 +205,7 @@ class ChatController extends Controller
         if (!empty($query->get())) {
             $message = $query->paginate($request->limit, ['*'], 'page', $request->offset);
             $message?->map(function ($conversation) {
+                $this->maskChatParticipantContact($conversation);
                 if (!is_null($conversation->attachment_full_url) && count($conversation->attachment_full_url) > 0) {
                     $attachmentData = [];
                     foreach ($conversation->attachment_full_url as $key => $attachment) {
@@ -247,6 +270,8 @@ class ChatController extends Controller
         $chatting->attachment = json_encode($attachment);
         $chatting->sent_by_customer = 1;
         $chatting->seen_by_customer = 1;
+        $chatting->flag_reason = ContactLeakDetector::scan($request['message']);
+        $chatting->flagged = $chatting->flag_reason !== null;
         $messageForm = User::find($request->user()->id);
         if ($type == 'seller') {
             $seller = Seller::with('shop')->find($request->id);

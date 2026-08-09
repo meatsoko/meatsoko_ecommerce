@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class PaymobController extends Controller
@@ -124,7 +125,7 @@ class PaymobController extends Controller
                 "last_name" => !empty($payer->name) ? $payer->name : "rashed",
                 "state" => "N/A",
             ],
-            'special_reference' => time(),
+            'special_reference' => $payment_data->id,
             'customer' => [
                 'first_name' => !empty($payer->name) ? $payer->name : "rashed",
                 'last_name' => !empty($payer->name) ? $payer->name : "rashed",
@@ -259,20 +260,39 @@ class PaymobController extends Controller
         $secret = is_array($this->config_values) ? $this->config_values['hmac'] : $this->config_values->hmac;
         $hased = hash_hmac('sha512', $connectedString, $secret);
 
-        if ($hased == $hmac && $data['success'] === "true") {
+        $payment_data = $this->payment::where(['id' => session('payment_id')])->where(['is_paid' => 0])->first();
 
-            $this->payment::where(['id' => session('payment_id')])->update([
-                'payment_method' => 'paymob_accept',
-                'is_paid' => 1,
-                'transaction_id' => session('payment_id'),
-            ]);
+        // The HMAC is real crypto proof the transaction fields weren't tampered
+        // with, but transaction_id was previously stored as our OWN session
+        // payment_id rather than Paymob's transaction id — making reuse detection
+        // meaningless — and the paid amount was never checked against what this
+        // payment actually expects. Both are fixed below.
+        if ($payment_data
+            && $hased == $hmac
+            && $data['success'] === "true"
+            && isset($data['id'], $data['amount_cents'])
+            && abs(((int)$data['amount_cents']) - (int)round($payment_data->payment_amount * 100)) <= 1
+            && !$this->payment::where('transaction_id', $data['id'])->exists()
+        ) {
+            $updated = false;
+            DB::transaction(function () use ($payment_data, $data, &$updated) {
+                $locked = $this->payment::where(['id' => $payment_data->id])->lockForUpdate()->first();
+                if ($locked && !$locked->is_paid) {
+                    $locked->payment_method = 'paymob_accept';
+                    $locked->is_paid = 1;
+                    $locked->transaction_id = $data['id'];
+                    $locked->save();
+                    $updated = true;
+                }
+            });
 
-            $payment_data = $this->payment::where(['id' => session('payment_id')])->first();
-
-            if (isset($payment_data) && function_exists($payment_data->success_hook)) {
-                call_user_func($payment_data->success_hook, $payment_data);
+            if ($updated) {
+                $data2 = $this->payment::where(['id' => $payment_data->id])->first();
+                if (isset($data2) && function_exists($data2->success_hook)) {
+                    call_user_func($data2->success_hook, $data2);
+                }
+                return $this->payment_response($data2, 'success');
             }
-            return $this->payment_response($payment_data, 'success');
         }
         $payment_data = $this->payment::where(['id' => session('payment_id')])->first();
         if (isset($payment_data) && function_exists($payment_data->failure_hook)) {

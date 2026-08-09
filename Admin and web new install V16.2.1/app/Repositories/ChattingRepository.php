@@ -73,6 +73,8 @@ class ChattingRepository implements ChattingRepositoryInterface
                 return $query->where(['sent_by_customer' => $filters['sent_by_customer']]);
             })->when(isset($filters['seen_by_customer']), function ($query) use ($filters) {
                 return $query->where(['seen_by_customer' => $filters['seen_by_customer']]);
+            })->when(isset($filters['flagged']), function ($query) use ($filters) {
+                return $query->where(['flagged' => $filters['flagged']]);
             })
             ->when(!empty($orderBy), function ($query) use ($orderBy) {
                 return $query->orderBy(array_key_first($orderBy), array_values($orderBy)[0]);

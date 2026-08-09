@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class SslCommerzPaymentController extends Controller
@@ -108,7 +109,11 @@ class SslCommerzPaymentController extends Controller
         $post_data['product_profile'] = "service";
 
         # OPTIONAL PARAMETERS
-        $post_data['value_a'] = "ref001";
+        // value_a carries our internal payment_id through SSLCommerz and back —
+        // SSLCommerz includes it in the signed verify_key set, so success() can
+        // confirm the signed callback was actually issued for THIS payment_id
+        // rather than trusting the payment_id query param on its own.
+        $post_data['value_a'] = $data['id'];
         $post_data['value_b'] = "ref002";
         $post_data['value_c'] = "ref003";
         $post_data['value_d'] = "ref004";
@@ -184,20 +189,41 @@ class SslCommerzPaymentController extends Controller
 
     public function success(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
-        if ($request['status'] == 'VALID' && $this->SSLCOMMERZ_hash_verify($this->store_password, $request)) {
+        $payment_data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid' => 0])->first();
 
-            $this->payment::where(['id' => $request['payment_id']])->update([
-                'payment_method' => 'ssl_commerz',
-                'is_paid' => 1,
-                'transaction_id' => $request->input('tran_id')
-            ]);
+        // The hash proves the POST body wasn't tampered with, but on its own it
+        // doesn't prove this specific payment_id was ever part of that signed
+        // transaction — value_a (echoed back inside the signed field set) does,
+        // since we set it ourselves to payment_id at checkout initiation.
+        // The amount check and transaction_id-reuse check close the remaining gap:
+        // a valid signed callback from a *different, already-consumed* transaction
+        // being replayed against this payment_id.
+        if ($payment_data
+            && $request['status'] == 'VALID'
+            && $this->SSLCOMMERZ_hash_verify($this->store_password, $request)
+            && (string)$request['value_a'] === (string)$payment_data->id
+            && abs((float)$request['amount'] - (float)$payment_data->payment_amount) < 0.01
+            && !$this->payment::where('transaction_id', $request->input('tran_id'))->exists()
+        ) {
+            $updated = false;
+            DB::transaction(function () use ($request, &$updated) {
+                $locked = $this->payment::where(['id' => $request['payment_id']])->lockForUpdate()->first();
+                if ($locked && !$locked->is_paid) {
+                    $locked->payment_method = 'ssl_commerz';
+                    $locked->is_paid = 1;
+                    $locked->transaction_id = $request->input('tran_id');
+                    $locked->save();
+                    $updated = true;
+                }
+            });
 
-            $data = $this->payment::where(['id' => $request['payment_id']])->first();
-
-            if (isset($data) && function_exists($data->success_hook)) {
-                call_user_func($data->success_hook, $data);
+            if ($updated) {
+                $data = $this->payment::where(['id' => $request['payment_id']])->first();
+                if (isset($data) && function_exists($data->success_hook)) {
+                    call_user_func($data->success_hook, $data);
+                }
+                return $this->payment_response($data, 'success');
             }
-            return $this->payment_response($data, 'success');
         }
         $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
         if (isset($payment_data) && function_exists($payment_data->failure_hook)) {

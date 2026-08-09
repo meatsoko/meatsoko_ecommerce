@@ -141,6 +141,30 @@ class ChattingController extends BaseController
     }
 
     /**
+     * Platform-wide queue of messages the automated contact-leak detector
+     * flagged as a possible attempt to move a deal off-platform (raw phone
+     * numbers, WhatsApp/Telegram links, "call me on..." phrasing). Unlike
+     * index(), which only shows the admin's own in-house chat, this spans
+     * every customer/seller/delivery-man conversation on the platform.
+     *
+     * @param Request $request
+     * @return View
+     */
+    public function flagged(Request $request): View
+    {
+        $flaggedMessages = $this->chattingRepo->getListWhere(
+            orderBy: ['id' => 'DESC'],
+            filters: ['flagged' => 1],
+            relations: ['customer', 'sellerInfo', 'sellerInfo.shop', 'deliveryMan', 'admin'],
+            dataLimit: 20,
+        );
+
+        return view('admin-views.chatting.flagged', [
+            'flaggedMessages' => $flaggedMessages,
+        ]);
+    }
+
+    /**
      * @param Request $request
      * @return JsonResponse
      * @throws Throwable

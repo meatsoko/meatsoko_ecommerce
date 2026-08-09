@@ -10,6 +10,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Stripe\Checkout\Session;
 use Stripe\Stripe;
@@ -86,6 +87,10 @@ class StripePaymentController extends Controller
                 'quantity' => 1,
             ]],
             'mode' => 'payment',
+            // Bound server-side to this payment_id so success() can confirm the
+            // verified session was actually created for THIS payment, not just
+            // any completed session an attacker might replay.
+            'client_reference_id' => $data->id,
             'success_url' => url('/') . '/payment/stripe/success?payment_session_id={CHECKOUT_SESSION_ID}&payment_id=' . $data->id,
             'cancel_url' => url()->previous(),
         ]);
@@ -97,22 +102,37 @@ class StripePaymentController extends Controller
     {
         Stripe::setApiKey($this->config_values->api_key);
         $session = Session::retrieve($request->get('payment_session_id'));
+        $payment_data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid' => 0])->first();
 
-        if ($session->payment_status == 'paid' && $session->status == 'complete') {
+        // client_reference_id ties the verified session to this payment_id;
+        // the amount check and payment_intent-reuse check stop a different,
+        // already-completed session from being replayed against this one.
+        if ($payment_data
+            && $session->payment_status == 'paid'
+            && $session->status == 'complete'
+            && $session->client_reference_id === $payment_data->id
+            && abs(((int)$session->amount_total) - (int)round($payment_data->payment_amount * 100)) <= 1
+            && !$this->payment::where('transaction_id', $session->payment_intent)->exists()
+        ) {
+            $updated = false;
+            DB::transaction(function () use ($request, $session, &$updated) {
+                $locked = $this->payment::where(['id' => $request['payment_id']])->lockForUpdate()->first();
+                if ($locked && !$locked->is_paid) {
+                    $locked->payment_method = 'stripe';
+                    $locked->is_paid = 1;
+                    $locked->transaction_id = $session->payment_intent;
+                    $locked->save();
+                    $updated = true;
+                }
+            });
 
-            $this->payment::where(['id' => $request['payment_id']])->update([
-                'payment_method' => 'stripe',
-                'is_paid' => 1,
-                'transaction_id' => $session->payment_intent,
-            ]);
-
-            $data = $this->payment::where(['id' => $request['payment_id']])->first();
-
-            if (isset($data) && function_exists($data->success_hook)) {
-                call_user_func($data->success_hook, $data);
+            if ($updated) {
+                $data = $this->payment::where(['id' => $request['payment_id']])->first();
+                if (isset($data) && function_exists($data->success_hook)) {
+                    call_user_func($data->success_hook, $data);
+                }
+                return $this->payment_response($data, 'success');
             }
-
-            return $this->payment_response($data,'success');
         }
         $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
         if (isset($payment_data) && function_exists($payment_data->failure_hook)) {

@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Razorpay\Api\Api;
 
@@ -77,45 +78,91 @@ class RazorPayController extends Controller
     public function payment(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
         $input = $request->all();
-        $api = new Api(config('razor_config.api_key'), config('razor_config.api_secret'));
-        $payment = $api->payment->fetch($input['razorpay_payment_id']);
+        $payment_data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid' => 0])->first();
 
-        if (count($input) && !empty($input['razorpay_payment_id'])) {
-            $response = $api->payment->fetch($input['razorpay_payment_id'])->capture(array('amount' => $payment['amount'] - $payment['fee']));
-
-            $this->payment::where(['id' => $request['payment_id']])->update([
-                'payment_method' => 'razor_pay',
-                'is_paid' => 1,
-                'transaction_id' => $input['razorpay_payment_id'],
-            ]);
-            $data = $this->payment::where(['id' => $request['payment_id']])->first();
-            if (isset($data) && function_exists($data->success_hook)) {
-                call_user_func($data->success_hook, $data);
+        if (!$payment_data || empty($input['razorpay_payment_id']) || !$this->verifyAndCapturePayment($input['razorpay_payment_id'], $payment_data)) {
+            if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
+                call_user_func($payment_data->failure_hook, $payment_data);
             }
-            return $this->payment_response($data, 'success');
+            return $this->payment_response($payment_data, 'fail');
         }
-        $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
-        if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
-            call_user_func($payment_data->failure_hook, $payment_data);
+
+        $data = $this->payment::where(['id' => $request['payment_id']])->first();
+        if (isset($data) && function_exists($data->success_hook)) {
+            call_user_func($data->success_hook, $data);
         }
-        return $this->payment_response($payment_data, 'fail');
+        return $this->payment_response($data, 'success');
     }
 
     public function callback(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
         $input = $request->all();
-        $payment_data = $this->payment::where(['id' => $request->payment_request_id])->first();
-        if (count($input) && $payment_data && !empty($input['razorpay_payment_id'])) {
-            if (isset($payment_data) && function_exists($payment_data->success_hook)) {
-                $payment_data->payment_method = 'razor_pay';
-                $payment_data->is_paid = 1;
-                $payment_data->transaction_id = $input['razorpay_payment_id'];
-                $payment_data->save();
-                call_user_func($payment_data->success_hook, $payment_data);
-                return $this->payment_response($payment_data, 'success');
-            }
+        $payment_data = $this->payment::where(['id' => $request->payment_request_id])->where(['is_paid' => 0])->first();
+
+        if ($payment_data && !empty($input['razorpay_payment_id']) && function_exists($payment_data->success_hook)
+            && $this->verifyAndCapturePayment($input['razorpay_payment_id'], $payment_data)) {
+            $data = $this->payment::where(['id' => $request->payment_request_id])->first();
+            call_user_func($data->success_hook, $data);
+            return $this->payment_response($data, 'success');
         }
-        return $this->payment_response($payment_data, 'fail');
+        return $this->payment_response($payment_data ?? $this->payment::where(['id' => $request->payment_request_id])->first(), 'fail');
+    }
+
+    /**
+     * Verifies a razorpay_payment_id server-side (status + amount) before
+     * accepting it, and atomically binds it to exactly one PaymentRequest.
+     * Without this, a client could submit a valid-but-unrelated
+     * razorpay_payment_id (e.g. from their own small legitimate payment)
+     * against an arbitrary payment_request_id and have it marked paid —
+     * there was previously no check that the two were ever associated.
+     */
+    private function verifyAndCapturePayment(string $razorpayPaymentId, $paymentData): bool
+    {
+        $api = new Api(config('razor_config.api_key'), config('razor_config.api_secret'));
+
+        try {
+            $payment = $api->payment->fetch($razorpayPaymentId);
+        } catch (\Exception $exception) {
+            return false;
+        }
+
+        if (!in_array($payment['status'], ['authorized', 'captured'], true)) {
+            return false;
+        }
+
+        $expectedAmount = (int)round($paymentData->payment_amount * 100);
+        if (abs((int)$payment['amount'] - $expectedAmount) > 1) {
+            return false;
+        }
+
+        // A razorpay_payment_id already recorded against another payment_request
+        // must never be reusable — otherwise the same paid transaction could be
+        // replayed to mark a second, unrelated order as paid.
+        if ($this->payment::where('transaction_id', $razorpayPaymentId)->exists()) {
+            return false;
+        }
+
+        try {
+            if ($payment['status'] === 'authorized') {
+                $api->payment->fetch($razorpayPaymentId)->capture(['amount' => $payment['amount'] - ($payment['fee'] ?? 0)]);
+            }
+        } catch (\Exception $exception) {
+            return false;
+        }
+
+        $captured = false;
+        DB::transaction(function () use ($razorpayPaymentId, $paymentData, &$captured) {
+            $locked = $this->payment::where(['id' => $paymentData->id])->lockForUpdate()->first();
+            if ($locked && !$locked->is_paid) {
+                $locked->payment_method = 'razor_pay';
+                $locked->is_paid = 1;
+                $locked->transaction_id = $razorpayPaymentId;
+                $locked->save();
+                $captured = true;
+            }
+        });
+
+        return $captured;
     }
 
     public function cancel(Request $request): JsonResponse|Redirector|RedirectResponse|Application
@@ -127,23 +174,30 @@ class RazorPayController extends Controller
     public function createOrder(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
         $request->validate([
-            'payment_amount' => 'required|numeric',
-            'currency_code' => 'required|string'
+            'payment_request_id' => 'required|uuid',
         ]);
+
+        // The order is created for the amount/currency stored server-side against
+        // payment_request_id — never for client-supplied payment_amount/currency_code
+        // — so a tampered request can't get a mismatched Razorpay order created for it.
+        $payment_data = $this->payment::where(['id' => $request['payment_request_id']])->where(['is_paid' => 0])->first();
+        if (!$payment_data) {
+            return response()->json(['status' => false, 'message' => translate('Invalid_payment_request')]);
+        }
 
         try {
             $api = new Api(config('razor_config.api_key'), config('razor_config.api_secret'));
 
             $razorpayOrder = $api->order->create([
                 'receipt' => 'order_' . uniqid(),
-                'amount' => (int)(round($request['payment_amount'], 2) * 100),
-                'currency' => $request['currency_code'],
+                'amount' => (int)round($payment_data->payment_amount * 100),
+                'currency' => $payment_data->currency_code,
                 'payment_capture' => 1
             ]);
 
             return response()->json([
                 'status' => true,
-                'payment_request_id' => $request['payment_request_id'],
+                'payment_request_id' => $payment_data->id,
                 'order_id' => $razorpayOrder['id'],
                 'amount' => $razorpayOrder['amount'],
                 'currency' => $razorpayOrder['currency']
@@ -158,34 +212,36 @@ class RazorPayController extends Controller
 
     public function verifyPayment(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
+        $payment_data = $this->payment::where(['id' => $request['payment_request_id']])->where(['is_paid' => 0])->first();
+        if (!$payment_data || empty($request['payment_id'])) {
+            return $this->payment_response($payment_data, 'fail');
+        }
+
         $api = new Api(config('razor_config.api_key'), config('razor_config.api_secret'));
-
-        // Verify payment signature
-        $api->utility->verifyPaymentSignature([
-            'razorpay_order_id' => $request['order_id'],
-            'razorpay_payment_id' => $request['payment_id'],
-            'razorpay_signature' => $request['signature']
-        ]);
-
-        // Fetch payment details using payment_id
-        $payment = $api->payment->fetch($request['payment_id']);
-
-        if ($payment && isset($payment['status']) && $payment['status'] == 'captured') {
-            $this->payment::where(['id' => $request['payment_request_id']])->update([
-                'payment_method' => 'razor_pay',
-                'is_paid' => 1,
-                'transaction_id' => $request['payment_id'],
+        try {
+            $api->utility->verifyPaymentSignature([
+                'razorpay_order_id' => $request['order_id'],
+                'razorpay_payment_id' => $request['payment_id'],
+                'razorpay_signature' => $request['signature']
             ]);
-            $data = $this->payment::where(['id' => $request['payment_request_id']])->first();
-            if (isset($data) && function_exists($data->success_hook)) {
-                call_user_func($data->success_hook, $data);
+        } catch (\Exception $exception) {
+            if (function_exists($payment_data->failure_hook)) {
+                call_user_func($payment_data->failure_hook, $payment_data);
             }
-            return $this->payment_response($data, 'success');
+            return $this->payment_response($payment_data, 'fail');
         }
-        $paymentData = $this->payment::where(['id' => $request['payment_request_id']])->first();
-        if (isset($paymentData) && function_exists($paymentData->failure_hook)) {
-            call_user_func($paymentData->failure_hook, $paymentData);
+
+        if (!$this->verifyAndCapturePayment($request['payment_id'], $payment_data)) {
+            if (function_exists($payment_data->failure_hook)) {
+                call_user_func($payment_data->failure_hook, $payment_data);
+            }
+            return $this->payment_response($payment_data, 'fail');
         }
-        return $this->payment_response($paymentData, 'fail');
+
+        $data = $this->payment::where(['id' => $request['payment_request_id']])->first();
+        if (isset($data) && function_exists($data->success_hook)) {
+            call_user_func($data->success_hook, $data);
+        }
+        return $this->payment_response($data, 'success');
     }
 }

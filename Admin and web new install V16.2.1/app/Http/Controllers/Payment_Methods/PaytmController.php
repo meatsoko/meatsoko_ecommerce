@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class PaytmController extends Controller
@@ -384,17 +385,33 @@ class PaytmController extends Controller
         //Verify all parameters received from Paytm pg to your application. Like MID received from paytm pg is same as your application’s MID, TXN_AMOUNT and ORDER_ID are same as what was sent by you to Paytm PG for initiating transaction etc.
         $isValidChecksum = $this->verifychecksum_e($paramList, Config::get('paytm_config.PAYTM_MERCHANT_KEY'), $paytmChecksum); //will return TRUE or FALSE string.
 
-        if ($isValidChecksum == "TRUE") {
-            if ($request["STATUS"] == "TXN_SUCCESS") {
+        $payment_data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid' => 0])->first();
 
-                $this->payment::where(['id' => $request['payment_id']])->update([
-                    'payment_method' => 'paytm',
-                    'is_paid' => 1,
-                    'transaction_id' => $request['TXNID'],
-                ]);
+        // The checksum is real crypto proof the params (including TXN_AMOUNT) came
+        // from Paytm unmodified, but payment_id itself is a URL segment outside the
+        // signed payload — so cross-checking the signed TXN_AMOUNT against what this
+        // payment actually expects, plus blocking TXNID reuse, is what stops a valid
+        // checksum from a different transaction being pointed at this payment_id.
+        if ($payment_data
+            && $isValidChecksum == "TRUE"
+            && $request["STATUS"] == "TXN_SUCCESS"
+            && abs((float)$request['TXN_AMOUNT'] - (float)$payment_data->payment_amount) < 0.01
+            && !$this->payment::where('transaction_id', $request['TXNID'])->exists()
+        ) {
+            $updated = false;
+            DB::transaction(function () use ($payment_data, $request, &$updated) {
+                $locked = $this->payment::where(['id' => $payment_data->id])->lockForUpdate()->first();
+                if ($locked && !$locked->is_paid) {
+                    $locked->payment_method = 'paytm';
+                    $locked->is_paid = 1;
+                    $locked->transaction_id = $request['TXNID'];
+                    $locked->save();
+                    $updated = true;
+                }
+            });
 
+            if ($updated) {
                 $data = $this->payment::where(['id' => $request['payment_id']])->first();
-
                 if (isset($data) && function_exists($data->success_hook)) {
                     call_user_func($data->success_hook, $data);
                 }

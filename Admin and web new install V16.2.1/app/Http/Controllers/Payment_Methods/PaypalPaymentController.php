@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Redirector;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -179,21 +180,42 @@ class PaypalPaymentController extends Controller
         curl_close($ch);
 
         $response = json_decode($result);
+        $payment_data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid' => 0])->first();
 
-        if ($response->status === 'COMPLETED') {
-            $this->payment::where(['id' => $request['payment_id']])->update([
-                'payment_method' => 'paypal',
-                'is_paid' => 1,
-                'transaction_id' => $response->id,
-            ]);
+        $capturedUnit = $response->purchase_units[0] ?? null;
+        $capturedAmount = $capturedUnit->payments->captures[0]->amount->value ?? null;
 
-            $data = $this->payment::where(['id' => $request['payment_id']])->first();
+        // reference_id ties the captured order back to this payment_id (set
+        // server-side at order creation) — without checking it, a captured
+        // order for a *different* payment_id could be replayed here. The
+        // amount check and transaction_id-reuse check close the remaining gap.
+        if ($payment_data
+            && $response->status === 'COMPLETED'
+            && $capturedUnit
+            && $capturedUnit->reference_id === $payment_data->id
+            && $capturedAmount !== null
+            && abs((float)$capturedAmount - (float)$payment_data->payment_amount) < 0.01
+            && !$this->payment::where('transaction_id', $response->id)->exists()
+        ) {
+            $updated = false;
+            DB::transaction(function () use ($request, $response, &$updated) {
+                $locked = $this->payment::where(['id' => $request['payment_id']])->lockForUpdate()->first();
+                if ($locked && !$locked->is_paid) {
+                    $locked->payment_method = 'paypal';
+                    $locked->is_paid = 1;
+                    $locked->transaction_id = $response->id;
+                    $locked->save();
+                    $updated = true;
+                }
+            });
 
-            if (isset($data) && function_exists($data->success_hook)) {
-                call_user_func($data->success_hook, $data);
+            if ($updated) {
+                $data = $this->payment::where(['id' => $request['payment_id']])->first();
+                if (isset($data) && function_exists($data->success_hook)) {
+                    call_user_func($data->success_hook, $data);
+                }
+                return $this->payment_response($data, 'success');
             }
-
-            return $this->payment_response($data, 'success');
         }
         $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
         if (isset($payment_data) && function_exists($payment_data->failure_hook)) {

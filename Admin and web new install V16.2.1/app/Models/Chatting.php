@@ -58,6 +58,8 @@ class Chatting extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'shop_id' => 'integer',
+        'flagged' => 'boolean',
+        'flag_reason' => 'string',
     ];
 
     protected $fillable = [
@@ -79,6 +81,8 @@ class Chatting extends Model
         'notification_receiver',
         'seen_notification',
         'shop_id',
+        'flagged',
+        'flag_reason',
     ];
 
     protected $guarded=[];
