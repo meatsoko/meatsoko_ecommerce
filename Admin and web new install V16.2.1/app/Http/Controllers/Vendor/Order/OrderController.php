@@ -587,6 +587,13 @@ class OrderController extends BaseController
             ]);
         }
 
+        if ($request['order_status'] == 'delivered' && OrderManager::deliveryOtpBlocksDeliveredTransition($order, $request['verification_override_reason'] ?? null)) {
+            return response()->json([
+                'status' => 0,
+                'message' => translate('Please_verify_the_delivery_OTP_with_the_customer_first_or_provide_an_override_reason'),
+            ]);
+        }
+
         if ($order['edit_due_amount'] > 0 && $order?->latestEditHistory?->order_due_payment_method == 'cash_on_delivery' && $order?->latestEditHistory?->order_due_payment_status == 'unpaid' && $order['shipping_responsibility'] == 'inhouse_shipping' && $request['order_status'] == 'delivered') {
             return response()->json([
                 'status' => 0,
@@ -679,7 +686,15 @@ class OrderController extends BaseController
             }
         }
 
-        $orderStatusHistoryData = $orderStatusHistoryService->getOrderHistoryData(orderId: $request['id'], userId: auth('seller')->id(), userType: 'seller', status: $request['order_status']);
+        $orderStatusHistoryData = $orderStatusHistoryService->getOrderHistoryData(
+            orderId: $request['id'],
+            userId: auth('seller')->id(),
+            userType: 'seller',
+            status: $request['order_status'],
+            cause: ($request['order_status'] == 'delivered' && !empty($request['verification_override_reason']))
+                ? 'delivery_otp_overridden: ' . $request['verification_override_reason']
+                : null,
+        );
         $this->orderStatusHistoryRepo->add($orderStatusHistoryData);
         OrderManager::removeOldStatusHistory(orderId: $request['id'], orderStatus: $request['order_status']);
         $transaction = $this->orderTransactionRepo->getFirstWhere(params: ['order_id' => $order['id']]);

@@ -69,7 +69,7 @@
                                 <div class="d-flex flex-column gap-20 w-100">
                                     <div>
                                         <label for="" class="form-label fw-semibold mb-1">
-                                            {{ translate('Vendor_Image')}}  <span class="text-danger">*</span>
+                                            {{ translate('Vendor_Image')}}
                                         </label>
                                         <p class="fs-12 mb-0">
                                             {{ getFileUploadFormats(skip: '.svg,.gif', asBladeMessage: true).' '. translate('Image_size'). ' : '. translate('Max').' '. getFileUploadMaxSize() . 'MB' }}
@@ -221,7 +221,7 @@
                                 <div class="d-flex flex-column gap-20 w-100">
                                     <div>
                                         <label for="" class="form-label fw-semibold mb-1">
-                                            {{ translate('Shop_logo') }} <span class="text-danger">*</span>
+                                            {{ translate('Shop_logo') }}
                                         </label>
                                         <p class="fs-12 mb-0">
                                             {{ getFileUploadFormats(skip: '.svg,.gif', asBladeMessage: true).' '. translate('Image_size'). ' : '. translate('Max').' '. getFileUploadMaxSize() . 'MB' }}
@@ -268,7 +268,7 @@
                                 <div class="d-flex flex-column gap-20 w-100">
                                     <div>
                                         <label for="" class="form-label fw-semibold mb-1">
-                                              {{ translate('Shop_cover_image') }}<span class="text-danger">*</span>
+                                              {{ translate('Shop_cover_image') }}
                                         </label>
                                         <p class="fs-12 mb-0">
                                             {{ getFileUploadFormats(skip: '.svg,.gif', asBladeMessage: true).' '. translate('Image_size'). ' : '. translate('Max').' '. getFileUploadMaxSize() . 'MB' }}

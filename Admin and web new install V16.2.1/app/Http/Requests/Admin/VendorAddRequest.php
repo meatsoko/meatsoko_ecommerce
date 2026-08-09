@@ -33,7 +33,7 @@ class VendorAddRequest extends FormRequest
             'phone' => 'required|unique:sellers|max:20|min:4',
             'email' => 'required|unique:sellers',
             'image' => getRulesStringForImageValidation(
-                rules: ['required'],
+                rules: ['nullable'],
                 skipMimes: ['.svg','.gif'],
                 maxSize: getFileUploadMaxSize(unit: 'kb'),
                 isDisallowed : true
@@ -42,13 +42,13 @@ class VendorAddRequest extends FormRequest
             'shop_name' => 'required',
             'shop_address' => 'required',
             'logo' => getRulesStringForImageValidation(
-                rules: ['required'],
+                rules: ['nullable'],
                 skipMimes: ['.svg','.gif'],
                 maxSize: getFileUploadMaxSize(unit: 'kb'),
                 isDisallowed : true
             ),
             'banner' => getRulesStringForImageValidation(
-                rules: ['required'],
+                rules: ['nullable'],
                 skipMimes: ['.svg','.gif'],
                 maxSize: getFileUploadMaxSize(unit: 'kb'),
                 isDisallowed : true

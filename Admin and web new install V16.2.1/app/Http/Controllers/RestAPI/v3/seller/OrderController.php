@@ -193,6 +193,13 @@ class OrderController extends Controller
             $detail['current_stock'] = $currentStock;
             $detail['current_price'] = $unitPrice;
             $detail['edit_order_payment_histories'] = $paymentInfo;
+
+            // Mirrors the web order-details gating: a vendor shouldn't get the
+            // buyer's raw phone/email from the mobile app either until they've
+            // actually confirmed the order (same rule, different surface).
+            if ($detail->order && $detail->order->order_status == 'pending') {
+                $detail->order->customer?->makeHidden(['phone', 'email']);
+            }
         }
 
         return response()->json($detailsList, 200);
@@ -304,6 +311,10 @@ class OrderController extends Controller
             return response()->json(['success' => 0, 'message' => translate('order is already delivered')], 200);
         }
 
+        if ($request['order_status'] == 'delivered' && OrderManager::deliveryOtpBlocksDeliveredTransition($order, $request['verification_override_reason'] ?? null)) {
+            return response()->json(['success' => 0, 'message' => translate('Please_verify_the_delivery_OTP_with_the_customer_first_or_provide_an_override_reason')], 202);
+        }
+
         event(new OrderStatusEvent(key: $request['order_status'], type: 'customer', order: $order));
         if ($request->order_status == 'canceled') {
             event(new OrderStatusEvent(key: 'canceled', type: 'delivery_man', order: $order));
@@ -381,7 +392,15 @@ class OrderController extends Controller
                 ReferralCustomer::where('user_id', $order?->customer?->id)->update(['delivered_notify' => 1]);
             }
         }
-        self::add_order_status_history($order->id, $seller->id, $request->order_status, 'seller');
+        self::add_order_status_history(
+            $order->id,
+            $seller->id,
+            $request->order_status,
+            'seller',
+            ($request['order_status'] == 'delivered' && !empty($request['verification_override_reason']))
+                ? 'delivery_otp_overridden: ' . $request['verification_override_reason']
+                : null,
+        );
 
         return response()->json(['success' => 1, 'message' => translate('order_status_updated_successfully')], 200);
     }
@@ -594,6 +613,10 @@ class OrderController extends Controller
                     return response()->json(['success' => 0, 'message' => translate('order_is_already_delivered')], 200);
                 }
 
+                if ($request['order_status'] == 'delivered' && OrderManager::deliveryOtpBlocksDeliveredTransition($order, $request['verification_override_reason'] ?? null)) {
+                    return response()->json(['success' => 0, 'message' => translate('Please_verify_the_delivery_OTP_with_the_customer_first_or_provide_an_override_reason')], 202);
+                }
+
                 event(new OrderStatusEvent(key: $request['order_status'], type: 'customer', order: $order));
                 if ($request['order_status'] == 'canceled') {
                     event(new OrderStatusEvent(key: 'canceled', type: 'delivery_man', order: $order));
@@ -663,7 +686,15 @@ class OrderController extends Controller
                     }
                 }
 
-                self::add_order_status_history($order['id'], $seller->id, $request['order_status'], 'seller');
+                self::add_order_status_history(
+                    $order['id'],
+                    $seller->id,
+                    $request['order_status'],
+                    'seller',
+                    ($request['order_status'] == 'delivered' && !empty($request['verification_override_reason']))
+                        ? 'delivery_otp_overridden: ' . $request['verification_override_reason']
+                        : null,
+                );
             }
 
             $order = Order::with(['customer', 'seller.shop', 'deliveryMan'])->find($request['order_id']);

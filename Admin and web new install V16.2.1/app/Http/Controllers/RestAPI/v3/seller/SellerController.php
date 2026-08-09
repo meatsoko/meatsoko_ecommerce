@@ -17,6 +17,7 @@ use App\Models\Review;
 use App\Models\ReviewReply;
 use App\Models\Seller;
 use App\Models\SellerWallet;
+use App\Models\VendorStrike;
 use App\Models\Shop;
 use App\Models\WithdrawalMethod;
 use App\Models\WithdrawRequest;
@@ -402,16 +403,30 @@ class SellerController extends Controller
 
         $wallet = SellerWallet::where('seller_id', $seller['id'])->first();
         if (($wallet->total_earning) >= Convert::usd($request['amount']) && $request['amount'] > 0) {
+            // Mirrors the web vendor dashboard's fast-track: no strikes in the
+            // last 90 days skips manual admin review on this withdrawal.
+            $autoApproved = VendorStrike::where('seller_id', $seller['id'])
+                ->where('created_at', '>=', now()->subDays(90))
+                ->doesntExist();
+
             DB::table('withdraw_requests')->insert([
                 'seller_id' => $seller['id'],
                 'amount' => Convert::usd($request['amount']),
-                'transaction_note' => null,
+                'transaction_note' => $autoApproved ? 'Auto-approved: no recent strikes on this vendor' : null,
                 'withdrawal_method_id' => $request['withdraw_method_id'],
                 'withdrawal_method_fields' => json_encode($data),
-                'approved' => 0,
+                'approved' => $autoApproved ? 1 : 0,
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
+
+            if ($autoApproved) {
+                $wallet->total_earning -= BackEndHelper::currency_to_usd($request['amount']);
+                $wallet->withdrawn += BackEndHelper::currency_to_usd($request['amount']);
+                $wallet->save();
+                return response()->json(translate('Withdraw request has been approved automatically!'), 200);
+            }
+
             $wallet->total_earning -= BackEndHelper::currency_to_usd($request['amount']);
             $wallet->pending_withdraw += BackEndHelper::currency_to_usd($request['amount']);
             $wallet->save();

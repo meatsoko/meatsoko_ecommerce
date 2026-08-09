@@ -42,6 +42,7 @@
                                         <th>{{translate('conversation')}}</th>
                                         <th>{{translate('message')}}</th>
                                         <th>{{translate('reason')}}</th>
+                                        <th>{{translate('action')}}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -72,6 +73,23 @@
                                             <span class="badge bg-soft-danger text-danger">
                                                 {{ $flagReasonLabels[$chat->flag_reason] ?? $chat->flag_reason }}
                                             </span>
+                                        </td>
+                                        <td class="text-nowrap">
+                                            @if($chat->seller_id)
+                                                <form action="{{ route('admin.messages.flagged.issue-strike') }}" method="post" class="d-flex gap-1">
+                                                    @csrf
+                                                    <input type="hidden" name="chatting_id" value="{{ $chat->id }}">
+                                                    <input type="text" name="reason" class="form-control form-control-sm"
+                                                           style="min-width: 160px;"
+                                                           placeholder="{{ translate('strike_reason') }}" required
+                                                           value="{{ $flagReasonLabels[$chat->flag_reason] ?? '' }}">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm text-nowrap">
+                                                        {{ translate('issue_strike') }}
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <span class="text-muted fs-12">{{ translate('n/a') }}</span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

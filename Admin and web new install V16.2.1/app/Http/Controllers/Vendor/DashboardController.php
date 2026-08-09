@@ -8,6 +8,7 @@ use App\Contracts\Repositories\OrderRepositoryInterface;
 use App\Contracts\Repositories\ProductRepositoryInterface;
 use App\Contracts\Repositories\VendorWalletRepositoryInterface;
 use App\Contracts\Repositories\VendorWithdrawMethodInfoRepositoryInterface;
+use App\Contracts\Repositories\VendorStrikeRepositoryInterface;
 use App\Contracts\Repositories\WithdrawalMethodRepositoryInterface;
 use App\Contracts\Repositories\WithdrawRequestRepositoryInterface;
 use App\Contracts\Repositories\RestockProductRepositoryInterface;
@@ -45,8 +46,19 @@ class DashboardController extends BaseController
         private readonly DashboardService                            $dashboardService,
         private readonly RestockProductRepositoryInterface           $restockProductRepo,
         private readonly VendorWithdrawMethodInfoRepositoryInterface $vendorWithdrawMethodInfoRepo,
+        private readonly VendorStrikeRepositoryInterface              $vendorStrikeRepo,
     )
     {
+    }
+
+    /**
+     * Vendors with no strikes in the last 90 days skip manual admin review
+     * on withdrawal requests. See VendorStrike — strikes come from flagged
+     * off-platform contact-sharing attempts reviewed by admin.
+     */
+    private function withdrawalFastTrackEligible(int|string $vendorId): bool
+    {
+        return $this->vendorStrikeRepo->countRecentForSeller((int)$vendorId, 90) === 0;
     }
 
     /**
@@ -190,19 +202,32 @@ class DashboardController extends BaseController
         $withdrawMethod = $this->withdrawalMethodRepo->getFirstWhere(params: ['id' => $request['withdraw_method']]);
         $wallet = $this->vendorWalletRepo->getFirstWhere(params: ['seller_id' => auth('seller')->id()]);
         if (($wallet['total_earning'] ?? 0) >= currencyConverter($request['amount']) && $request['amount'] > 0) {
+            $autoApproved = $this->withdrawalFastTrackEligible($vendorId);
+
             $this->withdrawRequestRepo->add($this->withdrawRequestService->getWithdrawRequestData(
                 withdrawMethod: $withdrawMethod,
                 request: $request,
                 addedBy: 'vendor',
-                vendorId: $vendorId
+                vendorId: $vendorId,
+                autoApproved: $autoApproved,
             ));
-            $totalEarning = $wallet['total_earning'] - currencyConverter($request['amount']);
-            $pendingWithdraw = $wallet['pending_withdraw'] + currencyConverter($request['amount']);
-            $this->vendorWalletRepo->update(
-                id: $wallet['id'],
-                data: $this->vendorWalletService->getVendorWalletData(totalEarning: $totalEarning, pendingWithdraw: $pendingWithdraw)
-            );
-            ToastMagic::success(translate('withdraw_request_has_been_sent'));
+
+            $amount = currencyConverter($request['amount']);
+            if ($autoApproved) {
+                // Same wallet movement as an admin approval — goes straight to
+                // withdrawn rather than sitting in pending_withdraw.
+                $this->vendorWalletRepo->update(id: $wallet['id'], data: [
+                    'total_earning' => $wallet['total_earning'] - $amount,
+                    'withdrawn' => $wallet['withdrawn'] + $amount,
+                ]);
+                ToastMagic::success(translate('withdraw_request_has_been_approved_automatically'));
+            } else {
+                $this->vendorWalletRepo->update(
+                    id: $wallet['id'],
+                    data: $this->vendorWalletService->getVendorWalletData(totalEarning: $wallet['total_earning'] - $amount, pendingWithdraw: $wallet['pending_withdraw'] + $amount)
+                );
+                ToastMagic::success(translate('withdraw_request_has_been_sent'));
+            }
         } else {
             ToastMagic::error(translate('invalid_request') . '!');
         }

@@ -102,6 +102,18 @@ class Seller extends Authenticatable
         return $this->hasMany(Order::class, 'seller_id');
     }
 
+    /**
+     * Orders that actually finished, delivered, on the platform — used for
+     * public-facing trust signals (e.g. the "X orders" shown on a vendor's
+     * shop card) so a vendor can't inflate their ranking with pending,
+     * canceled, or failed orders. Prefer this over orders() anywhere the
+     * count is shown to buyers as a signal of vendor reliability.
+     */
+    public function completedOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'seller_id')->where('order_status', 'delivered');
+    }
+
     public function product(): HasMany
     {
         return $this->hasMany(Product::class, 'user_id')->where(['added_by' => 'seller']);

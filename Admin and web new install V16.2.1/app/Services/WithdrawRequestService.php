@@ -5,17 +5,20 @@ namespace App\Services;
 class WithdrawRequestService
 {
     /**
+     * @param bool $autoApproved Set true when the requesting vendor has no
+     * recent strikes — see VendorStrikeRepositoryInterface::countRecentForSeller().
+     * Skips the manual admin review queue for vendors with a clean record.
      * @return array[seller_id: int|string, amount: float|int, transaction_note: null, withdrawal_method_id: mixed, withdrawal_method_fields: false|string, approved: int, created_at: \Illuminate\Support\Carbon, updated_at: \Illuminate\Support\Carbon]
      */
-    public function getWithdrawRequestData(object $withdrawMethod, object $request, string $addedBy, int|string $vendorId): array
+    public function getWithdrawRequestData(object $withdrawMethod, object $request, string $addedBy, int|string $vendorId, bool $autoApproved = false): array
     {
         return [
             'seller_id' => $addedBy === 'vendor' ? $vendorId : '',
             'amount' => currencyConverter($request['amount']),
-            'transaction_note' => null,
+            'transaction_note' => $autoApproved ? 'Auto-approved: no recent strikes on this vendor' : null,
             'withdrawal_method_id' => $request['withdraw_method'],
             'withdrawal_method_fields' => json_encode($this->getWithdrawMethodFields(request: $request, withdrawMethod: $withdrawMethod)),
-            'approved' => 0,
+            'approved' => $autoApproved ? 1 : 0,
             'request_method_type' => $request['request_method_type'] ?? 'system',
             'created_at' => now(),
             'updated_at' => now()

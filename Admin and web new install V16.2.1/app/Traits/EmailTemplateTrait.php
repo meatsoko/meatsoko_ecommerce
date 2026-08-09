@@ -6,6 +6,7 @@ use App\Mail\SendMail;
 use App\Models\SocialMedia;
 use App\Models\EmailTemplate;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Services\EmailTemplateService;
 
@@ -70,6 +71,7 @@ trait EmailTemplateTrait
                 try {
                     Mail::to($sendMailTo)->send(new SendMail($data, $template, $socialMedia));
                 } catch (Exception $exception) {
+                    Log::error('Failed to send "' . $templateName . '" email to ' . $sendMailTo . ': ' . $exception->getMessage());
                 }
             }
             if (isset($data['attachmentPath'])) {

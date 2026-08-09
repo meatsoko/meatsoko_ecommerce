@@ -648,6 +648,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
         Route::controller(ChattingController::class)->group(function () {
             Route::get('index/{type}', 'index')->name('index');
             Route::get('flagged', 'flagged')->name('flagged');
+            Route::post('flagged/issue-strike', 'issueVendorStrike')->name('flagged.issue-strike');
             Route::get('message', 'getMessageByUser')->name('message');
             Route::post('message', 'addAdminMessage');
         });

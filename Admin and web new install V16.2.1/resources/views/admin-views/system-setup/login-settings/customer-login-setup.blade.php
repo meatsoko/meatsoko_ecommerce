@@ -240,7 +240,7 @@
                         <div class="bg-warning bg-opacity-10 fs-12 px-12 py-10 text-dark rounded d-flex gap-2 align-items-center">
                             <i class="fi fi-sr-bulb text-warning fs-16"></i>
                             <span>
-                                {{ translate('at_least_one_login_option_must_remain_active_for_verification._otherwise_you_will_be_unable_to_select_&_save') }}.
+                                {{ translate('these_options_are_optional._leave_both_off_to_let_customers_sign_up_and_log_in_without_email_or_phone_verification') }}.
                             </span>
                         </div>
                         <div class="p-12 p-sm-20 bg-section rounded">

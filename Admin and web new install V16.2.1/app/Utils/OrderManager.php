@@ -53,6 +53,43 @@ class OrderManager
         return rand(1000, 9999) . '-' . Str::random(5) . '-' . time();
     }
 
+    /**
+     * The "Order Delivery Verification" business setting, the per-order
+     * verification_code/verification_status columns, delivery-man OTP entry,
+     * and the customer-facing display of the code already exist end-to-end —
+     * the one missing piece was that nothing ever checked verification_status
+     * before allowing an order to be marked delivered. This centralizes that
+     * check so every entry point (vendor web/API, delivery-man app, admin)
+     * enforces it the same way instead of each reimplementing it.
+     *
+     * Scoped to orders with an assigned in-house/seller delivery man — POS
+     * (in-person) and orders without a platform-tracked rider have no one to
+     * physically collect the code from the customer.
+     */
+    public static function deliveryOtpRequired(Order $order): bool
+    {
+        return getWebConfig(name: 'order_verification') == 1
+            && $order->order_type == 'default_type'
+            && !is_null($order->delivery_man_id);
+    }
+
+    /**
+     * @param Order $order
+     * @param string|null $overrideReason Vendor/admin manual override — allowed,
+     * but only when a reason is given so it lands in the order status history.
+     * @return bool true if the delivered transition should be blocked
+     */
+    public static function deliveryOtpBlocksDeliveredTransition(Order $order, ?string $overrideReason = null): bool
+    {
+        if (!self::deliveryOtpRequired($order)) {
+            return false;
+        }
+        if ($order->verification_status == 1) {
+            return false;
+        }
+        return blank($overrideReason);
+    }
+
     public static function getOrderSummaryBeforePlaceOrder($cart, $coupon_discount): array
     {
         $coupon_code = session()->has('coupon_code') ? session('coupon_code') : 0;

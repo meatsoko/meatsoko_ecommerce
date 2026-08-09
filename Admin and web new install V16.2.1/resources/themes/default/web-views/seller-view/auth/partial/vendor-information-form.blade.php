@@ -44,7 +44,6 @@
                                         <div class="d-flex flex-column gap-1 upload-img-content text-center">
                                             <h6 class="text-uppercase mb-1 fs-14">
                                                 {{ translate('vendor_image') }}
-                                                <span class="text-danger">*</span>
                                             </h6>
                                             <div class="text-muted text-capitalize fs-12">
                                                 {{ translate('image_ratio') . ' ' . '1:1' }}</div>
@@ -91,7 +90,6 @@
                                     <div class="d-flex flex-column gap-1 upload-img-content text-center">
                                         <h6 class="text-uppercase mb-1 fs-14">
                                             {{ translate('upload_logo') }}
-                                            <span class="text-danger">*</span>
                                         </h6>
                                         <div class="text-muted text-capitalize fs-12">
                                             {{ translate('image_ratio') . ' ' . '1:1' }}</div>
@@ -105,7 +103,7 @@
                                 <div class="d-flex flex-column gap-3 align-items-center">
                                     <div class="upload-file">
                                         <input type="file" class="upload-file__input" name="banner" data-max-size="{{ getFileUploadMaxSize() }}"   accept="{{getFileUploadFormats(skip: '.svg')}}"
-                                            required>
+                                            >
                                         <div class="upload-file__img style--two">
                                             <div class="temp-img-box">
                                                 <div class="d-flex align-items-center flex-column gap-2">
@@ -123,7 +121,6 @@
                                     <div class="d-flex flex-column gap-1 upload-img-content text-center">
                                         <h6 class="text-uppercase mb-1 fs-14">
                                             {{ translate('upload_banner') }}
-                                            <span class="text-danger">*</span>
                                         </h6>
                                         <div class="text-muted text-capitalize fs-12">
                                             {{ translate('image_ratio') . ' ' . '2:1' }}</div>

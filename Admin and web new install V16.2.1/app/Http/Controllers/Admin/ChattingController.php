@@ -7,12 +7,14 @@ use App\Contracts\Repositories\ChattingRepositoryInterface;
 use App\Contracts\Repositories\CustomerRepositoryInterface;
 use App\Contracts\Repositories\DeliveryManRepositoryInterface;
 use App\Contracts\Repositories\ShopRepositoryInterface;
+use App\Contracts\Repositories\VendorStrikeRepositoryInterface;
 use App\Enums\ViewPaths\Admin\Chatting;
 use App\Events\ChattingEvent;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\Admin\ChattingRequest;
 use App\Services\ChattingService;
 use App\Traits\PushNotificationTrait;
+use Devrabiul\ToastMagic\Facades\ToastMagic;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -31,6 +33,7 @@ class ChattingController extends BaseController
      * @param ChattingService $chattingService
      * @param DeliveryManRepositoryInterface $deliveryManRepo
      * @param CustomerRepositoryInterface $customerRepo
+     * @param VendorStrikeRepositoryInterface $vendorStrikeRepo
      */
     public function __construct(
         private readonly ChattingRepositoryInterface    $chattingRepo,
@@ -38,6 +41,7 @@ class ChattingController extends BaseController
         private readonly ChattingService                $chattingService,
         private readonly DeliveryManRepositoryInterface $deliveryManRepo,
         private readonly CustomerRepositoryInterface    $customerRepo,
+        private readonly VendorStrikeRepositoryInterface $vendorStrikeRepo,
     )
     {
     }
@@ -162,6 +166,39 @@ class ChattingController extends BaseController
         return view('admin-views.chatting.flagged', [
             'flaggedMessages' => $flaggedMessages,
         ]);
+    }
+
+    /**
+     * Issues a strike against the vendor on a flagged message, tied back to
+     * that specific Chatting row so there's a record of what was flagged.
+     * Strikes are what the withdrawal flow checks to decide whether a
+     * vendor's payout requests fast-track or need manual review.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function issueVendorStrike(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'chatting_id' => 'required|integer',
+            'reason' => 'required|string|max:255',
+        ]);
+
+        $chatting = $this->chattingRepo->getFirstWhere(params: ['id' => $request['chatting_id']]);
+        if (!$chatting || !$chatting->seller_id) {
+            ToastMagic::error(translate('this_flagged_message_is_not_tied_to_a_vendor'));
+            return back();
+        }
+
+        $this->vendorStrikeRepo->add([
+            'seller_id' => $chatting->seller_id,
+            'chatting_id' => $chatting->id,
+            'reason' => $request['reason'],
+            'issued_by_admin_id' => auth('admin')->id(),
+        ]);
+
+        ToastMagic::success(translate('strike_issued_to_vendor_successfully'));
+        return back();
     }
 
     /**

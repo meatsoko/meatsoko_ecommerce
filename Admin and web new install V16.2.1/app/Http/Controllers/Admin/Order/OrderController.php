@@ -675,6 +675,13 @@ class OrderController extends BaseController
             ]);
         }
 
+        if ($request['order_status'] == 'delivered' && OrderManager::deliveryOtpBlocksDeliveredTransition($order, $request['verification_override_reason'] ?? null)) {
+            return response()->json([
+                'status' => 0,
+                'message' => translate('Please_verify_the_delivery_OTP_with_the_customer_first_or_provide_an_override_reason'),
+            ]);
+        }
+
         if ($request['order_status'] == 'delivered') {
             foreach ($order['details'] as $orderDetail) {
                 $productDetails = json_decode($orderDetail?->product_details ?? '', true);
@@ -740,7 +747,15 @@ class OrderController extends BaseController
             }
         }
 
-        $orderStatusHistoryData = $orderStatusHistoryService->getOrderHistoryData(orderId: $request['id'], userId: 0, userType: 'admin', status: $request['order_status']);
+        $orderStatusHistoryData = $orderStatusHistoryService->getOrderHistoryData(
+            orderId: $request['id'],
+            userId: 0,
+            userType: 'admin',
+            status: $request['order_status'],
+            cause: ($request['order_status'] == 'delivered' && !empty($request['verification_override_reason']))
+                ? 'delivery_otp_overridden: ' . $request['verification_override_reason']
+                : null,
+        );
         $this->orderStatusHistoryRepo->add($orderStatusHistoryData);
         OrderManager::removeOldStatusHistory(orderId: $request['id'], orderStatus: $request['order_status']);
 

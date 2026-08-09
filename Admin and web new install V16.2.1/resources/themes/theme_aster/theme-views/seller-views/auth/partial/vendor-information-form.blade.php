@@ -50,7 +50,6 @@
                                              <div class="d-flex flex-column gap-1 upload-img-content text-center">
                                                  <h6 class="text-uppercase mb-1">
                                                      {{ translate('vendor_image') }}
-                                                     <span class="text-danger">*</span>
                                                  </h6>
                                                  <div class="text-muted text-capitalize">
                                                      {{ translate('image_ratio') . ' ' . '1:1' }}
@@ -104,7 +103,6 @@
                                      <div class="d-flex flex-column gap-1 upload-img-content text-center">
                                          <h6 class="text-uppercase mb-1">
                                              {{ translate('Shop_Image') }}
-                                             <span class="text-danger">*</span>
                                          </h6>
                                          <div class="text-muted text-capitalize">
                                              {{ translate('image_ratio') . ' ' . '1:1' }}
@@ -138,7 +136,6 @@
                                      <div class="d-flex flex-column gap-1 upload-img-content text-center">
                                          <h6 class="text-uppercase mb-1">
                                              {{ translate('Shop_Banner') }}
-                                             <span class="text-danger">*</span>
                                          </h6>
                                          <div class="text-muted text-capitalize">
                                              {{ translate('image_ratio') . ' ' . '2:1' }}

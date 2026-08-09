@@ -862,7 +862,7 @@ a {
 }
 
 .page-footer {
-    background: #183f56;
+    background: var(--web-primary);
 }
 
 .page-footer hr {
@@ -1277,6 +1277,24 @@ a {
     box-shadow: 0 1px 7px 0 rgba(0, 0, 0, 0.05);
 }
 
+.navbar-sticky.bg-light,
+.topbar.bg-light {
+    background-color: var(--web-primary) !important;
+}
+
+.topbar.bg-light .topbar-link,
+.topbar.bg-light .topbar-text {
+    color: #fff !important;
+}
+
+.topbar.bg-light .text-primary {
+    color: #fff !important;
+}
+
+.navbar-sticky.bg-light .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='%23fff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
 .close {
     margin: -20px -10px -1rem auto !important;
 }
@@ -1299,7 +1317,7 @@ a {
 
 .footer-web-logo a img {
     width: 100%;
-    height: 46px;
+    height: 72px;
     -o-object-fit: contain;
     object-fit: contain;
     -o-object-position: left center;
@@ -11587,37 +11605,34 @@ input[type="checkbox"] {
 }
 
 .system-logo-element {
-    max-height: 60px;
-    max-width: 200px;
+    height: 64px;
+    max-width: 260px;
     padding: 0 !important;
     margin-inline-start: 0;
     margin-inline-end: 0 !important;
 }
 
 .system-logo-element img {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
     object-fit: contain;
-    max-height: 60px;
-    aspect-ratio: 4.5 / 2;
 }
 
 @media screen and (max-width: 575px) {
     .system-logo-element {
+        height: 46px;
         margin-inline-start: 0;
         margin-inline-end: 0 !important;
-    }
-    .system-logo-element img {
-        max-height: 40px;
     }
 }
 
 @media (max-width: 767px) {
     .navbar-light .navbar-brand,
     .system-logo-element {
+        height: 46px;
         margin-inline-start: 0;
         margin-inline-end: 0 !important;
-    }
-    .system-logo-element img {
-        max-height: 40px;
     }
 }
 

@@ -27,18 +27,18 @@ class SellerRegistrationRequest extends FormRequest
             'phone' => 'required|unique:sellers,phone',
             'password' => 'required|min:8',
             'image' => getRulesStringForImageValidation(
-                rules: ['required'],
+                rules: ['nullable'],
                 skipMimes: ['.svg', '.gif'],
                 maxSize: $maxFileSize,
                 isDisallowed: true),
             'logo' =>  getRulesStringForImageValidation(
-                rules: ['required'],
+                rules: ['nullable'],
                 skipMimes: ['.svg', '.gif'],
                 maxSize: $maxFileSize,
                 isDisallowed: true
             ),
             'banner' => getRulesStringForImageValidation(
-                rules: ['required'],
+                rules: ['nullable'],
                 skipMimes: ['.svg'],
                 maxSize: $maxFileSize,
                 isDisallowed: true

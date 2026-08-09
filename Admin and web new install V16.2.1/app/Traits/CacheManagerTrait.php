@@ -281,7 +281,7 @@ trait CacheManagerTrait
                         $query->active()->with('reviews', function ($query) {
                             $query->active();
                         });
-                    }, 'storage')->with('coupon')->withCount(['orders']);
+                    }, 'storage')->with('coupon')->withCount(['completedOrders as orders_count']);
                 })
                 ->get()
                 ->each(function ($shop) use ($productReviews) {

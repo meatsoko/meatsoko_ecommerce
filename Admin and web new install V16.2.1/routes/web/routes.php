@@ -270,7 +270,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['maintenance_mode', 'guestC
     });
 });
 
-Route::group(['prefix' => 'cart', 'as' => 'cart.', 'namespace' => 'Web'], function () {
+Route::group(['prefix' => 'cart', 'as' => 'cart.', 'namespace' => 'Web', 'middleware' => 'throttle:120,1'], function () {
     Route::controller(CartController::class)->group(function () {
         Route::post('variant_price', 'getVariantPrice')->name('variant_price');
         Route::post('add', 'addToCart')->name('add');
@@ -366,9 +366,13 @@ Route::group(['namespace' => 'Customer', 'prefix' => 'customer', 'as' => 'custom
 
 Route::group(['namespace' => 'Customer', 'prefix' => 'customer', 'as' => 'customer.'], function () {
     Route::controller(PaymentController::class)->group(function () {
-        Route::post('web-payment-request', 'payment')->name('web-payment-request');
-        Route::post('customer-add-fund-request', 'customer_add_to_fund_request')->name('add-fund-request');
-        Route::post('customer-order-edit-pay-amount', 'customerOrderEditPayDueAmount')->name('customer-order-edit-pay-amount');
+        // Order placement itself was previously unthrottled — only the payment
+        // gateway callbacks that come after it were. Rate limiting this endpoint
+        // closes the gap where the checkout/order-creation step could be hit at
+        // unlimited speed regardless of what happens downstream.
+        Route::post('web-payment-request', 'payment')->name('web-payment-request')->middleware('throttle:20,1');
+        Route::post('customer-add-fund-request', 'customer_add_to_fund_request')->name('add-fund-request')->middleware('throttle:20,1');
+        Route::post('customer-order-edit-pay-amount', 'customerOrderEditPayDueAmount')->name('customer-order-edit-pay-amount')->middleware('throttle:20,1');
     });
 });
 

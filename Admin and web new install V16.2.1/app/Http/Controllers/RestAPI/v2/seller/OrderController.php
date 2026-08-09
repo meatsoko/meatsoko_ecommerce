@@ -206,6 +206,10 @@ class OrderController extends Controller
             return response()->json(['success' => 0, 'message' => translate('order is already delivered')], 200);
         }
 
+        if ($request->order_status == 'delivered' && OrderManager::deliveryOtpBlocksDeliveredTransition($order, $request['verification_override_reason'] ?? null)) {
+            return response()->json(['success' => 0, 'message' => translate('Please_verify_the_delivery_OTP_with_the_customer_first_or_provide_an_override_reason')], 202);
+        }
+
         OrderStatusEvent::dispatch($request['order_status'], 'customer', $order);
         if ($request->order_status == 'canceled') {
             OrderStatusEvent::dispatch('canceled', 'delivery_man', $order);
@@ -267,7 +271,15 @@ class OrderController extends Controller
                 ReferralCustomer::where('user_id', $order?->customer?->id)->update(['delivered_notify' => 1]);
             }
         }
-        self::add_order_status_history($order->id, $seller->id, $request->order_status, 'seller');
+        self::add_order_status_history(
+            $order->id,
+            $seller->id,
+            $request->order_status,
+            'seller',
+            ($request->order_status == 'delivered' && !empty($request['verification_override_reason']))
+                ? 'delivery_otp_overridden: ' . $request['verification_override_reason']
+                : null,
+        );
 
         return response()->json(['success' => 1, 'message' => translate('order_status_updated_successfully')], 200);
     }

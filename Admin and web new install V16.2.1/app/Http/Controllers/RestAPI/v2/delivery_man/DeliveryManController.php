@@ -145,6 +145,13 @@ class DeliveryManController extends Controller
             return response()->json(['success' => 0, 'message' => 'order is already delivered.'], 200);
         }
 
+        // This is the endpoint a rider hits to close out a delivery in the field —
+        // the natural place to require they've already collected the OTP from the
+        // customer via verify_order_delivery_otp() before the order can close.
+        if ($request['status'] == 'delivered' && OrderManager::deliveryOtpBlocksDeliveredTransition($order, $request['verification_override_reason'] ?? null)) {
+            return response()->json(['success' => 0, 'message' => translate('Please_verify_the_delivery_OTP_with_the_customer_first_or_provide_an_override_reason')], 202);
+        }
+
         Order::where(['id' => $request['order_id'], 'delivery_man_id' => $deliveryMan['id']])->update([
             'order_status' => $request['status'],
             'cause' => $cause
@@ -226,7 +233,15 @@ class DeliveryManController extends Controller
                 CustomerManager::create_wallet_transaction($referredByUser->id, floatval($refEarningExchangeRate), 'add_fund_by_admin', 'earned_by_referral');
             }
         }
-        self::add_order_status_history($order->id, $deliveryMan['id'], $request['status'], 'delivery_man', $request['cause']);
+        self::add_order_status_history(
+            $order->id,
+            $deliveryMan['id'],
+            $request['status'],
+            'delivery_man',
+            ($request['status'] == 'delivered' && !empty($request['verification_override_reason']))
+                ? 'delivery_otp_overridden: ' . $request['verification_override_reason']
+                : $request['cause'],
+        );
         return response()->json(['message' => 'Order status updated successfully!'], 200);
     }
 

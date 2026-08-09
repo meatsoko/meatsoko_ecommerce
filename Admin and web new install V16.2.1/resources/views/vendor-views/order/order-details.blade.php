@@ -10,6 +10,12 @@
 
 @section('content')
     @php($shippingAddress = $order['shipping_address_data'] ?? null)
+    {{-- Buyer phone/email is only shown once the vendor has actually confirmed the
+         order — not on a merely-pending order — so a vendor can't pull a buyer's
+         contact details before ever committing to fulfilling the order through
+         the platform. Address fields stay visible since fulfillment decisions
+         (in-area or not) may need them even before confirming. --}}
+    @php($buyerContactVisible = $order['order_status'] != 'pending')
     <div class="content container-fluid">
         <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
             <h2 class="fs-20 mb-0 text-capitalize d-flex align-items-center gap-2">
@@ -1099,7 +1105,7 @@
                                     <td class="px-0 py-2 text-nowrap">{{translate('contact')}}</td>
                                     <td class="px-3 py-2">:</td>
                                     <td class="px-0 py-2">
-                                        <strong>{{$shippingAddress->phone}}</strong>
+                                        <strong>{{ $buyerContactVisible ? $shippingAddress->phone : translate('hidden_until_order_confirmed') }}</strong>
                                     </td>
                                 </tr>
                                 @if ($order->is_guest && $shippingAddress->email)
@@ -1107,7 +1113,7 @@
                                         <td class="px-0 py-2 text-nowrap">{{translate('email')}}</td>
                                         <td class="px-3 py-2">:</td>
                                         <td class="px-0 py-2">
-                                            <strong>{{$shippingAddress->email}}</strong>
+                                            <strong>{{ $buyerContactVisible ? $shippingAddress->email : translate('hidden_until_order_confirmed') }}</strong>
                                         </td>
                                     </tr>
                                 @endif
@@ -1193,7 +1199,7 @@
                                     <td class="px-0 py-2 text-nowrap">{{translate('contact')}}</td>
                                     <td class="px-3 py-2">:</td>
                                     <td class="px-0 py-2">
-                                        <strong>{{$billing->phone}}</strong>
+                                        <strong>{{ $buyerContactVisible ? $billing->phone : translate('hidden_until_order_confirmed') }}</strong>
                                     </td>
                                 </tr>
                                 @if ($order->is_guest && $billing->email)
@@ -1201,7 +1207,7 @@
                                         <td class="px-0 py-2 text-nowrap">{{translate('email')}}</td>
                                         <td class="px-3 py-2">:</td>
                                         <td class="px-0 py-2">
-                                            <strong>{{$billing->email}}</strong>
+                                            <strong>{{ $buyerContactVisible ? $billing->email : translate('hidden_until_order_confirmed') }}</strong>
                                         </td>
                                     </tr>
                                 @endif
@@ -1265,10 +1271,14 @@
 
                                     @if($order?->customer?->email !== 'walking@customer.com')
                                         <span class="text-dark fs-12"> <span class="fw-bold">{{ $orderCount }}</span> {{translate('orders')}}</span>
-                                        <span
-                                            class="text-dark break-all fs-12"><span
-                                                class="fw-semibold">{{$order->customer['phone']}}</span></span>
-                                        <span class="text-dark break-all fs-12">{{$order->customer['email']}}</span>
+                                        @if($buyerContactVisible)
+                                            <span
+                                                class="text-dark break-all fs-12"><span
+                                                    class="fw-semibold">{{$order->customer['phone']}}</span></span>
+                                            <span class="text-dark break-all fs-12">{{$order->customer['email']}}</span>
+                                        @else
+                                            <span class="text-dark break-all fs-12">{{ translate('hidden_until_order_confirmed') }}</span>
+                                        @endif
                                     @endif
                                 </div>
                             </div>
