@@ -354,6 +354,7 @@ Route::group(['namespace' => 'Customer', 'prefix' => 'customer', 'as' => 'custom
     Route::controller(SystemController::class)->group(function () {
         Route::get('set-payment-method/{name}', 'setPaymentMethod')->name('set-payment-method');
         Route::get('set-shipping-method', 'setShippingMethod')->name('set-shipping-method');
+        Route::post('set-receiving-method', 'setReceivingMethod')->name('set-receiving-method');
         Route::post('choose-shipping-address', 'getChooseShippingAddress')->name('choose-shipping-address');
         Route::post('choose-shipping-address-other', 'getChooseShippingAddressOther')->name('choose-shipping-address-other');
         Route::post('choose-billing-address', 'choose_billing_address')->name('choose-billing-address');

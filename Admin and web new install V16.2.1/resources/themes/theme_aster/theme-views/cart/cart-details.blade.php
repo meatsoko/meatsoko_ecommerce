@@ -99,7 +99,7 @@
                                                     </span>
                                                     @endif
                                                 </div>
-                                                @if($physical_product && $shippingMethod=='sellerwise_shipping' && $shipping_type == 'order_wise')
+                                                @if($physical_product && $shippingMethod=='sellerwise_shipping' && $shipping_type == 'order_wise' && session('receiving_method', 'delivery') !== 'self_pickup')
                                                     @php
                                                         $choosen_shipping=CartShipping::where(['cart_group_id'=>$cartItem['cart_group_id']])->first()
                                                     @endphp
@@ -514,7 +514,47 @@
                             </div>
                         @endforeach
 
-                        @if($shippingMethod=='inhouse_shipping')
+                        <?php
+                        $cartHasPhysicalProduct = false;
+                        foreach ($cart as $group_key => $group) {
+                            foreach ($group as $row) {
+                                if ($row->product_type == 'physical' && $row->is_checked) {
+                                    $cartHasPhysicalProduct = true;
+                                }
+                            }
+                        }
+                        ?>
+
+                        @if($cartHasPhysicalProduct)
+                            <div class="border border-primary-light bg-white rounded p-3 mb-3">
+                                <p class="fw-bold mb-2 fs-14">{{ translate('how_would_you_like_to_receive_your_order?') }}</p>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input receiving-method-radio" type="radio"
+                                               name="receiving_method" id="receiving-method-delivery" value="delivery"
+                                            {{ session('receiving_method', 'delivery') !== 'self_pickup' ? 'checked' : '' }}>
+                                        <label class="form-check-label cursor-pointer" for="receiving-method-delivery">{{ translate('home_delivery') }}</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input receiving-method-radio" type="radio"
+                                               name="receiving_method" id="receiving-method-pickup" value="self_pickup"
+                                            {{ session('receiving_method', 'delivery') === 'self_pickup' ? 'checked' : '' }}>
+                                        <label class="form-check-label cursor-pointer" for="receiving-method-pickup">{{ translate('self_pickup') }}</label>
+                                    </div>
+                                </div>
+                                @if(session('receiving_method', 'delivery') === 'self_pickup')
+                                    <div class="mt-2 fs-13">
+                                        <span class="fw-bold">{{ translate('pickup_location') }}</span>:
+                                        {{ getInHouseShopConfig(key: 'name') }}, {{ getInHouseShopConfig(key: 'address') }}
+                                        @if(getInHouseShopConfig(key: 'contact'))
+                                            ({{ getInHouseShopConfig(key: 'contact') }})
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        @if($shippingMethod=='inhouse_shipping' && session('receiving_method', 'delivery') !== 'self_pickup')
                                 <?php
                                 $physical_product = false;
                                 foreach ($cart as $group_key => $group) {
@@ -583,6 +623,7 @@
             @include('theme-views.partials._order-summery')
         </div>
     </form>
+    <span id="route-customer-set-receiving-method" data-url="{{ route('customer.set-receiving-method') }}"></span>
 </div>
 @push('script')
     <script src="{{ theme_asset('assets/js/cart.js') }}"></script>

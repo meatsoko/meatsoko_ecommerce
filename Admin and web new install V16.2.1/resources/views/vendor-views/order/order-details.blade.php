@@ -1148,6 +1148,19 @@
                                 </tbody>
                             </table>
                         </div>
+                    @elseif(($order['receiving_method'] ?? 'delivery') == 'self_pickup')
+                        <div class="card-body">
+                            <div class="d-flex gap-2 align-items-center mb-2">
+                                <span class="badge badge-soft-success">{{ translate('self_pickup') }}</span>
+                            </div>
+                            <p class="mb-0 fs-13">{{ translate('customer_will_collect_this_order_in_person_from') }}:</p>
+                            <p class="mb-0"><strong>
+                                {{ getInHouseShopConfig(key: 'name') }}, {{ getInHouseShopConfig(key: 'address') }}
+                                @if(getInHouseShopConfig(key: 'contact'))
+                                    ({{ getInHouseShopConfig(key: 'contact') }})
+                                @endif
+                            </strong></p>
+                        </div>
                     @elseif($physicalProduct)
                         <div class="card-body">
                             <div class="media align-items-center">

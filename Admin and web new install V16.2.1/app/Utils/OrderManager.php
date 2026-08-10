@@ -1028,6 +1028,7 @@ class OrderManager
             'is_shipping_free' => $cartData['is_shipping_free'],
             'shipping_method_id' => $cartData['shipping_method_id'],
             'shipping_type' => $cartData['shipping_type'],
+            'receiving_method' => session('receiving_method', 'delivery'),
             'created_at' => now(),
             'updated_at' => now(),
             'order_note' => $orderData['order_note'] ?? session('order_note'),
@@ -2158,7 +2159,7 @@ class OrderManager
                 }
             }
 
-            if ($isPhysicalProductExist) {
+            if ($isPhysicalProductExist && session('receiving_method', 'delivery') !== 'self_pickup') {
                 foreach ($cartList as $cart) {
                     if ($shippingMethod == 'inhouse_shipping') {
                         $adminShipping = ShippingType::where('seller_id', 0)->first();

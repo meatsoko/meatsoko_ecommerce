@@ -41,6 +41,13 @@ class SystemController extends Controller
         return response()->json(['status' => 1]);
     }
 
+    public function setReceivingMethod(Request $request): JsonResponse
+    {
+        $method = $request['method'] == 'self_pickup' ? 'self_pickup' : 'delivery';
+        session()->put('receiving_method', $method);
+        return response()->json(['status' => 1]);
+    }
+
     public static function insertIntoCartShipping($request): void
     {
         $shipping = CartShipping::where(['cart_group_id' => $request['cart_group_id']])->first();

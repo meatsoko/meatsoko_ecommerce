@@ -341,6 +341,10 @@ class WebController extends Controller
             return isset($response['redirect']) ? redirect($response['redirect']) : redirect('/');
         }
 
+        if (session('receiving_method', 'delivery') === 'self_pickup') {
+            return redirect()->route('checkout-payment');
+        }
+
         $countryRestrictStatus = getWebConfig(name: 'delivery_country_restriction');
         $zipRestrictStatus = getWebConfig(name: 'delivery_zip_code_area_restriction');
         $countries = $countryRestrictStatus ? $this->get_delivery_country_array() : COUNTRIES;
@@ -378,7 +382,7 @@ class WebController extends Controller
 
     public function checkout_payment(Request $request): View|RedirectResponse
     {
-        if (!session('address_id') && !session('billing_address_id')) {
+        if (!session('address_id') && !session('billing_address_id') && session('receiving_method', 'delivery') !== 'self_pickup') {
             Toastr::error(translate('Please_update_address_information'));
             return redirect()->route('checkout-details');
         }
@@ -459,7 +463,7 @@ class WebController extends Controller
             $availablePaymentMethod = ['wallet_status'];
         }
 
-        if (session()->has('address_id') && session()->has('billing_address_id')) {
+        if ((session()->has('address_id') && session()->has('billing_address_id')) || session('receiving_method', 'delivery') === 'self_pickup') {
             return view(VIEW_FILE_NAMES['payment_details'], [
                 'cashOnDeliveryBtnShow' => $cashOnDeliveryBtnShow,
                 'cash_on_delivery' => $cashOnDeliveryStatus,
@@ -631,7 +635,7 @@ class WebController extends Controller
             return back()->with('error', 'Something went wrong!');
         }
 
-        if (!session('address_id') && !session('billing_address_id')) {
+        if (!session('address_id') && !session('billing_address_id') && session('receiving_method', 'delivery') !== 'self_pickup') {
             Toastr::error(translate('Please_update_address_information'));
             return redirect()->route('checkout-details');
         }
@@ -727,7 +731,7 @@ class WebController extends Controller
 
     public function checkout_complete_wallet(Request $request): View|RedirectResponse
     {
-        if (!session('address_id') && !session('billing_address_id')) {
+        if (!session('address_id') && !session('billing_address_id') && session('receiving_method', 'delivery') !== 'self_pickup') {
             Toastr::error(translate('Please_update_address_information'));
             return redirect()->route('checkout-details');
         }

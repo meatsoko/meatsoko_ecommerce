@@ -79,9 +79,9 @@ class AppServiceProvider extends ServiceProvider
         if (!App::runningInConsole()) {
             Paginator::useBootstrap();
 
-            Config::set('addon_admin_routes', $this->getAddonAdminRoutes());
-            Config::set('get_payment_publish_status', $this->getPaymentPublishStatus());
-            Config::set('get_theme_routes', $this->getThemeRoutesArray());
+            Config::set('addon_admin_routes', Cache::remember(CACHE_ADDON_ADMIN_ROUTES, CACHE_FOR_3_HOURS, fn() => $this->getAddonAdminRoutes()));
+            Config::set('get_payment_publish_status', Cache::remember(CACHE_PAYMENT_PUBLISH_STATUS, CACHE_FOR_3_HOURS, fn() => $this->getPaymentPublishStatus()));
+            Config::set('get_theme_routes', Cache::remember(CACHE_THEME_ROUTES . theme_root_path(), CACHE_FOR_3_HOURS, fn() => $this->getThemeRoutesArray()));
 
             try {
                 $hasBusinessSettings = Cache::remember('_schema_has_business_settings', 21600, fn() => Schema::hasTable('business_settings'));
@@ -93,6 +93,7 @@ class AppServiceProvider extends ServiceProvider
                     $this->cacheInHouseShopInTemporaryStatus();
 
                     $web = $this->cacheBusinessSettingsTable();
+                    $businessPages = $this->cacheBusinessPagesTable();
 
                     $firebaseOTPVerification = getWebConfig(name: 'firebase_otp_verification');
                     $firebaseOTPVerificationStatus = (int)($firebaseOTPVerification && $firebaseOTPVerification['status'] && $firebaseOTPVerification['web_api_key']);
@@ -129,30 +130,32 @@ class AppServiceProvider extends ServiceProvider
                         'firebase_otp_verification' => $firebaseOTPVerification,
                         'firebase_otp_verification_status' => $firebaseOTPVerificationStatus,
                         'meta_title' => getWebConfig(name: 'company_name') . ' ' . translate('Online_Shopping') . ' | ' . getWebConfig(name: 'company_name') . ' ' . translate('ecommerce'),
-                        'meta_description' => substr(strip_tags(str_replace('&nbsp;', ' ', (BusinessPage::where('slug', 'about-us')->first()?->description ?? ''))), 0, 160),
+                        'meta_description' => substr(strip_tags(str_replace('&nbsp;', ' ', ($businessPages->firstWhere('slug', 'about-us')?->description ?? ''))), 0, 160),
                     ];
 
                     if ((!Request::is('admin') && !Request::is('admin/*') && !Request::is('seller/*') && !Request::is('vendor/*')) || Request::is('vendor/auth/registration/*')) {
                         $userId = Auth::guard('customer')->user() ? Auth::guard('customer')->id() : 0;
                         $flashDeal = ProductManager::getPriorityWiseFlashDealsProductsQuery(userId: $userId);
 
-                        $shops = Shop::whereHas('seller', function ($query) {
-                            return $query->approved();
-                        })->take(9)->get();
+                        $shops = Cache::remember(CACHE_FOOTER_SHOPS_LIST, CACHE_FOR_3_HOURS, function () {
+                            return Shop::whereHas('seller', function ($query) {
+                                return $query->approved();
+                            })->take(9)->get();
+                        });
 
                         $recaptcha = getWebConfig(name: 'recaptcha');
                         $paymentGatewayPublishedStatus = config('get_payment_publish_status') ?? 0;
 
-                        $paymentGatewaysQuery = Setting::whereIn('settings_type', ['payment_config'])->where('is_active', 1);
-                        if ($paymentGatewayPublishedStatus == 1) {
-                            $paymentsGatewaysList = $paymentGatewaysQuery->select('key_name', 'additional_data')->get();
-                        } else {
-                            $paymentsGatewaysList = $paymentGatewaysQuery->whereIn('key_name', GlobalConstant::DEFAULT_PAYMENT_GATEWAYS)->select('key_name', 'additional_data')->get();
-                        }
+                        $paymentsGatewaysList = Cache::remember(CACHE_HEADER_PAYMENT_GATEWAYS_LIST . '_' . $paymentGatewayPublishedStatus, CACHE_FOR_3_HOURS, function () use ($paymentGatewayPublishedStatus) {
+                            $paymentGatewaysQuery = Setting::whereIn('settings_type', ['payment_config'])->where('is_active', 1);
+                            if ($paymentGatewayPublishedStatus == 1) {
+                                return $paymentGatewaysQuery->select('key_name', 'additional_data')->get();
+                            }
+                            return $paymentGatewaysQuery->whereIn('key_name', GlobalConstant::DEFAULT_PAYMENT_GATEWAYS)->select('key_name', 'additional_data')->get();
+                        });
 
-                        $customerLoginOptions = LoginSetup::where(['key' => 'login_options'])->first()?->value ?? '';
-                        $customerSocialLoginOptions = LoginSetup::where(['key' => 'social_media_for_login'])->first()?->value ?? '';
-                        $customerSocialLoginOptions = json_decode($customerSocialLoginOptions, true) ?? [];
+                        $customerLoginOptions = getLoginConfig('login_options');
+                        $customerSocialLoginOptions = getLoginConfig('social_media_for_login') ?? [];
                         $socialLoginConfigStatus = $this->checkCustomerSocialMediaLoginAbility();
 
                         foreach ($customerSocialLoginOptions as $socialKey => $socialLoginService) {
@@ -178,11 +181,11 @@ class AppServiceProvider extends ServiceProvider
                             'cookie_setting' => Helpers::get_settings($web, 'cookie_setting'),
                             'announcement' => getWebConfig(name: 'announcement'),
                             'currency_model' => getWebConfig(name: 'currency_model'),
-                            'currencies' => Currency::where(['status' => 1])->get(),
+                            'currencies' => $this->cacheCurrencyTable()->where('status', 1)->values(),
                             'main_categories' => $this->cacheMainCategoriesList(),
                             'priority_wise_brands' => $this->cachePriorityWiseBrandList(),
                             'business_mode' => getWebConfig(name: 'business_mode'),
-                            'social_media' => SocialMedia::where('active_status', 1)->get(),
+                            'social_media' => Cache::remember(CACHE_ACTIVE_SOCIAL_MEDIA_LIST, CACHE_FOR_3_HOURS, fn() => SocialMedia::where('active_status', 1)->get()),
                             'ios' => getWebConfig(name: 'download_app_apple_store'),
                             'android' => getWebConfig(name: 'download_app_google_store'),
                             'refund_policy' => getWebConfig(name: 'refund-policy'),
@@ -201,14 +204,14 @@ class AppServiceProvider extends ServiceProvider
                             'header_banner' => $this->cacheBannerTable(bannerType: 'Header Banner'),
                             'payments_list' => $paymentsGatewaysList, // Fashion_theme
                             'ref_earning_status' => getWebConfig('ref_earning_status'),
-                            'customer_login_options' => json_decode($customerLoginOptions, true),
+                            'customer_login_options' => $customerLoginOptions,
                             'customer_social_login_options' => $customerSocialLoginOptions,
                             'customer_phone_verification' => getLoginConfig(key: 'phone_verification'),
                             'customer_email_verification' => getLoginConfig(key: 'email_verification'),
                             'default_meta_content' => $this->cacheRobotsMetaContent(page: 'default'),
                             'analytic_scripts' => $this->cacheActiveAnalyticScript(),
                             'clearance_sale_product_count' => $this->cacheClearanceSaleProductsCount(),
-                            'business_pages' => $this->cacheBusinessPagesTable(),
+                            'business_pages' => $businessPages,
                         ];
 
                         if (theme_root_path() == "theme_fashion") {

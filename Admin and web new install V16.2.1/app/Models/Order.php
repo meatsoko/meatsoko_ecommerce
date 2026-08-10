@@ -128,6 +128,7 @@ class Order extends Model
         'delivery_type',
         'delivery_service_name',
         'third_party_delivery_tracking_id',
+        'receiving_method',
         'edited_status',
         'updated_at'
     ];
@@ -186,6 +187,7 @@ class Order extends Model
         'delivery_type' => 'string',
         'delivery_service_name' => 'string',
         'third_party_delivery_tracking_id' => 'string',
+        'receiving_method' => 'string',
         'edited_status' => 'integer'
     ];
 

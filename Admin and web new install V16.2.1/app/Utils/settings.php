@@ -392,6 +392,12 @@ if (!function_exists('cacheRemoveByType')) {
             Cache::forget(CACHE_BUSINESS_SETTINGS_TABLE);
             Cache::forget(CACHE_FOR_IN_HOUSE_SHIPPING_TYPE);
             Cache::forget(CACHE_FOR_ANALYTIC_SCRIPT_ACTIVE_LIST);
+            Cache::forget(CACHE_ADDON_ADMIN_ROUTES);
+            Cache::forget(CACHE_PAYMENT_PUBLISH_STATUS);
+            Cache::forget(CACHE_FOOTER_SHOPS_LIST);
+            Cache::forget(CACHE_ACTIVE_SOCIAL_MEDIA_LIST);
+            Cache::forget(CACHE_HEADER_PAYMENT_GATEWAYS_LIST . '_0');
+            Cache::forget(CACHE_HEADER_PAYMENT_GATEWAYS_LIST . '_1');
             cacheRemoveByType(type: 'products');
         } else if ($type == 'business_pages') {
             Cache::forget(CACHE_FOR_BUSINESS_PAGES_LIST);

@@ -125,7 +125,7 @@ $admin_shipping = \App\Models\ShippingType::where('seller_id', 0)->first();
 
                                 @php($chosenShipping=\App\Models\CartShipping::where(['cart_group_id'=>$cartItem['cart_group_id']])->first())
                                 <div class=" bg-white select-method-border rounded">
-                                    @if($isPhysicalProductExist && $shippingMethod=='sellerwise_shipping' && $shipping_type == 'order_wise')
+                                    @if($isPhysicalProductExist && $shippingMethod=='sellerwise_shipping' && $shipping_type == 'order_wise' && session('receiving_method', 'delivery') !== 'self_pickup')
                                         @if(isset($chosenShipping)==false)
                                             @php($chosenShipping['shipping_method_id']=0)
                                         @endif
@@ -476,7 +476,7 @@ $admin_shipping = \App\Models\ShippingType::where('seller_id', 0)->first();
                             @endif
 
                             <div class=" bg-white select-method-border rounded">
-                                @if($isPhysicalProductExist && $shippingMethod=='sellerwise_shipping' && $shipping_type == 'order_wise')
+                                @if($isPhysicalProductExist && $shippingMethod=='sellerwise_shipping' && $shipping_type == 'order_wise' && session('receiving_method', 'delivery') !== 'self_pickup')
                                     @php($chosenShipping=\App\Models\CartShipping::where(['cart_group_id'=>$cartItem['cart_group_id']])->first())
                                     @if(isset($chosenShipping)==false)
                                         @php($chosenShipping['shipping_method_id']=0)
@@ -684,7 +684,49 @@ $admin_shipping = \App\Models\ShippingType::where('seller_id', 0)->first();
         @endforeach
 
 
-        @if($shippingMethod=='inhouse_shipping')
+        <?php
+        $cartHasPhysicalProduct = false;
+        foreach ($cart as $group_key => $group) {
+            foreach ($group as $row) {
+                if ($row->product_type == 'physical' && $row->is_checked) {
+                    $cartHasPhysicalProduct = true;
+                }
+            }
+        }
+        ?>
+
+        @if($cartHasPhysicalProduct)
+            <div class="px-3 px-md-0 mb-3">
+                <div class="bg-white select-method-border rounded p-3">
+                    <p class="font-weight-bold mb-2 fs-14">{{ translate('how_would_you_like_to_receive_your_order?') }}</p>
+                    <div class="d-flex flex-wrap gap-15">
+                        <div class="form-check">
+                            <input class="form-check-input receiving-method-radio" type="radio"
+                                   name="receiving_method" id="receiving-method-delivery" value="delivery"
+                                {{ session('receiving_method', 'delivery') !== 'self_pickup' ? 'checked' : '' }}>
+                            <label class="form-check-label cursor-pointer" for="receiving-method-delivery">{{ translate('home_delivery') }}</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input receiving-method-radio" type="radio"
+                                   name="receiving_method" id="receiving-method-pickup" value="self_pickup"
+                                {{ session('receiving_method', 'delivery') === 'self_pickup' ? 'checked' : '' }}>
+                            <label class="form-check-label cursor-pointer" for="receiving-method-pickup">{{ translate('self_pickup') }}</label>
+                        </div>
+                    </div>
+                    @if(session('receiving_method', 'delivery') === 'self_pickup')
+                        <div class="mt-2 fs-13">
+                            <span class="font-weight-bold">{{ translate('pickup_location') }}</span>:
+                            {{ getInHouseShopConfig(key: 'name') }}, {{ getInHouseShopConfig(key: 'address') }}
+                            @if(getInHouseShopConfig(key: 'contact'))
+                                ({{ getInHouseShopConfig(key: 'contact') }})
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
+
+        @if($shippingMethod=='inhouse_shipping' && session('receiving_method', 'delivery') !== 'self_pickup')
                 <?php
                 $isPhysicalProductExist = false;
                 foreach ($cart as $group_key => $group) {
@@ -764,6 +806,7 @@ $admin_shipping = \App\Models\ShippingType::where('seller_id', 0)->first();
     @include('web-views.partials._order-summary')
 
     <span id="route-customer-set-shipping-method" data-url="{{ url('/customer/set-shipping-method') }}"></span>
+    <span id="route-customer-set-receiving-method" data-url="{{ route('customer.set-receiving-method') }}"></span>
     <span id="route-action-checkout-function" data-route="shop-cart"></span>
 </div>
 

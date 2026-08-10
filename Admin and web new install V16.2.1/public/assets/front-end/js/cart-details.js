@@ -174,3 +174,28 @@ function setShippingIdFunctionCartDetails() {
 }
 
 setShippingIdFunctionCartDetails();
+
+function setReceivingMethodFunction() {
+    $('.receiving-method-radio').on('change', function () {
+        let method = $(this).val();
+        $.post({
+            url: $('#route-customer-set-receiving-method').data('url'),
+            dataType: 'json',
+            data: {
+                _token: $('meta[name="_token"]').attr('content'),
+                method: method
+            },
+            beforeSend: function () {
+                $('#loading').addClass('d-grid');
+            },
+            success: function () {
+                location.reload();
+            },
+            complete: function () {
+                $('#loading').removeClass('d-grid');
+            },
+        });
+    });
+}
+
+setReceivingMethodFunction();
