@@ -211,6 +211,7 @@ class DeliveryManController extends Controller
 
         OrderManager::getStockUpdateOnOrderStatusChange($order, $request['status']);
         OrderManager::generateReferBonusForFirstOrder(orderId: $order['id']);
+        OrderManager::generateAffiliateCommission(orderId: $order['id']);
 
         if ($request['status'] == 'delivered' && $order['seller_id'] != null) {
             OrderManager::getWalletManageOnOrderStatusChange($order, 'delivery man');

@@ -3,6 +3,9 @@
 namespace App\Utils;
 
 use App\Events\OrderEditDuePaymentEvent;
+use App\Models\Affiliate;
+use App\Models\AffiliateCommission;
+use App\Models\AffiliateWallet;
 use App\Models\OrderDetailsRewards;
 use App\Models\OrderEditHistory;
 use App\Models\OrderStatusHistory;
@@ -812,6 +815,64 @@ class OrderManager
         }
     }
 
+    /**
+     * Credits the affiliate attributed to this order (see
+     * resolveAffiliateIdForOrder()) — called from the same delivered-status
+     * entry points as generateReferBonusForFirstOrder(), and just as strict
+     * about only paying out on an actually-delivered order. Unlike the
+     * customer referral bonus this pays on every commissionable order, not
+     * just the buyer's first — an affiliate is being paid for driving sales,
+     * not for a one-time signup bonus.
+     */
+    public static function generateAffiliateCommission(int|string $orderId): void
+    {
+        $order = Order::find($orderId);
+        if (!$order || !$order->affiliate_id || $order->order_status !== 'delivered') {
+            return;
+        }
+
+        if (getWebConfig(name: 'affiliate_program_status') != 1) {
+            return;
+        }
+
+        $rate = (float)(getWebConfig(name: 'affiliate_commission_rate') ?? 0);
+        if ($rate <= 0) {
+            return;
+        }
+
+        // order_id is unique on affiliate_commissions — this existence check
+        // avoids the unnecessary work, the unique constraint is the actual
+        // guarantee against double-crediting if this ever runs twice.
+        if (AffiliateCommission::where('order_id', $order->id)->exists()) {
+            return;
+        }
+
+        $baseAmount = (float)$order->order_amount - (float)$order->shipping_cost;
+        $commissionAmount = round(($baseAmount * $rate) / 100, 2);
+        if ($commissionAmount <= 0) {
+            return;
+        }
+
+        try {
+            AffiliateCommission::create([
+                'affiliate_id' => $order->affiliate_id,
+                'order_id' => $order->id,
+                'order_amount' => $baseAmount,
+                'commission_rate' => $rate,
+                'amount' => $commissionAmount,
+            ]);
+        } catch (\Illuminate\Database\QueryException $exception) {
+            // Unique constraint hit — another call already credited this order.
+            return;
+        }
+
+        $wallet = AffiliateWallet::firstOrCreate(
+            ['affiliate_id' => $order->affiliate_id],
+            ['total_earning' => 0, 'pending_withdraw' => 0, 'withdrawn' => 0]
+        );
+        $wallet->increment('total_earning', $commissionAmount);
+    }
+
     public static function getVendorWiseCartList(array|object|null $data = []): array
     {
         $cartListQuery = CartManager::getCartListQuery(type: 'checked');
@@ -995,6 +1056,7 @@ class OrderManager
             'is_guest' => $customerData['is_guest'],
             'seller_id' => $cartData['seller_id'],
             'seller_is' => $cartData['seller_is'],
+            'affiliate_id' => $orderData['affiliate_id'] ?? null,
             'customer_type' => 'customer',
             'payment_status' => $orderData['payment_status'],
             'order_status' => $orderData['order_status'],
@@ -1247,6 +1309,37 @@ class OrderManager
         ]);
     }
 
+    /**
+     * Reads the 30-day attribution cookie CaptureAffiliateReferral sets and
+     * resolves it to an affiliate to credit for this order — null if there's
+     * no cookie, the code doesn't match an approved affiliate, or the buyer
+     * IS the affiliate (self-referral guard: matched by email/phone against
+     * the affiliate's own contact details, when the buyer is a real account
+     * rather than a guest).
+     */
+    private static function resolveAffiliateIdForOrder(mixed $customer): ?int
+    {
+        $code = request()->cookie('affiliate_ref');
+        if (!$code) {
+            return null;
+        }
+
+        $affiliate = Affiliate::where('affiliate_code', $code)->approved()->first();
+        if (!$affiliate) {
+            return null;
+        }
+
+        if (is_object($customer)) {
+            $sameEmail = !empty($customer->email) && !empty($affiliate->email) && strcasecmp($customer->email, $affiliate->email) === 0;
+            $samePhone = !empty($customer->phone) && !empty($affiliate->phone) && $customer->phone === $affiliate->phone;
+            if ($sameEmail || $samePhone) {
+                return null;
+            }
+        }
+
+        return $affiliate->id;
+    }
+
     public static function generateOrder(object|array|null $data = []): array
     {
         $taxConfig = self::getTaxSystemType();
@@ -1261,6 +1354,7 @@ class OrderManager
             'new_customer_id' => $data['new_customer_id'] ?? null,
             'requestObj' => $data['requestObj'] ?? null,
         ]);
+        $data['affiliate_id'] = self::resolveAffiliateIdForOrder(customer: $getCustomerInfo['customer']);
         $orderGroupId = OrderManager::generateUniqueOrderID();
         $vendorWiseCartList = OrderManager::processOrderGenerateData(data: [
             'coupon_code' => $data['coupon_code'] ?? (session('coupon_code') ?? ''),

@@ -110,6 +110,7 @@ class Order extends Model
         'verification_status',
         'seller_id',
         'seller_is',
+        'affiliate_id',
         'shipping_address_data',
         'delivery_man_id',
         'deliveryman_assigned_at',
@@ -170,6 +171,7 @@ class Order extends Model
         'verification_code' => 'string',
         'verification_status' => 'boolean',
         'seller_id' => 'integer',
+        'affiliate_id' => 'integer',
         'seller_is' => 'string',
         'shipping_address_data' => 'object',
         'delivery_man_id' => 'integer',
@@ -200,6 +202,11 @@ class Order extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(Seller::class);
+    }
+
+    public function affiliate(): BelongsTo
+    {
+        return $this->belongsTo(Affiliate::class);
     }
 
     public function sellerName(): HasOne

@@ -60,6 +60,11 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'affiliate' => [
+            'driver' => 'session',
+            'provider' => 'affiliates',
+        ],
     ],
 
     /*
@@ -93,6 +98,11 @@ return [
         'sellers' => [
             'driver' => 'eloquent',
             'model' => \App\Models\Seller::class,
+        ],
+
+        'affiliates' => [
+            'driver' => 'eloquent',
+            'model' => \App\Models\Affiliate::class,
         ],
 
         // 'users' => [
@@ -133,6 +143,13 @@ return [
 
         'sellers' => [
             'provider' => 'sellers',
+            'table' => 'password_resets',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'affiliates' => [
+            'provider' => 'affiliates',
             'table' => 'password_resets',
             'expire' => 60,
             'throttle' => 60,

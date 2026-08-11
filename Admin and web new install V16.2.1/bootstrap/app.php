@@ -4,6 +4,7 @@ use App\Http\Middleware\ActivationCheckMiddleware;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\APIGuestMiddleware;
 use App\Http\Middleware\APILocalizationMiddleware;
+use App\Http\Middleware\CaptureAffiliateReferral;
 use App\Http\Middleware\CustomerMiddleware;
 use App\Http\Middleware\DatabaseRefreshMiddleware;
 use App\Http\Middleware\DeliveryManAuth;
@@ -60,6 +61,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\Localization::class,
             \App\Http\Middleware\DetectMobile::class,
+            CaptureAffiliateReferral::class,
         ]);
         $middleware->group('api', [
             'throttle:3000,1',

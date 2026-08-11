@@ -103,6 +103,7 @@ if (!function_exists('digital_payment_success')) {
 
             foreach ($orderIds as $orderId) {
                 OrderManager::generateReferBonusForFirstOrder(orderId: $orderId);
+                OrderManager::generateAffiliateCommission(orderId: $orderId);
             }
         }
     }

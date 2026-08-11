@@ -15,6 +15,7 @@ use App\Http\Controllers\SharedController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\POS\POSController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\ChattingController;
 use App\Http\Controllers\Admin\POS\CartController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -651,6 +652,15 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
             Route::post('flagged/issue-strike', 'issueVendorStrike')->name('flagged.issue-strike');
             Route::get('message', 'getMessageByUser')->name('message');
             Route::post('message', 'addAdminMessage');
+        });
+    });
+
+    Route::group(['prefix' => 'affiliate', 'as' => 'affiliate.'], function () {
+        Route::controller(AffiliateController::class)->group(function () {
+            Route::get('list', 'index')->name('list');
+            Route::post('status-update/{id}', 'updateStatus')->name('status-update');
+            Route::get('settings', 'settings')->name('settings');
+            Route::post('settings', 'updateSettings')->name('settings.update');
         });
     });
 

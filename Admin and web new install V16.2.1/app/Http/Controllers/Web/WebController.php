@@ -787,6 +787,7 @@ class WebController extends Controller
 
             foreach ($order_ids as $order_id) {
                 OrderManager::generateReferBonusForFirstOrder(orderId: $order_id);
+                OrderManager::generateAffiliateCommission(orderId: $order_id);
             }
 
             CustomerManager::create_wallet_transaction($user->id, Convert::default($paymentAmount), 'order_place', 'order payment');

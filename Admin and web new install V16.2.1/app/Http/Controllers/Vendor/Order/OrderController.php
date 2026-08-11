@@ -664,6 +664,8 @@ class OrderController extends BaseController
             }
         }
 
+        OrderManager::generateAffiliateCommission(orderId: $order['id']);
+
         if ($order['delivery_man_id'] && $request['order_status'] == 'delivered') {
             $deliverymanWallet = $this->deliveryManWalletRepo->getFirstWhere(params: ['delivery_man_id' => $order['delivery_man_id']]);
             $cashInHand = $order['payment_method'] == 'cash_on_delivery' ? $order['order_amount'] : 0;

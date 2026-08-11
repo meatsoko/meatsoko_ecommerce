@@ -295,6 +295,14 @@ Route::group(['prefix' => 'coupon', 'as' => 'coupon.', 'namespace' => 'Web'], fu
     });
 });
 
+// Clean, shareable affiliate link — just redirects into the normal ?ref=
+// query-param flow so CaptureAffiliateReferral (the only place that actually
+// sets the attribution cookie) handles it the same way as a ?ref= link to
+// any other page.
+Route::get('/ref/{code}', function (string $code) {
+    return redirect('/?ref=' . urlencode($code));
+})->name('affiliate.redirect');
+
 Route::get('authentication-failed', function () {
     $errors = [];
     array_push($errors, ['code' => 'auth-001', 'message' => 'Unauthorized.']);

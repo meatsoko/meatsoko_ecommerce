@@ -385,6 +385,7 @@ class OrderController extends Controller
         }
 
         OrderManager::generateReferBonusForFirstOrder(orderId: $order['id']);
+        OrderManager::generateAffiliateCommission(orderId: $order['id']);
         if ($request['order_status'] == 'delivered') {
             $referredUser = ReferralCustomer::where('user_id', $order?->customer?->id)->first();
             if ($referredUser?->delivered_notify != 1) {

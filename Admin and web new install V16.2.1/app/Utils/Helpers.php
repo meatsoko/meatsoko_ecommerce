@@ -683,6 +683,20 @@ class Helpers
         return $refCode;
     }
 
+    /**
+     * Short on purpose (unlike generate_referer_code) — this ends up in a
+     * shareable marketing link (/ref/{code}), so it needs to be easy to type
+     * and read out loud, not just unique.
+     */
+    public static function generate_affiliate_code(): string
+    {
+        $code = strtoupper(\Illuminate\Support\Str::random(8));
+        if (\App\Models\Affiliate::where('affiliate_code', '=', $code)->exists()) {
+            return Helpers::generate_affiliate_code();
+        }
+        return $code;
+    }
+
     public static function add_fund_to_wallet_bonus($amount)
     {
         $bonuses = AddFundBonusCategories::where('is_active', 1)
