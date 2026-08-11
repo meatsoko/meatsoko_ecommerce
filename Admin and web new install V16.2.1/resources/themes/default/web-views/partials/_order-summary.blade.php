@@ -14,6 +14,7 @@
             @php($cartGroupIds = \App\Utils\CartManager::get_cart_group_ids())
             @php($getShippingCost = \App\Utils\CartManager::get_shipping_cost(type: 'checked'))
             @php($getShippingCostSavedForFreeDelivery = \App\Utils\CartManager::getShippingCostSavedForFreeDelivery(type: 'checked'))
+            @php($getServiceFee = \App\Utils\CartManager::get_service_fee(type: 'checked'))
             @if ($cart->count() > 0)
                 @foreach ($cart as $key => $cartItem)
                     @php($subTotal += $cartItem['price'] * $cartItem['quantity'])
@@ -80,6 +81,14 @@
                     {{ webCurrencyConverter(amount: $totalShippingCost) }}
                 </span>
             </div>
+            @if($getServiceFee > 0)
+                <div class="d-flex justify-content-between">
+                    <span class="cart_title">{{ translate('service_fee') }}</span>
+                    <span class="cart_value">
+                        {{ webCurrencyConverter(amount: $getServiceFee) }}
+                    </span>
+                </div>
+            @endif
             <div class="d-flex justify-content-between">
                 <span class="cart_title">{{ translate('discount_on_product') }}</span>
                 <span class="cart_value">
@@ -102,7 +111,7 @@
                 $coupon_dis = $couponDiscount;
             }
 
-            $totalAmount = $subTotal + ($totalTax['item_tax'] + $totalTax['shipping_cost_tax']) + $totalShippingCost - $coupon_dis - $totalDiscountOnProduct;
+            $totalAmount = $subTotal + ($totalTax['item_tax'] + $totalTax['shipping_cost_tax']) + $totalShippingCost + $getServiceFee - $coupon_dis - $totalDiscountOnProduct;
             $referralAmount = \App\Utils\CustomerManager::getReferralDiscountAmount(
                 user: (auth('customer')->check() ? auth('customer')->user() : null),
                 couponDiscount: $coupon_dis
@@ -227,7 +236,7 @@
     <div class="d-flex justify-content-center align-items-center fs-14 mb-2">
         <div class="product-description-label fw-semibold text-capitalize">{{ translate('total_price') }} :</div>
         &nbsp; <strong class="text-base">
-            {{ webCurrencyConverter(amount: $subTotal + ($totalTax['item_tax'] + $totalTax['shipping_cost_tax']) + $totalShippingCost - $coupon_dis - $totalDiscountOnProduct) }}
+            {{ webCurrencyConverter(amount: $subTotal + ($totalTax['item_tax'] + $totalTax['shipping_cost_tax']) + $totalShippingCost + $getServiceFee - $coupon_dis - $totalDiscountOnProduct) }}
         </strong>
     </div>
 

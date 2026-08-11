@@ -43,6 +43,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $shipping_responsibility
  * @property int $shipping_method_id
  * @property float $shipping_cost
+ * @property float $service_fee
  * @property bool $is_shipping_free
  * @property string $order_group_id
  * @property string $verification_code
@@ -104,6 +105,7 @@ class Order extends Model
         'shipping_responsibility',
         'shipping_method_id',
         'shipping_cost',
+        'service_fee',
         'is_shipping_free',
         'order_group_id',
         'verification_code',
@@ -166,6 +168,7 @@ class Order extends Model
         'shipping_responsibility' => 'string',
         'shipping_method_id' => 'integer',
         'shipping_cost' => 'float',
+        'service_fee' => 'float',
         'is_shipping_free' => 'boolean',
         'order_group_id' => 'string',
         'verification_code' => 'string',

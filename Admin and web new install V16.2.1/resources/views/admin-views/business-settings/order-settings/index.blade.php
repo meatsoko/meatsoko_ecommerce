@@ -251,6 +251,53 @@
                 </div>
             </div>
 
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="mb-3 mb-sm-20">
+                        <h3>{{ translate('Service_Fee') }}</h3>
+                        <p class="mb-0 fs-12">
+                            {{ translate('an_optional_percentage_fee_charged_to_the_customer_at_checkout_paid_to_the_platform_not_the_vendor') }}
+                        </p>
+                    </div>
+                    <div class="p-12 p-sm-20 bg-section rounded">
+                        <div class="row g-4">
+                            @php($serviceFeeStatus = getWebConfig('service_fee_status'))
+                            <div class="col-xl-6 col-md-6">
+                                <label
+                                    class="d-flex justify-content-between align-items-start gap-3 border rounded p-3 user-select-none h-100 bg-white">
+                                    <span>
+                                        <h5 class="fw-medium text-dark fs-14 mb-1">{{ translate('Service_Fee') }}</h5>
+                                        <p class="mb-0 fs-12">
+                                            {{ translate('if_enabled_the_percentage_below_is_added_to_every_order_total_at_checkout') }}
+                                        </p>
+                                    </span>
+                                    <label class="switcher" for="service-fee-status">
+                                        <input
+                                            class="switcher_input"
+                                            type="checkbox" value="1" name="service_fee_status"
+                                            id="service-fee-status"
+                                            {{ $serviceFeeStatus == 1 ? 'checked' : '' }}>
+                                        <span class="switcher_control"></span>
+                                    </label>
+                                </label>
+                            </div>
+                            @php($serviceFeePercentage = getWebConfig('service_fee_percentage'))
+                            <div class="col-xl-6 col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="service_fee_percentage">
+                                        {{ translate('Commission_Rate') }} (%)
+                                    </label>
+                                    <input type="number" step="0.01" class="form-control" min="0" max="100"
+                                           name="service_fee_percentage" id="service_fee_percentage"
+                                           placeholder="{{ translate('ex') . ': ' . '2' }}"
+                                           value="{{ $serviceFeePercentage ?? 0 }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="d-flex justify-content-end trans3 mt-4 action-btn-wrapper-container">
                 <div
                     class="d-flex justify-content-sm-end justify-content-center gap-3 flex-grow-1 flex-grow-sm-0 bg-white action-btn-wrapper trans3">

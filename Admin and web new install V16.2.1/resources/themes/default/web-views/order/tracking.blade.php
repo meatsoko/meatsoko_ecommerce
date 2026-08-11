@@ -251,9 +251,10 @@
 
                     <?php
                     $total_shipping_cost = $orderDetails['shipping_cost'];
+                    $total_service_fee = $orderDetails['service_fee'] ?? 0;
                     $extra_discount = $orderDetails['extra_discount_type'] == 'percent' ? ($sub_total / 100) * $orderDetails['extra_discount'] : $orderDetails['extra_discount'];
                     $coupon_discount = $orderDetails['discount_amount'] ?? 0;
-                    $total_amount = $sub_total + $total_shipping_cost + $orderDetails['total_tax_amount'] - $total_discount_on_product - $coupon_discount - $extra_discount;
+                    $total_amount = $sub_total + $total_shipping_cost + $total_service_fee + $orderDetails['total_tax_amount'] - $total_discount_on_product - $coupon_discount - $extra_discount;
                     ?>
 
                     <div class="light-box rounded-10 p-1">
@@ -264,6 +265,9 @@
                                     <th>{{translate('sub_total')}}</th>
                                     @if ($orderDetails['order_type'] == 'default_type' && $orderDetails['is_shipping_free'] != 1)
                                         <th>{{translate('shipping')}}</th>
+                                    @endif
+                                    @if($total_service_fee > 0)
+                                        <th>{{translate('service_fee')}}</th>
                                     @endif
                                     @if($orderDetails['tax_model'] == 'exclude')
                                         <th>{{translate('tax')}}</th>
@@ -284,6 +288,9 @@
                                     <td>{{ webCurrencyConverter($sub_total) }}</td>
                                     @if ($orderDetails['order_type'] == 'default_type' && $orderDetails['is_shipping_free'] != 1)
                                         <td>{{ webCurrencyConverter($total_shipping_cost) }}</td>
+                                    @endif
+                                    @if($total_service_fee > 0)
+                                        <td>{{ webCurrencyConverter($total_service_fee) }}</td>
                                     @endif
                                     @if($orderDetails['tax_model'] == 'exclude')
                                         <td>{{ webCurrencyConverter($orderDetails['total_tax_amount']) }}</td>

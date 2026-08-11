@@ -178,6 +178,13 @@ class OrderManager
 
         OrderManager::getCheckOrCreateAdminWallet();
 
+        // Unconditional and separate from the commission/shipping branching
+        // below on purpose — the service fee is always the platform's, paid
+        // by the buyer, regardless of COD vs prepaid or shipping model.
+        if ($order->service_fee > 0) {
+            AdminWallet::where('admin_id', 1)->increment('service_fee_earned', $order->service_fee);
+        }
+
         if (!SellerWallet::where('seller_id', $order['seller_id'])->first()) {
             DB::table('seller_wallets')->insert([
                 'seller_id' => $order['seller_id'],
@@ -899,6 +906,7 @@ class OrderManager
                 cartListGroup: $cartListQueryGroup
             );
             $shippingCost = CartManager::get_shipping_cost(groupId: $groupId, type: 'checked');
+            $serviceFee = CartManager::get_service_fee(cartGroupId: $groupId, type: 'checked');
             $freeDelivery = OrderManager::getFreeDeliveryOrderAmountArray($groupId);
             $isShippingFree = 0;
             $freeShippingDiscount = 0;
@@ -941,6 +949,7 @@ class OrderManager
                 'coupon_discount' => $couponInfo['discount'] ?? 0,
                 'discount_type' => $couponInfo['discount'] == 0 ? null : 'coupon_discount',
                 'shipping_cost' => $shippingCost,
+                'service_fee' => $serviceFee,
                 'shipping_address_id' => OrderManager::getOrderAddressId(type: 'shipping_address', id: $data['address_id'] ?? null),
                 'billing_address_id' => OrderManager::getOrderAddressId(type: 'billing_address', id: $data['billing_address_id'] ?? null),
                 'shipping_type' => isset($shippingType?->shipping_type) ? $shippingType->shipping_type : 'order_wise',
@@ -1083,6 +1092,7 @@ class OrderManager
             'billing_address_data' => getWebConfig('billing_input_by_customer') ? ShippingAddress::find($cartData['billing_address_id']) : null,
             'shipping_responsibility' => getWebConfig(name: 'shipping_method'),
             'shipping_cost' => $cartData['shipping_cost'],
+            'service_fee' => $cartData['service_fee'] ?? 0,
             'extra_discount' => $cartData['free_delivery_discount'],
             'extra_discount_type' => $cartData['extra_discount_type'],
             'refer_and_earn_discount' => $cartData['refer_and_earn_discount'],
@@ -2113,6 +2123,7 @@ class OrderManager
             'total_tax' => $totalTax,
             'total_discount_on_product' => $totalDiscountOnProduct,
             'total_shipping_cost' => $totalShippingCost,
+            'service_fee' => $order['service_fee'] ?? 0,
         ];
     }
 
@@ -2381,6 +2392,7 @@ class OrderManager
         }
         $total = $itemPrice - $itemDiscount;
         $shipping = $order['shipping_cost'];
+        $serviceFee = $order['service_fee'] ?? 0;
 
         if ($order['extra_discount_type'] == 'percent') {
             $extraDiscount = (($totalProductPrice - $itemDiscount - (isset($order['discount_amount']) ? $order['discount_amount'] : 0)) / 100) * $order['extra_discount'];
@@ -2398,7 +2410,7 @@ class OrderManager
             $deliveryFeeDiscount = $shipping;
         }
 
-        $totalAmount = ($total + $shipping - $extraDiscount - $couponDiscount - $referAndEarnDiscount + $order['total_tax_amount']);
+        $totalAmount = ($total + $shipping + $serviceFee - $extraDiscount - $couponDiscount - $referAndEarnDiscount + $order['total_tax_amount']);
 
         if ($order['edit_due_amount'] > 0) {
             $editedTotalPaidAmount =  $totalAmount - $order['edit_due_amount'];
@@ -2416,6 +2428,7 @@ class OrderManager
             'taxTotal' => $order['total_tax_amount'],
             'tax_model' => $order['tax_model'],
             'shippingTotal' => $shipping,
+            'serviceFee' => $serviceFee,
             'deliveryFeeDiscount' => $deliveryFeeDiscount,
             'totalItemQuantity' => $totalItemQuantity,
             'totalAmount' => $totalAmount,

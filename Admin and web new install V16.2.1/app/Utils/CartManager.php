@@ -222,6 +222,25 @@ class CartManager
         return ($orderWiseShippingCost + $cartShippingCost);
     }
 
+    /**
+     * A platform-wide service fee, percentage of the group's product subtotal
+     * (never shipping/tax) — same per-cart-group scoping as get_shipping_cost
+     * so it flows through cart_grand_total() the same way. Off (0) unless
+     * an admin has explicitly turned it on and set a rate.
+     */
+    public static function get_service_fee($cartGroupId = null, $type = null): float
+    {
+        if (getWebConfig(name: 'service_fee_status') != 1) {
+            return 0;
+        }
+        $rate = (float)(getWebConfig(name: 'service_fee_percentage') ?? 0);
+        if ($rate <= 0) {
+            return 0;
+        }
+        $subtotal = self::getOnlyCartProductPriceGrandTotal(cartGroupId: $cartGroupId, type: $type);
+        return round(($subtotal * $rate) / 100, 2);
+    }
+
     public static function updateOrderSummaryShippingCost($groupId = null, $type = null): void
     {
         $user = Helpers::getCustomerInformation(request());
@@ -308,9 +327,11 @@ class CartManager
         if ($type == 'checked') {
             $cart = CartManager::getCartListQuery(groupId: $cartGroupId, type: 'checked');
             $shippingCost = CartManager::get_shipping_cost(groupId: $cartGroupId, type: 'checked');
+            $serviceFee = CartManager::get_service_fee(cartGroupId: $cartGroupId, type: 'checked');
         } else {
             $cart = CartManager::getCartListQuery(groupId: $cartGroupId);
             $shippingCost = CartManager::get_shipping_cost(groupId: $cartGroupId);
+            $serviceFee = CartManager::get_service_fee(cartGroupId: $cartGroupId);
         }
         $total = 0;
         if (!empty($cart)) {
@@ -320,6 +341,7 @@ class CartManager
                 $total += $productSubtotal;
             }
             $total += $shippingCost;
+            $total += $serviceFee;
         }
         return $total;
     }
