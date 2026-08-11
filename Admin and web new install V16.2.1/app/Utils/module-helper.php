@@ -687,3 +687,57 @@ if (!function_exists('getModuleAssetsProcessingDirectory')) {
         });
     }
 }
+
+// Ad Placement (Sponsored Product) - Success
+if (!function_exists('ad_placement_payment_success')) {
+    function ad_placement_payment_success($payment_data): void
+    {
+        if (!isset($payment_data) || $payment_data['is_paid'] != 1) {
+            return;
+        }
+
+        $additionalData = json_decode($payment_data['additional_data'], true);
+        $placementId = $additionalData['ad_placement_id'] ?? null;
+        if (!$placementId) {
+            return;
+        }
+
+        DB::transaction(function () use ($placementId, $payment_data) {
+            $placement = \App\Models\AdPlacement::where('id', $placementId)->lockForUpdate()->first();
+            // Idempotency guard — a gateway callback firing twice must not
+            // extend end_at a second time or double-credit the admin wallet.
+            if (!$placement || $placement->status !== 'pending') {
+                return;
+            }
+
+            $placement->status = 'active';
+            $placement->start_at = now();
+            $placement->end_at = now()->addDays($placement->days);
+            $placement->payment_request_id = $payment_data['id'];
+            $placement->save();
+
+            $wallet = \App\Models\AdminWallet::where('admin_id', 1)->first();
+            if ($wallet) {
+                $wallet->increment('ad_spend_earned', $placement->amount_paid);
+            }
+        });
+    }
+}
+
+// Ad Placement (Sponsored Product) - Fail
+if (!function_exists('ad_placement_payment_fail')) {
+    function ad_placement_payment_fail($payment_data): void
+    {
+        $additionalData = json_decode($payment_data['additional_data'] ?? '{}', true);
+        $placementId = $additionalData['ad_placement_id'] ?? null;
+        if (!$placementId) {
+            return;
+        }
+
+        // Must not stay 'pending' — that status is what blocks a vendor from
+        // buying a new placement for the same product (see
+        // AdPlacementRepository::hasActiveOrPendingForProduct()), so a failed
+        // payment has to release that block rather than leave it stuck forever.
+        \App\Models\AdPlacement::where('id', $placementId)->where('status', 'pending')->update(['status' => 'failed']);
+    }
+}

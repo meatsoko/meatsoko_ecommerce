@@ -73,6 +73,29 @@
             @include('auction.web-views.partials._auction-home-slider', ['auctionProducts' => $auctionProducts])
        @endif
 
+        @if (isset($sponsoredProductsList) && $sponsoredProductsList->count() > 0)
+            <div class="container">
+                <div class="__inline-62 section-card-margin">
+                    <div class="d-flex justify-content-between align-items-baseline px-3 pt-3">
+                        <h2 class="feature-product-title font-bold m-0 text-capitalize h5 letter-spacing-0">
+                            {{ translate('sponsored') }}
+                        </h2>
+                    </div>
+                    <div class="feature-product">
+                        <div class="carousel-wrap p-1">
+                            <div class="owl-carousel featured_products_listSlide owl-theme" data-slide-items="{{ count($sponsoredProductsList) }}">
+                                @foreach($sponsoredProductsList as $product)
+                                    <div>
+                                        @include('web-views.partials._feature-product',['product'=>$product, 'decimal_point_settings'=>$decimalPointSettings])
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         @if ($featuredProductsList->count() > 0 )
             <div class="container">
                 <div class="__inline-62 section-card-margin">

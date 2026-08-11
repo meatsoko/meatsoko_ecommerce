@@ -15,6 +15,7 @@ use App\Http\Controllers\SharedController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\POS\POSController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\AdvertisingController;
 use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\ChattingController;
 use App\Http\Controllers\Admin\POS\CartController;
@@ -659,6 +660,14 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
         Route::controller(AffiliateController::class)->group(function () {
             Route::get('list', 'index')->name('list');
             Route::post('status-update/{id}', 'updateStatus')->name('status-update');
+            Route::get('settings', 'settings')->name('settings');
+            Route::post('settings', 'updateSettings')->name('settings.update');
+        });
+    });
+
+    Route::group(['prefix' => 'advertising', 'as' => 'advertising.'], function () {
+        Route::controller(AdvertisingController::class)->group(function () {
+            Route::get('list', 'index')->name('list');
             Route::get('settings', 'settings')->name('settings');
             Route::post('settings', 'updateSettings')->name('settings.update');
         });

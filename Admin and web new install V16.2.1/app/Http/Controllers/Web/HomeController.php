@@ -78,6 +78,7 @@ class HomeController extends Controller
         $featuredProductsList = ProductManager::getPriorityWiseFeaturedProductsQuery(query: $this->product->active()->with(['clearanceSale' => function ($query) {
             return $query->active();
         }]), dataLimit: 12);
+        $sponsoredProductsList = getWebConfig(name: 'ad_placement_status') == 1 ? ProductManager::getSponsoredProductsQuery(dataLimit: 10) : collect();
         $newArrivalProducts = ProductManager::getPriorityWiseNewArrivalProductsQuery(query: $this->product->active()->with(['clearanceSale' => function ($query) {
             return $query->active();
         }]), dataLimit: 8);
@@ -102,7 +103,7 @@ class HomeController extends Controller
 
         return view(VIEW_FILE_NAMES['home'],
             compact(
-                'flashDeal', 'featuredProductsList', 'topRatedProducts', 'bestSellProduct', 'latestProductsList', 'categories', 'brands',
+                'flashDeal', 'featuredProductsList', 'sponsoredProductsList', 'topRatedProducts', 'bestSellProduct', 'latestProductsList', 'categories', 'brands',
                 'dealOfTheDay', 'topVendorsList', 'homeCategories', 'bannerTypeMainBanner', 'bannerTypeMainSectionBanner',
                 'current_date', 'recommendedProduct', 'bannerTypeFooterBanner', 'newArrivalProducts', 'clearanceSaleProducts', 'robotsMetaContentData', 'auctionProducts'
             )

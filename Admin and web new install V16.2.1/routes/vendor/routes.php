@@ -32,6 +32,7 @@ use App\Http\Controllers\Vendor\Shipping\ShippingMethodController;
 use App\Http\Controllers\Vendor\Shipping\ShippingTypeController;
 use App\Http\Controllers\Vendor\ShopController;
 use App\Http\Controllers\Vendor\SystemController;
+use App\Http\Controllers\Vendor\AdvertisingController;
 use App\Http\Controllers\Vendor\WithdrawController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Vendor\Order\OrderController;
@@ -357,6 +358,13 @@ Route::group(['middleware' => ['maintenance_mode', 'actch:admin_panel']], functi
                         Route::get('export', 'exportList')->name('export-withdraw-list');
                         Route::post('render-withdraw-method-infos', 'renderInfosView')->name('render-withdraw-method-infos');
                     });
+                });
+            });
+
+            Route::group(['prefix' => 'advertising', 'as' => 'advertising.'], function () {
+                Route::controller(AdvertisingController::class)->group(function () {
+                    Route::get('index', 'index')->name('index');
+                    Route::post('purchase', 'purchase')->name('purchase');
                 });
             });
 

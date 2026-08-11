@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property float $commission_earned
  * @property float $delivery_charge_earned
  * @property float $service_fee_earned
+ * @property float $ad_spend_earned
  * @property float $pending_amount
  * @property float $total_tax_collected
  *
@@ -34,6 +35,7 @@ class AdminWallet extends Model
         'commission_earned' => 'float',
         'delivery_charge_earned' => 'float',
         'service_fee_earned' => 'float',
+        'ad_spend_earned' => 'float',
         'pending_amount' => 'float',
         'total_tax_collected' => 'float',
     ];
@@ -45,6 +47,7 @@ class AdminWallet extends Model
         'commission_earned',
         'delivery_charge_earned',
         'service_fee_earned',
+        'ad_spend_earned',
         'pending_amount',
         'total_tax_collected',
     ];

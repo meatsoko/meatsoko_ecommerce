@@ -999,6 +999,36 @@ class ProductManager
         return array_unique($colorsMerge);
     }
 
+    /**
+     * Vendor-paid "Sponsored" placements — a separate, additive signal from
+     * the admin-curated featured_product_priority list above, not a rewrite
+     * of it. Ordered most-recently-activated first; only ever pulls rows the
+     * scheduled ads:expire-placements command still considers active() (see
+     * AdPlacement::scopeActive), so an expired placement disappears here on
+     * its own without extra logic.
+     */
+    public static function getSponsoredProductsQuery(int $dataLimit = 10): \Illuminate\Database\Eloquent\Collection
+    {
+        $productIds = \App\Models\AdPlacement::active()
+            ->orderBy('start_at', 'desc')
+            ->limit($dataLimit)
+            ->pluck('product_id');
+
+        if ($productIds->isEmpty()) {
+            return new \Illuminate\Database\Eloquent\Collection();
+        }
+
+        $orderedIds = $productIds->unique()->values();
+
+        return Product::active()
+            ->whereIn('id', $orderedIds)
+            ->withCount(['orderDetails', 'reviews', 'wishList'])
+            ->withAvg('reviews', 'rating')
+            ->get()
+            ->sortBy(fn($product) => $orderedIds->search($product->id))
+            ->values();
+    }
+
     public static function getPriorityWiseFeaturedProductsQuery($query, $dataLimit = 'all', $offset = 1, $appends = null)
     {
         $featuredProductSortBy = getWebConfig(name: 'featured_product_priority');
