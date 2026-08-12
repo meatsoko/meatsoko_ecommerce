@@ -180,6 +180,15 @@ class CartManager
 
     public static function get_shipping_cost($groupId = null, $type = null)
     {
+        // Self-pickup has no delivery to charge for — this is the single
+        // function every shipping-cost consumer (cart totals, order creation,
+        // free-delivery savings) goes through, so zeroing it here is enough;
+        // per-item Cart.shipping_cost stays intact in case the customer
+        // switches back to delivery.
+        if (session('receiving_method', 'delivery') === 'self_pickup') {
+            return 0;
+        }
+
         self::updateOrderSummaryShippingCost($groupId, $type);
         $cartShippingCost = Cart::where(['product_type' => 'physical'])
             ->whereHas('product', function ($query) {

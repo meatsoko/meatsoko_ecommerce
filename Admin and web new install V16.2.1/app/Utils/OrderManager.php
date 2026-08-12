@@ -1515,6 +1515,7 @@ class OrderManager
         session()->forget('coupon_bearer');
         session()->forget('coupon_discount');
         session()->forget('coupon_seller_id');
+        session()->forget('receiving_method');
 
         return $orderPlacedIds;
     }

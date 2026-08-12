@@ -260,6 +260,16 @@ class DashboardController extends BaseController
         $wallet = $this->vendorWalletRepo->getFirstWhere(params: ['seller_id' => auth('seller')->id()]);
         $withdrawRequest = $this->withdrawRequestRepo->getFirstWhere(params: ['id' => $request['withdraw_request_id']]);
 
+        // Only a still-pending request has its amount sitting in pending_withdraw,
+        // which is what the wallet math below assumes. An approved request (including
+        // auto-approved ones, where the amount already moved straight to withdrawn)
+        // must not be editable here — the UI already hides the edit action once
+        // approved == 1, this mirrors that on the server so it can't be bypassed.
+        if ($withdrawRequest && (int)$withdrawRequest['approved'] !== 0) {
+            ToastMagic::error(translate('invalid_request') . '!');
+            return redirect()->back();
+        }
+
         if ($withdrawRequest) {
             $totalEarning = $wallet['total_earning'] + $withdrawRequest['amount'];
             $pendingWithdraw = $wallet['pending_withdraw'] - $withdrawRequest['amount'];

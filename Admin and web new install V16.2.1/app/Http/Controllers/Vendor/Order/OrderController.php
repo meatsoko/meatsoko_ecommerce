@@ -664,6 +664,7 @@ class OrderController extends BaseController
             }
         }
 
+        OrderManager::generateReferBonusForFirstOrder(orderId: $order['id']);
         OrderManager::generateAffiliateCommission(orderId: $order['id']);
 
         if ($order['delivery_man_id'] && $request['order_status'] == 'delivered') {

@@ -148,7 +148,10 @@ class DeliveryManController extends Controller
         // This is the endpoint a rider hits to close out a delivery in the field —
         // the natural place to require they've already collected the OTP from the
         // customer via verify_order_delivery_otp() before the order can close.
-        if ($request['status'] == 'delivered' && OrderManager::deliveryOtpBlocksDeliveredTransition($order, $request['verification_override_reason'] ?? null)) {
+        // The override reason is intentionally never read from this endpoint: it's
+        // meant for a vendor/admin manual override, not for the rider being verified
+        // to waive their own check.
+        if ($request['status'] == 'delivered' && OrderManager::deliveryOtpBlocksDeliveredTransition($order, null)) {
             return response()->json(['success' => 0, 'message' => translate('Please_verify_the_delivery_OTP_with_the_customer_first_or_provide_an_override_reason')], 202);
         }
 

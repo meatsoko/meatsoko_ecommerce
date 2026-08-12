@@ -696,6 +696,9 @@ class OrderController extends Controller
                         ? 'delivery_otp_overridden: ' . $request['verification_override_reason']
                         : null,
                 );
+
+                OrderManager::generateReferBonusForFirstOrder(orderId: $order['id']);
+                OrderManager::generateAffiliateCommission(orderId: $order['id']);
             }
 
             $order = Order::with(['customer', 'seller.shop', 'deliveryMan'])->find($request['order_id']);
