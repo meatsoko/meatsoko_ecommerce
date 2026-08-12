@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('admin_wallets', function (Blueprint $table) {
-            $table->decimal('ad_spend_earned', 40, 20)->default(0)->after('service_fee_earned');
+            $table->decimal('ad_spend_earned', 40, 20)->default(0);
         });
     }
 

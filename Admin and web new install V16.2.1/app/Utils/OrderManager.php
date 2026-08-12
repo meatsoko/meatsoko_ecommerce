@@ -854,7 +854,7 @@ class OrderManager
             return;
         }
 
-        $baseAmount = (float)$order->order_amount - (float)$order->shipping_cost;
+        $baseAmount = (float)$order->order_amount - (float)$order->shipping_cost - (float)$order->service_fee;
         $commissionAmount = round(($baseAmount * $rate) / 100, 2);
         if ($commissionAmount <= 0) {
             return;
@@ -1324,10 +1324,12 @@ class OrderManager
      * resolves it to an affiliate to credit for this order — null if there's
      * no cookie, the code doesn't match an approved affiliate, or the buyer
      * IS the affiliate (self-referral guard: matched by email/phone against
-     * the affiliate's own contact details, when the buyer is a real account
-     * rather than a guest).
+     * the affiliate's own contact details). For guest checkout — where
+     * $customer is the literal string 'offline' rather than a User object —
+     * the same check is run against the order's shipping address instead,
+     * since that's the only place a guest's email/phone is captured.
      */
-    private static function resolveAffiliateIdForOrder(mixed $customer): ?int
+    private static function resolveAffiliateIdForOrder(mixed $customer, mixed $addressId = null): ?int
     {
         $code = request()->cookie('affiliate_ref');
         if (!$code) {
@@ -1340,11 +1342,18 @@ class OrderManager
         }
 
         if (is_object($customer)) {
-            $sameEmail = !empty($customer->email) && !empty($affiliate->email) && strcasecmp($customer->email, $affiliate->email) === 0;
-            $samePhone = !empty($customer->phone) && !empty($affiliate->phone) && $customer->phone === $affiliate->phone;
-            if ($sameEmail || $samePhone) {
-                return null;
-            }
+            $email = $customer->email ?? null;
+            $phone = $customer->phone ?? null;
+        } else {
+            $guestAddress = $addressId ? ShippingAddress::find($addressId) : null;
+            $email = $guestAddress->email ?? null;
+            $phone = $guestAddress->phone ?? null;
+        }
+
+        $sameEmail = !empty($email) && !empty($affiliate->email) && strcasecmp($email, $affiliate->email) === 0;
+        $samePhone = !empty($phone) && !empty($affiliate->phone) && $phone === $affiliate->phone;
+        if ($sameEmail || $samePhone) {
+            return null;
         }
 
         return $affiliate->id;
@@ -1364,7 +1373,7 @@ class OrderManager
             'new_customer_id' => $data['new_customer_id'] ?? null,
             'requestObj' => $data['requestObj'] ?? null,
         ]);
-        $data['affiliate_id'] = self::resolveAffiliateIdForOrder(customer: $getCustomerInfo['customer']);
+        $data['affiliate_id'] = self::resolveAffiliateIdForOrder(customer: $getCustomerInfo['customer'], addressId: $data['address_id'] ?? session('address_id'));
         $orderGroupId = OrderManager::generateUniqueOrderID();
         $vendorWiseCartList = OrderManager::processOrderGenerateData(data: [
             'coupon_code' => $data['coupon_code'] ?? (session('coupon_code') ?? ''),

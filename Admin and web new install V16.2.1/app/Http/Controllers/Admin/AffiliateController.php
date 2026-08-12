@@ -21,7 +21,7 @@ class AffiliateController extends BaseController
     {
     }
 
-    public function index(Request $request): View
+    public function index(?Request $request, ?string $type = null): View
     {
         $affiliates = $this->affiliateRepo->getListWhere(
             orderBy: ['id' => 'DESC'],

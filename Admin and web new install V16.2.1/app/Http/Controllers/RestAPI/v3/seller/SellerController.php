@@ -401,8 +401,15 @@ class SellerController extends Controller
 
         $seller = $request->seller;
 
-        $wallet = SellerWallet::where('seller_id', $seller['id'])->first();
-        if (($wallet->total_earning) >= Convert::usd($request['amount']) && $request['amount'] > 0) {
+        // Locks the wallet row for the duration of the transaction so two
+        // concurrent withdraw requests can't both read the same pre-write
+        // balance and both pass the check below (double-spend).
+        $outcome = DB::transaction(function () use ($request, $seller, $data) {
+            $wallet = SellerWallet::where('seller_id', $seller['id'])->lockForUpdate()->first();
+            if (!$wallet || $wallet->total_earning < Convert::usd($request['amount']) || $request['amount'] <= 0) {
+                return null;
+            }
+
             // Mirrors the web vendor dashboard's fast-track: no strikes in the
             // last 90 days skips manual admin review on this withdrawal.
             $autoApproved = VendorStrike::where('seller_id', $seller['id'])
@@ -420,19 +427,22 @@ class SellerController extends Controller
                 'updated_at' => now()
             ]);
 
-            if ($autoApproved) {
-                $wallet->total_earning -= BackEndHelper::currency_to_usd($request['amount']);
-                $wallet->withdrawn += BackEndHelper::currency_to_usd($request['amount']);
-                $wallet->save();
-                return response()->json(translate('Withdraw request has been approved automatically!'), 200);
-            }
-
             $wallet->total_earning -= BackEndHelper::currency_to_usd($request['amount']);
-            $wallet->pending_withdraw += BackEndHelper::currency_to_usd($request['amount']);
+            if ($autoApproved) {
+                $wallet->withdrawn += BackEndHelper::currency_to_usd($request['amount']);
+            } else {
+                $wallet->pending_withdraw += BackEndHelper::currency_to_usd($request['amount']);
+            }
             $wallet->save();
-            return response()->json(translate('Withdraw request sent successfully!'), 200);
+
+            return $autoApproved;
+        });
+
+        if ($outcome === null) {
+            return response()->json(['message' => translate('Invalid_withdraw_request')], 403);
         }
-        return response()->json(['message' => translate('Invalid_withdraw_request')], 403);
+
+        return response()->json(translate($outcome ? 'Withdraw request has been approved automatically!' : 'Withdraw request sent successfully!'), 200);
     }
 
 

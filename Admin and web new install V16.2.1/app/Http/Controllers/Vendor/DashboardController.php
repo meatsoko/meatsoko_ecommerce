@@ -16,6 +16,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\Vendor\WithdrawRequest;
 use App\Repositories\BrandRepository;
 use App\Repositories\OrderTransactionRepository;
+use App\Models\SellerWallet;
 use App\Services\DashboardService;
 use App\Services\VendorWalletService;
 use App\Services\WithdrawRequestService;
@@ -28,6 +29,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends BaseController
 {
@@ -200,8 +202,17 @@ class DashboardController extends BaseController
     {
         $vendorId = auth('seller')->id();
         $withdrawMethod = $this->withdrawalMethodRepo->getFirstWhere(params: ['id' => $request['withdraw_method']]);
-        $wallet = $this->vendorWalletRepo->getFirstWhere(params: ['seller_id' => auth('seller')->id()]);
-        if (($wallet['total_earning'] ?? 0) >= currencyConverter($request['amount']) && $request['amount'] > 0) {
+        $amount = currencyConverter($request['amount']);
+
+        // Locks the wallet row for the duration of the transaction so two
+        // concurrent withdraw requests can't both read the same pre-write
+        // balance and both pass the check below (double-spend).
+        $outcome = DB::transaction(function () use ($request, $withdrawMethod, $vendorId, $amount) {
+            $wallet = SellerWallet::where('seller_id', $vendorId)->lockForUpdate()->first();
+            if (!$wallet || $wallet->total_earning < $amount || $request['amount'] <= 0) {
+                return null;
+            }
+
             $autoApproved = $this->withdrawalFastTrackEligible($vendorId);
 
             $this->withdrawRequestRepo->add($this->withdrawRequestService->getWithdrawRequestData(
@@ -212,7 +223,6 @@ class DashboardController extends BaseController
                 autoApproved: $autoApproved,
             ));
 
-            $amount = currencyConverter($request['amount']);
             if ($autoApproved) {
                 // Same wallet movement as an admin approval — goes straight to
                 // withdrawn rather than sitting in pending_withdraw.
@@ -220,16 +230,20 @@ class DashboardController extends BaseController
                     'total_earning' => $wallet['total_earning'] - $amount,
                     'withdrawn' => $wallet['withdrawn'] + $amount,
                 ]);
-                ToastMagic::success(translate('withdraw_request_has_been_approved_automatically'));
             } else {
                 $this->vendorWalletRepo->update(
                     id: $wallet['id'],
                     data: $this->vendorWalletService->getVendorWalletData(totalEarning: $wallet['total_earning'] - $amount, pendingWithdraw: $wallet['pending_withdraw'] + $amount)
                 );
-                ToastMagic::success(translate('withdraw_request_has_been_sent'));
             }
-        } else {
+
+            return $autoApproved;
+        });
+
+        if ($outcome === null) {
             ToastMagic::error(translate('invalid_request') . '!');
+        } else {
+            ToastMagic::success(translate($outcome ? 'withdraw_request_has_been_approved_automatically' : 'withdraw_request_has_been_sent'));
         }
         return redirect()->back();
     }
