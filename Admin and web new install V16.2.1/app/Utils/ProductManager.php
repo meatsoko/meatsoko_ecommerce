@@ -1022,6 +1022,19 @@ class ProductManager
 
         return Product::active()
             ->whereIn('id', $orderedIds)
+            // A paid sponsored slot shouldn't surface something the customer
+            // can't actually buy right now — mirrors the two checks the
+            // featured-products query applies via getSortingProductByTemporaryClose()
+            // and its out_of_stock_product setting, kept unconditional here since
+            // a sponsored placement is a small paid list, not a configurable feed.
+            ->where(function ($query) {
+                $query->where('product_type', 'digital')->orWhere(function ($query) {
+                    $query->where('product_type', 'physical')->where('current_stock', '>', 0);
+                });
+            })
+            ->whereDoesntHave('shop', function ($query) {
+                $query->where('temporary_close', 1)->orWhere('vacation_status', 1);
+            })
             ->withCount(['orderDetails', 'reviews', 'wishList'])
             ->withAvg('reviews', 'rating')
             ->get()

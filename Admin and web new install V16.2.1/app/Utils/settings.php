@@ -394,6 +394,7 @@ if (!function_exists('cacheRemoveByType')) {
             Cache::forget(CACHE_FOR_ANALYTIC_SCRIPT_ACTIVE_LIST);
             Cache::forget(CACHE_ADDON_ADMIN_ROUTES);
             Cache::forget(CACHE_PAYMENT_PUBLISH_STATUS);
+            Cache::forget(CACHE_THEME_ROUTES . theme_root_path());
             Cache::forget(CACHE_FOOTER_SHOPS_LIST);
             Cache::forget(CACHE_ACTIVE_SOCIAL_MEDIA_LIST);
             Cache::forget(CACHE_HEADER_PAYMENT_GATEWAYS_LIST . '_0');

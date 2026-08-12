@@ -16,6 +16,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\DB;
 
 class AdvertisingController extends BaseController
 {
@@ -82,12 +83,6 @@ class AdvertisingController extends BaseController
             return back();
         }
 
-        $maxActiveSlots = (int)(getWebConfig(name: 'ad_placement_max_active_slots') ?? 0);
-        if ($maxActiveSlots > 0 && AdPlacement::active()->count() >= $maxActiveSlots) {
-            ToastMagic::error(translate('all_sponsored_slots_are_currently_taken_please_try_again_later'));
-            return back();
-        }
-
         $pricePerDay = (float)(getWebConfig(name: 'ad_placement_price_per_day') ?? 0);
         $days = (int)$request['days'];
         $amount = round($pricePerDay * $days, 2);
@@ -96,13 +91,37 @@ class AdvertisingController extends BaseController
             return back();
         }
 
-        $placement = $this->adPlacementRepo->add([
-            'seller_id' => $sellerId,
-            'product_id' => $product->id,
-            'days' => $days,
-            'amount_paid' => $amount,
-            'status' => 'pending',
-        ]);
+        $maxActiveSlots = (int)(getWebConfig(name: 'ad_placement_max_active_slots') ?? 0);
+
+        // Locks every active/pending row for the duration of the transaction so
+        // two vendors buying concurrently can't both read the same under-cap
+        // count and both slip through — pending is counted too, since a slot
+        // is reserved the moment a purchase starts, not once payment clears.
+        $placement = DB::transaction(function () use ($sellerId, $product, $days, $amount, $maxActiveSlots) {
+            $slotCount = AdPlacement::whereIn('status', ['active', 'pending'])
+                ->where(function ($query) {
+                    $query->where('status', 'pending')->orWhere('end_at', '>', now());
+                })
+                ->lockForUpdate()
+                ->count();
+
+            if ($maxActiveSlots > 0 && $slotCount >= $maxActiveSlots) {
+                return null;
+            }
+
+            return $this->adPlacementRepo->add([
+                'seller_id' => $sellerId,
+                'product_id' => $product->id,
+                'days' => $days,
+                'amount_paid' => $amount,
+                'status' => 'pending',
+            ]);
+        });
+
+        if (!$placement) {
+            ToastMagic::error(translate('all_sponsored_slots_are_currently_taken_please_try_again_later'));
+            return back();
+        }
 
         $seller = auth('seller')->user();
         $payer = new Payer(

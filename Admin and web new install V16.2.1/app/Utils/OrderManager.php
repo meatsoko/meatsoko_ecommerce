@@ -180,9 +180,24 @@ class OrderManager
 
         // Unconditional and separate from the commission/shipping branching
         // below on purpose — the service fee is always the platform's, paid
-        // by the buyer, regardless of COD vs prepaid or shipping model.
-        if ($order->service_fee > 0) {
+        // by the buyer, regardless of COD vs prepaid or shipping model. Guarded
+        // by a Transaction record (the same mechanism the coupon_discount credit
+        // below uses) so a reverted-then-redelivered order, or this function
+        // running twice for the same order, can't credit it a second time.
+        if ($order->service_fee > 0 && !Transaction::where(['order_id' => $order->id, 'payment_for' => 'service_fee'])->exists()) {
             AdminWallet::where('admin_id', 1)->increment('service_fee_earned', $order->service_fee);
+
+            $transaction = new Transaction();
+            $transaction->order_id = $order->id;
+            $transaction->payment_for = 'service_fee';
+            $transaction->payer_id = $order->customer_id ?: 0;
+            $transaction->payment_receiver_id = 1;
+            $transaction->paid_by = 'customer';
+            $transaction->paid_to = 'admin';
+            $transaction->payment_status = 'disburse';
+            $transaction->amount = $order->service_fee;
+            $transaction->transaction_type = 'credit';
+            $transaction->save();
         }
 
         if (!SellerWallet::where('seller_id', $order['seller_id'])->first()) {
