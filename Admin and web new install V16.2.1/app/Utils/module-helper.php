@@ -101,9 +101,13 @@ if (!function_exists('digital_payment_success')) {
                 'requestObj' => $requestObj,
             ]);
 
-            foreach ($orderIds as $orderId) {
-                OrderManager::generateReferBonusForFirstOrder(orderId: $orderId);
-                OrderManager::generateAffiliateCommission(orderId: $orderId);
+            // One batched fetch instead of a query per order id — this loop
+            // runs once per vendor in the cart, so a multi-vendor checkout
+            // otherwise re-queries the same handful of just-created orders
+            // one at a time.
+            foreach (Order::whereIn('id', $orderIds)->get() as $order) {
+                OrderManager::generateReferBonusForFirstOrder(order: $order);
+                OrderManager::generateAffiliateCommission(order: $order);
             }
         }
     }
@@ -716,10 +720,8 @@ if (!function_exists('ad_placement_payment_success')) {
             $placement->payment_request_id = $payment_data['id'];
             $placement->save();
 
-            $wallet = \App\Models\AdminWallet::where('admin_id', 1)->first();
-            if ($wallet) {
-                $wallet->increment('ad_spend_earned', $placement->amount_paid);
-            }
+            app(\App\Contracts\Repositories\AdminWalletRepositoryInterface::class)
+                ->incrementWhere(['admin_id' => 1], 'ad_spend_earned', (float)$placement->amount_paid);
         });
     }
 }

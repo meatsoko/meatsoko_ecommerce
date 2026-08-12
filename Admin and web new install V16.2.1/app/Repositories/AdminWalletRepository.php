@@ -58,6 +58,12 @@ class AdminWalletRepository implements AdminWalletRepositoryInterface
         return true;
     }
 
+    public function incrementWhere(array $params, string $column, float $amount): bool
+    {
+        $this->adminWallet->where($params)->increment($column, $amount);
+        return true;
+    }
+
     public function delete(array $params): bool
     {
         $this->adminWallet->where($params)->delete();

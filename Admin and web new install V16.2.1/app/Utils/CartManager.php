@@ -185,7 +185,7 @@ class CartManager
         // free-delivery savings) goes through, so zeroing it here is enough;
         // per-item Cart.shipping_cost stays intact in case the customer
         // switches back to delivery.
-        if (session('receiving_method', 'delivery') === 'self_pickup') {
+        if (OrderManager::isSelfPickup()) {
             return 0;
         }
 

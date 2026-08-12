@@ -626,5 +626,6 @@
     <span id="route-customer-set-receiving-method" data-url="{{ route('customer.set-receiving-method') }}"></span>
 </div>
 @push('script')
+    <script src="{{ asset('assets/shared/js/receiving-method.js') }}"></script>
     <script src="{{ theme_asset('assets/js/cart.js') }}"></script>
 @endpush

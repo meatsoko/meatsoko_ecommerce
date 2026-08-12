@@ -341,7 +341,7 @@ class WebController extends Controller
             return isset($response['redirect']) ? redirect($response['redirect']) : redirect('/');
         }
 
-        if (session('receiving_method', 'delivery') === 'self_pickup') {
+        if (OrderManager::isSelfPickup()) {
             return redirect()->route('checkout-payment');
         }
 
@@ -382,7 +382,7 @@ class WebController extends Controller
 
     public function checkout_payment(Request $request): View|RedirectResponse
     {
-        if (!session('address_id') && !session('billing_address_id') && session('receiving_method', 'delivery') !== 'self_pickup') {
+        if (!session('address_id') && !session('billing_address_id') && !OrderManager::isSelfPickup()) {
             Toastr::error(translate('Please_update_address_information'));
             return redirect()->route('checkout-details');
         }
@@ -463,7 +463,7 @@ class WebController extends Controller
             $availablePaymentMethod = ['wallet_status'];
         }
 
-        if ((session()->has('address_id') && session()->has('billing_address_id')) || session('receiving_method', 'delivery') === 'self_pickup') {
+        if ((session()->has('address_id') && session()->has('billing_address_id')) || OrderManager::isSelfPickup()) {
             return view(VIEW_FILE_NAMES['payment_details'], [
                 'cashOnDeliveryBtnShow' => $cashOnDeliveryBtnShow,
                 'cash_on_delivery' => $cashOnDeliveryStatus,
@@ -635,7 +635,7 @@ class WebController extends Controller
             return back()->with('error', 'Something went wrong!');
         }
 
-        if (!session('address_id') && !session('billing_address_id') && session('receiving_method', 'delivery') !== 'self_pickup') {
+        if (!session('address_id') && !session('billing_address_id') && !OrderManager::isSelfPickup()) {
             Toastr::error(translate('Please_update_address_information'));
             return redirect()->route('checkout-details');
         }
@@ -731,7 +731,7 @@ class WebController extends Controller
 
     public function checkout_complete_wallet(Request $request): View|RedirectResponse
     {
-        if (!session('address_id') && !session('billing_address_id') && session('receiving_method', 'delivery') !== 'self_pickup') {
+        if (!session('address_id') && !session('billing_address_id') && !OrderManager::isSelfPickup()) {
             Toastr::error(translate('Please_update_address_information'));
             return redirect()->route('checkout-details');
         }
@@ -785,9 +785,13 @@ class WebController extends Controller
                 'requestObj' => $request,
             ]);
 
-            foreach ($order_ids as $order_id) {
-                OrderManager::generateReferBonusForFirstOrder(orderId: $order_id);
-                OrderManager::generateAffiliateCommission(orderId: $order_id);
+            // One batched fetch instead of a query per order id — this loop
+            // runs once per vendor in the cart, so a multi-vendor checkout
+            // otherwise re-queries the same handful of just-created orders
+            // one at a time.
+            foreach (Order::whereIn('id', $order_ids)->get() as $order) {
+                OrderManager::generateReferBonusForFirstOrder(order: $order);
+                OrderManager::generateAffiliateCommission(order: $order);
             }
 
             CustomerManager::create_wallet_transaction($user->id, Convert::default($paymentAmount), 'order_place', 'order payment');

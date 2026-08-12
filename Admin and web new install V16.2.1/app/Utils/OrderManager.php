@@ -5,7 +5,6 @@ namespace App\Utils;
 use App\Events\OrderEditDuePaymentEvent;
 use App\Models\Affiliate;
 use App\Models\AffiliateCommission;
-use App\Models\AffiliateWallet;
 use App\Models\OrderDetailsRewards;
 use App\Models\OrderEditHistory;
 use App\Models\OrderStatusHistory;
@@ -74,6 +73,17 @@ class OrderManager
         return getWebConfig(name: 'order_verification') == 1
             && $order->order_type == 'default_type'
             && !is_null($order->delivery_man_id);
+    }
+
+    /**
+     * Single source of truth for "is the customer picking this up
+     * themselves, right now, in this checkout session" — every checkout
+     * gate (address requirement, shipping-cost assignment) should read
+     * this instead of re-deriving the same session()->get() comparison.
+     */
+    public static function isSelfPickup(): bool
+    {
+        return session('receiving_method', 'delivery') === 'self_pickup';
     }
 
     /**
@@ -185,7 +195,8 @@ class OrderManager
         // below uses) so a reverted-then-redelivered order, or this function
         // running twice for the same order, can't credit it a second time.
         if ($order->service_fee > 0 && !Transaction::where(['order_id' => $order->id, 'payment_for' => 'service_fee'])->exists()) {
-            AdminWallet::where('admin_id', 1)->increment('service_fee_earned', $order->service_fee);
+            app(\App\Contracts\Repositories\AdminWalletRepositoryInterface::class)
+                ->incrementWhere(['admin_id' => 1], 'service_fee_earned', (float)$order->service_fee);
 
             $transaction = new Transaction();
             $transaction->order_id = $order->id;
@@ -816,11 +827,16 @@ class OrderManager
         return 0;
     }
 
-    public static function generateReferBonusForFirstOrder(int|string $orderId): void
+    public static function generateReferBonusForFirstOrder(Order|int|string $order): void
     {
         $refEarningStatus = getWebConfig(name: 'ref_earning_status') ?? 0;
         $refEarningExchangeRate = getWebConfig(name: 'ref_earning_exchange_rate') ?? 0;
-        $order = Order::with(['customer', 'seller.shop', 'deliveryMan'])->where(['id' => $orderId])->first();
+        // Every call site already has the order loaded — only hit the DB again
+        // when handed a bare id.
+        $order = $order instanceof Order ? $order : Order::with(['customer', 'seller.shop', 'deliveryMan'])->where(['id' => $order])->first();
+        if (!$order) {
+            return;
+        }
 
         if (!$order['is_guest'] && $refEarningStatus == 1 && $order['order_status'] == 'delivered') {
             $customer = User::where(['id' => $order['customer_id']])->first();
@@ -846,9 +862,26 @@ class OrderManager
      * just the buyer's first — an affiliate is being paid for driving sales,
      * not for a one-time signup bonus.
      */
-    public static function generateAffiliateCommission(int|string $orderId): void
+    /**
+     * The order's product subtotal with shipping and the platform service fee
+     * stripped back out — i.e. the portion of the order an affiliate commission
+     * is paid against. Deliberately its own named method: this is computed
+     * from the persisted order (post-checkout), while CartManager::get_service_fee()
+     * computes the equivalent "product subtotal" from the live cart
+     * (pre-checkout) — the two can't share code since they read from different
+     * data sources, but keeping this one in a single place means a future fee
+     * added to order_amount only has to be subtracted here once.
+     */
+    public static function getCommissionableBaseAmount(Order $order): float
     {
-        $order = Order::find($orderId);
+        return (float)$order->order_amount - (float)$order->shipping_cost - (float)$order->service_fee;
+    }
+
+    public static function generateAffiliateCommission(Order|int|string $order): void
+    {
+        // Every call site already has the order loaded — only hit the DB again
+        // when handed a bare id.
+        $order = $order instanceof Order ? $order : Order::find($order);
         if (!$order || !$order->affiliate_id || $order->order_status !== 'delivered') {
             return;
         }
@@ -869,7 +902,7 @@ class OrderManager
             return;
         }
 
-        $baseAmount = (float)$order->order_amount - (float)$order->shipping_cost - (float)$order->service_fee;
+        $baseAmount = self::getCommissionableBaseAmount($order);
         $commissionAmount = round(($baseAmount * $rate) / 100, 2);
         if ($commissionAmount <= 0) {
             return;
@@ -888,11 +921,8 @@ class OrderManager
             return;
         }
 
-        $wallet = AffiliateWallet::firstOrCreate(
-            ['affiliate_id' => $order->affiliate_id],
-            ['total_earning' => 0, 'pending_withdraw' => 0, 'withdrawn' => 0]
-        );
-        $wallet->increment('total_earning', $commissionAmount);
+        app(\App\Contracts\Repositories\AffiliateWalletRepositoryInterface::class)
+            ->creditEarning($order->affiliate_id, $commissionAmount);
     }
 
     public static function getVendorWiseCartList(array|object|null $data = []): array
@@ -2289,7 +2319,7 @@ class OrderManager
                 }
             }
 
-            if ($isPhysicalProductExist && session('receiving_method', 'delivery') !== 'self_pickup') {
+            if ($isPhysicalProductExist && !self::isSelfPickup()) {
                 foreach ($cartList as $cart) {
                     if ($shippingMethod == 'inhouse_shipping') {
                         $adminShipping = ShippingType::where('seller_id', 0)->first();

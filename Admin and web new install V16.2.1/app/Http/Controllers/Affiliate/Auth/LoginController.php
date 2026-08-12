@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers\Affiliate\Auth;
 
+use App\Contracts\Repositories\AffiliateRepositoryInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Affiliate\LoginRequest;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 
 class LoginController extends Controller
 {
-    public function __construct()
+    public function __construct(
+        private readonly AffiliateRepositoryInterface $affiliateRepo,
+    )
     {
         $this->middleware('guest:affiliate', ['except' => ['logout']]);
     }
@@ -21,19 +23,10 @@ class LoginController extends Controller
         return view('affiliate-views.auth.login');
     }
 
-    public function login(Request $request): RedirectResponse
+    public function login(LoginRequest $request): RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-
-        $affiliate = \App\Models\Affiliate::where('email', $request['email'])->first();
-        if ($affiliate && $affiliate->status !== 'approved') {
+        $affiliate = $this->affiliateRepo->getFirstWhere(['email' => $request['email']]);
+        if ($affiliate && $affiliate['status'] !== 'approved') {
             return back()->with('error', translate('your_account_is_pending_admin_approval_or_has_been_suspended'))->withInput();
         }
 

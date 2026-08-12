@@ -726,8 +726,8 @@ class OrderController extends BaseController
             $this->orderDetailsRewardsRepo->update(id: $orderDetailsRewards['id'], data: ['reward_delivered' => 1]);
         }
 
-        OrderManager::generateReferBonusForFirstOrder(orderId: $order['id']);
-        OrderManager::generateAffiliateCommission(orderId: $order['id']);
+        OrderManager::generateReferBonusForFirstOrder(order: $order);
+        OrderManager::generateAffiliateCommission(order: $order);
 
         if ($order['delivery_man_id'] && $request->order_status == 'delivered') {
             $deliverymanWallet = $this->deliveryManWalletRepo->getFirstWhere(params: ['delivery_man_id' => $order['delivery_man_id']]);

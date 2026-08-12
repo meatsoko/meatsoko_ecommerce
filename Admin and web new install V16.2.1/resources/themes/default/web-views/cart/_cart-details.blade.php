@@ -811,5 +811,6 @@ $admin_shipping = \App\Models\ShippingType::where('seller_id', 0)->first();
 </div>
 
 @push('script')
+    <script src="{{ asset('assets/shared/js/receiving-method.js') }}"></script>
     <script src="{{ theme_asset(path: 'public/assets/front-end/js/cart-details.js') }}"></script>
 @endpush

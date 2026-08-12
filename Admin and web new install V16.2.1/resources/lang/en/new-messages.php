@@ -2448,4 +2448,7 @@ ____________________________________________________on_search_engines_and_see_th
 	"max_concurrent_active_slots" => "Max concurrent active slots",
 	"purchases_are_blocked_once_this_many_placements_are_active_at_once_so_a_vendor_is_never_charged_for_a_slot_that_does_not_exist" => "Purchases are blocked once this many placements are active at once so a vendor is never charged for a slot that does not exist",
 	"if_enabled_the_percentage_below_is_added_to_every_order_total_at_checkout" => "If enabled the percentage below is added to every order total at checkout",
+	"when_enabled_marketing_affiliates_can_register_share_their_link_and_earn_commission_on_orders_they_bring_in" => "When enabled marketing affiliates can register share their link and earn commission on orders they bring in",
+	"Service_Fee" => "Service Fee",
+	"register_as_an_affiliate" => "Register as an affiliate",
 ];

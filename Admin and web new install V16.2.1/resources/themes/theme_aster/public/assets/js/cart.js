@@ -168,28 +168,8 @@ function setShippingIdFunction(){
 }
 setShippingIdFunction();
 
-function setReceivingMethodFunction() {
-    $('.receiving-method-radio').on('change', function () {
-        let method = $(this).val();
-        $.post({
-            url: $('#route-customer-set-receiving-method').data('url'),
-            dataType: 'json',
-            data: {
-                _token: $('meta[name="_token"]').attr('content'),
-                method: method
-            },
-            beforeSend: function () {
-                $('#loading').addClass('d-grid');
-            },
-            success: function () {
-                location.reload();
-            },
-            complete: function () {
-                $('#loading').removeClass('d-grid');
-            },
-        });
-    });
-}
-setReceivingMethodFunction();
+// setReceivingMethodFunction() now lives in
+// public/assets/shared/js/receiving-method.js, loaded separately by
+// cart-details.blade.php — shared with the default theme instead of duplicated.
 
 

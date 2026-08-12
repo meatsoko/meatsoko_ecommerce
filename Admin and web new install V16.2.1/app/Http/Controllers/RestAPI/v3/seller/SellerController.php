@@ -5,6 +5,7 @@ namespace App\Http\Controllers\RestAPI\v3\seller;
 use App\Contracts\Repositories\OrderRepositoryInterface;
 use App\Contracts\Repositories\ProductRepositoryInterface;
 use App\Contracts\Repositories\ReviewRepositoryInterface;
+use App\Contracts\Repositories\VendorStrikeRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\API\v3\SellerUpdateRequest;
 use App\Http\Requests\API\v3\ShopInfoUpdateRequest;
@@ -17,7 +18,6 @@ use App\Models\Review;
 use App\Models\ReviewReply;
 use App\Models\Seller;
 use App\Models\SellerWallet;
-use App\Models\VendorStrike;
 use App\Models\Shop;
 use App\Models\WithdrawalMethod;
 use App\Models\WithdrawRequest;
@@ -46,11 +46,12 @@ class SellerController extends Controller
     use FileManagerTrait;
 
     public function __construct(
-        private readonly OrderTransactionRepository $orderTransactionRepo,
-        private readonly DashboardService           $dashboardService,
-        private readonly OrderRepositoryInterface   $orderRepo,
-        private readonly ProductRepositoryInterface $productRepo,
-        private readonly ReviewRepositoryInterface  $reviewRepo,
+        private readonly OrderTransactionRepository      $orderTransactionRepo,
+        private readonly DashboardService                $dashboardService,
+        private readonly OrderRepositoryInterface        $orderRepo,
+        private readonly ProductRepositoryInterface      $productRepo,
+        private readonly ReviewRepositoryInterface       $reviewRepo,
+        private readonly VendorStrikeRepositoryInterface $vendorStrikeRepo,
     )
     {
     }
@@ -411,10 +412,10 @@ class SellerController extends Controller
             }
 
             // Mirrors the web vendor dashboard's fast-track: no strikes in the
-            // last 90 days skips manual admin review on this withdrawal.
-            $autoApproved = VendorStrike::where('seller_id', $seller['id'])
-                ->where('created_at', '>=', now()->subDays(90))
-                ->doesntExist();
+            // last 90 days skips manual admin review on this withdrawal. Goes
+            // through the same repository method the dashboard uses so the
+            // 90-day window can't drift between the two channels.
+            $autoApproved = $this->vendorStrikeRepo->countRecentForSeller((int)$seller['id'], 90) === 0;
 
             DB::table('withdraw_requests')->insert([
                 'seller_id' => $seller['id'],
