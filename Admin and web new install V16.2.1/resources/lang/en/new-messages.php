@@ -2451,4 +2451,5 @@ ____________________________________________________on_search_engines_and_see_th
 	"when_enabled_marketing_affiliates_can_register_share_their_link_and_earn_commission_on_orders_they_bring_in" => "When enabled marketing affiliates can register share their link and earn commission on orders they bring in",
 	"Service_Fee" => "Service Fee",
 	"register_as_an_affiliate" => "Register as an affiliate",
+	"withdraw_request_has_been_approved_automatically" => "Withdraw request has been approved automatically",
 ];

@@ -76,7 +76,12 @@ class AppServiceProvider extends ServiceProvider
         if (!in_array(request()->ip(), ['127.0.0.1', '::1']) && env('FORCE_HTTPS')) {
             \URL::forceScheme('https');
         }
-        if (!App::runningInConsole()) {
+        // runningInConsole() is also true for PHPUnit's HTTP test client (it's
+        // still a CLI process, unlike php-fpm/php -S serving real traffic) —
+        // without the runningUnitTests() carve-out, $web_config and friends
+        // never get shared to views and every feature test hitting a
+        // storefront route fails with "Undefined variable $web_config".
+        if (!App::runningInConsole() || App::runningUnitTests()) {
             Paginator::useBootstrap();
 
             Config::set('addon_admin_routes', Cache::remember(CACHE_ADDON_ADMIN_ROUTES, CACHE_FOR_3_HOURS, fn() => $this->getAddonAdminRoutes()));

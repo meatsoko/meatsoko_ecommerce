@@ -12,17 +12,32 @@
             <directory suffix="Test.php">./tests/Feature</directory>
         </testsuite>
     </testsuites>
-    <filter>
-        <whitelist processUncoveredFilesFromWhitelist="true">
+    <source>
+        <include>
             <directory suffix=".php">./app</directory>
-        </whitelist>
-    </filter>
+        </include>
+    </source>
     <php>
         <server name="APP_ENV" value="testing"/>
         <server name="BCRYPT_ROUNDS" value="4"/>
         <server name="CACHE_DRIVER" value="array"/>
-        <server name="DB_CONNECTION" value="sqlite"/>
-        <server name="DB_DATABASE" value=":memory:"/>
+        <!--
+            This app's migrations assume the base schema already exists (see
+            CLAUDE.md: "Never run php artisan migrate on an empty database. Import
+            installation/backup/database.sql first, then migrate.") — several
+            migrations alter tables that no earlier migration ever creates. A
+            sqlite :memory: DB run through RefreshDatabase's migrate:fresh has no
+            way to satisfy that, so tests point at a real, pre-seeded MySQL
+            database instead — a one-time database.sql import + `php artisan
+            migrate` (see tests/README.md) — and each test wraps in a
+            transaction (DatabaseTransactions) rather than rebuilding the schema.
+        -->
+        <server name="DB_CONNECTION" value="mysql"/>
+        <server name="DB_HOST" value="127.0.0.1"/>
+        <server name="DB_PORT" value="3306"/>
+        <server name="DB_DATABASE" value="6valley_test"/>
+        <server name="DB_USERNAME" value="root"/>
+        <server name="DB_PASSWORD" value=""/>
         <server name="MAIL_DRIVER" value="array"/>
         <server name="QUEUE_CONNECTION" value="sync"/>
         <server name="SESSION_DRIVER" value="array"/>

@@ -14,7 +14,10 @@ class ThemeServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        if (!App::runningInConsole()) {
+        // runningInConsole() is also true for PHPUnit's HTTP test client (it's
+        // still a CLI process) — without the runningUnitTests() carve-out, no
+        // feature test hitting a storefront route can ever resolve a view.
+        if (!App::runningInConsole() || App::runningUnitTests()) {
             $theme = env('WEB_THEME') == null ? 'default' : env('WEB_THEME');
             $path = base_path('resources/themes/' . $theme);
             if (!defined('VIEW_FILE_NAMES')) {
