@@ -161,6 +161,32 @@
                             <i class="navbar-tool-icon czi-heart"></i>
                         </a>
                     </div>
+                    @php($businessMode = getWebConfig(name: 'business_mode'))
+                    @if ($businessMode == 'multi' && getWebConfig(name: 'seller_registration'))
+                        <div class="navbar-tool dropdown d-md-none {{Session::get('direction') === "rtl" ? 'mr-md-3' : 'ml-md-3'}}">
+                            @if(auth('seller')->check())
+                                <a class="navbar-tool-icon-box bg-secondary" href="{{route('vendor.dashboard.index')}}" title="{{ translate('vendor_zone') }}">
+                                    <i class="fi fi-rr-shop"></i>
+                                </a>
+                            @else
+                                <a class="navbar-tool-icon-box bg-secondary dropdown-toggle" href="#" rel="nofollow"
+                                   type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                   title="{{ translate('vendor_zone') }}">
+                                    <i class="fi fi-rr-shop"></i>
+                                </a>
+                                <div class="text-align-direction dropdown-menu __auth-dropdown dropdown-menu-{{Session::get('direction') === "rtl" ? 'left' : 'right'}}"
+                                     aria-labelledby="dropdownMenuButton">
+                                    <a class="dropdown-item" href="{{route('vendor.auth.login')}}">
+                                        <i class="fa fa-sign-in mr-2"></i> {{ translate('vendor_login') }}
+                                    </a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" href="{{route('vendor.auth.registration.index')}}">
+                                        <i class="fa fa-user-circle mr-2"></i> {{ translate('become_a_vendor') }}
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                     @if(auth('customer')->check())
                         <div class="dropdown">
                             <a class="navbar-tool ml-3" type="button" data-toggle="dropdown" aria-haspopup="true"
@@ -532,7 +558,7 @@
                         @endif
                         @if ($businessMode == 'multi')
                             @if(getWebConfig(name: 'seller_registration'))
-                                <li class="nav-item">
+                                <li class="nav-item d-none d-md-block">
                                     <div class="dropdown">
                                         <button class="btn dropdown-toggle text-white text-max-md-dark text-capitalize ps-2 pe-0 fw-semibold"
                                                 type="button" id="dropdownMenuButton"
