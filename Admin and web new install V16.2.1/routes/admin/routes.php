@@ -18,6 +18,8 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\AdvertisingController;
 use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\Affiliate\AffiliateWithdrawController;
+use App\Http\Controllers\Admin\SubscriptionPlanController;
+use App\Http\Controllers\Admin\CustomerSubscriptionController;
 use App\Http\Controllers\Admin\ChattingController;
 use App\Http\Controllers\Admin\POS\CartController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -671,6 +673,32 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
             Route::get('withdraw-list', 'index')->name('withdraw-list');
             Route::get('withdraw-view/{id}', 'view')->name('withdraw-view');
             Route::post('withdraw-status-update/{id}', 'updateStatus')->name('withdraw-status-update');
+        });
+    });
+
+    Route::group(['prefix' => 'subscription-plan', 'as' => 'subscription-plan.'], function () {
+        Route::controller(SubscriptionPlanController::class)->group(function () {
+            Route::get('list', 'index')->name('list');
+            Route::get('add', 'create')->name('add');
+            Route::post('add', 'store')->name('store');
+            Route::get('edit/{id}', 'edit')->name('edit');
+            Route::post('edit/{id}', 'update')->name('update');
+            Route::post('status-update/{id}', 'updateStatus')->name('status-update');
+            Route::get('products/{id}', 'products')->name('products');
+            Route::post('products/{id}', 'addProducts')->name('products.add');
+            Route::post('products/{id}/quantities', 'updateProductQuantities')->name('products.update-quantities');
+            Route::post('products/{id}/remove/{productId}', 'removeProduct')->name('products.remove');
+            Route::get('settings', 'settings')->name('settings');
+            Route::post('settings', 'updateSettings')->name('settings.update');
+        });
+    });
+
+    Route::group(['prefix' => 'subscription', 'as' => 'subscription.'], function () {
+        Route::controller(CustomerSubscriptionController::class)->group(function () {
+            Route::get('subscribers', 'index')->name('subscribers');
+            Route::get('subscribers/{id}', 'view')->name('subscribers.view');
+            Route::post('subscribers/status-update/{id}', 'updateStatus')->name('subscribers.status-update');
+            Route::post('subscribers/bill-now/{id}', 'billNow')->name('subscribers.bill-now');
         });
     });
 

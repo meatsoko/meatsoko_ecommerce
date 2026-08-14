@@ -87,6 +87,21 @@
                 </div>
             @endif
 
+            @if (getWebConfig(name: 'subscription_program_status'))
+                <div>
+                    <div class="widget-title">
+                        <a class="{{Request::is('subscriptions/mine')?'active-menu':''}}" href="{{route('customer.subscriptions.index') }}">
+                            <span>
+                                <i class="fi fi-rr-refresh"></i>
+                            </span>
+                            <span class="aside-link">
+                                {{translate('my_subscriptions')}}
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            @endif
+
             @if ($web_config['loyalty_point_status'] == 1)
                <div>
                    <div class="widget-title">

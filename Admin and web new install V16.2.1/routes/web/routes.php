@@ -8,6 +8,7 @@ use App\Http\Controllers\Customer\Auth\LoginController;
 use App\Http\Controllers\Customer\Auth\RegisterController;
 use App\Http\Controllers\Customer\Auth\SocialAuthController;
 use App\Http\Controllers\Customer\PaymentController;
+use App\Http\Controllers\Customer\SubscriptionController;
 use App\Http\Controllers\Customer\RewardPointController;
 use App\Http\Controllers\Customer\SystemController;
 use App\Http\Controllers\Payment_Methods\BkashPaymentController;
@@ -236,6 +237,18 @@ Route::group(['namespace' => 'Web', 'middleware' => ['maintenance_mode', 'guestC
     Route::controller(UserWalletController::class)->group(function () {
         Route::get('wallet-account', 'myWalletAccount')->name('wallet-account'); //theme fashion
         Route::get('wallet', 'index')->name('wallet')->middleware('customer');
+    });
+
+    Route::group(['prefix' => 'subscriptions', 'as' => 'customer.subscriptions.'], function () {
+        Route::controller(SubscriptionController::class)->group(function () {
+            Route::get('/', 'plans')->name('plans');
+            Route::post('/{planId}/subscribe', 'subscribe')->name('subscribe')->middleware('customer');
+            Route::get('/mine', 'index')->name('index')->middleware('customer');
+            Route::get('/{id}/history', 'history')->name('history')->middleware('customer');
+            Route::post('/{id}/pause', 'pause')->name('pause')->middleware('customer');
+            Route::post('/{id}/resume', 'resume')->name('resume')->middleware('customer');
+            Route::post('/{id}/cancel', 'cancel')->name('cancel')->middleware('customer');
+        });
     });
 
     Route::controller(UserLoyaltyController::class)->group(function () {

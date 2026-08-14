@@ -27,6 +27,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')
         //          ->hourly();
         $schedule->command('ads:expire-placements')->hourly();
+        $schedule->command('subscriptions:bill-due')->dailyAt('06:00');
     }
 
     /**

@@ -470,6 +470,37 @@
                             <span class="v2-nav-child-label">{{ translate('settings') }}</span>
                         </a>
                     </div>
+
+                    <div class="v2-nav-item v2-has-children {{ Request::is('admin/subscription*') ? 'v2-is-active' : '' }}" data-item="subscription-plan">
+                        <a class="v2-nav-btn" href="{{ route('admin.subscription-plan.list') }}">
+                            <span class="v2-nav-label">{{ translate('subscription_plans') }}</span>
+                        </a>
+                        <div class="v2-nav-right">
+                            <button class="v2-pin-btn" type="button" data-pin="subscription-plan" aria-label="Pin"></button>
+                            <span class="v2-nav-chev">
+                                <svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 5 5 5-5 5"/></svg>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="v2-nav-children v2-is-collapsed" data-children-for="subscription-plan">
+                        <a class="v2-nav-child {{ Request::is('admin/subscription-plan/list') ? 'v2-is-on' : '' }}" href="{{ route('admin.subscription-plan.list') }}">
+                            <span class="v2-nav-child-dot" data-tone="primary"></span>
+                            <span class="v2-nav-child-label">{{ translate('all_plans') }}</span>
+                        </a>
+                        <a class="v2-nav-child {{ Request::is('admin/subscription-plan/add') ? 'v2-is-on' : '' }}" href="{{ route('admin.subscription-plan.add') }}">
+                            <span class="v2-nav-child-dot" data-tone="primary"></span>
+                            <span class="v2-nav-child-label">{{ translate('add_plan') }}</span>
+                        </a>
+                        <a class="v2-nav-child {{ Request::is('admin/subscription/subscribers*') ? 'v2-is-on' : '' }}" href="{{ route('admin.subscription.subscribers') }}">
+                            <span class="v2-nav-child-dot" data-tone="warn"></span>
+                            <span class="v2-nav-child-label">{{ translate('subscribers') }}</span>
+                        </a>
+                        <a class="v2-nav-child {{ Request::is('admin/subscription-plan/settings') ? 'v2-is-on' : '' }}" href="{{ route('admin.subscription-plan.settings') }}">
+                            <span class="v2-nav-child-dot" data-tone="primary"></span>
+                            <span class="v2-nav-child-label">{{ translate('settings') }}</span>
+                        </a>
+                    </div>
                 </div>
             @endif
         </div>

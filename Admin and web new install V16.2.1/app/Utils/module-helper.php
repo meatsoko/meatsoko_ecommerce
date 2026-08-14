@@ -743,3 +743,67 @@ if (!function_exists('ad_placement_payment_fail')) {
         \App\Models\AdPlacement::where('id', $placementId)->where('status', 'pending')->update(['status' => 'failed']);
     }
 }
+
+// Subscription billing (M-Pesa STK) - Success
+//
+// Deliberately NOT reusing digital_payment_success: this callback fires from
+// Safaricom with no customer browser session behind it (see the "Customer
+// Subscription Boxes" plan), so this hook must not touch session()/request()
+// the way digital_payment_success does.
+if (!function_exists('subscription_payment_success')) {
+    function subscription_payment_success($paymentData): void
+    {
+        if (!isset($paymentData) || $paymentData['is_paid'] != 1) {
+            return;
+        }
+
+        $additionalData = json_decode($paymentData['additional_data'], true);
+        $chargeId = $additionalData['subscription_charge_id'] ?? null;
+        if (!$chargeId) {
+            return;
+        }
+
+        DB::transaction(function () use ($chargeId) {
+            $charge = \App\Models\SubscriptionCharge::where('id', $chargeId)->lockForUpdate()->first();
+            // Idempotency guard — Safaricom callbacks can be delivered more
+            // than once for the same transaction.
+            if (!$charge || $charge->status !== 'pending') {
+                return;
+            }
+
+            $subscription = \App\Models\CustomerSubscription::find($charge->customer_subscription_id);
+            if (!$subscription) {
+                return;
+            }
+
+            $order = app(\App\Services\SubscriptionOrderBuilder::class)->build($subscription);
+            app(\App\Services\SubscriptionBillingService::class)->markSuccess($subscription, $charge, $order);
+        });
+    }
+}
+
+// Subscription billing (M-Pesa STK) - Fail
+if (!function_exists('subscription_payment_fail')) {
+    function subscription_payment_fail($paymentData): void
+    {
+        $additionalData = json_decode($paymentData['additional_data'] ?? '{}', true);
+        $chargeId = $additionalData['subscription_charge_id'] ?? null;
+        if (!$chargeId) {
+            return;
+        }
+
+        DB::transaction(function () use ($chargeId) {
+            $charge = \App\Models\SubscriptionCharge::where('id', $chargeId)->lockForUpdate()->first();
+            if (!$charge || $charge->status !== 'pending') {
+                return;
+            }
+
+            $subscription = \App\Models\CustomerSubscription::find($charge->customer_subscription_id);
+            if (!$subscription) {
+                return;
+            }
+
+            app(\App\Services\SubscriptionBillingService::class)->markFailed($subscription, $charge, 'mpesa_payment_declined');
+        });
+    }
+}
