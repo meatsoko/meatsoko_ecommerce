@@ -24,7 +24,7 @@ class SubscriptionPlanController extends BaseController
     {
     }
 
-    public function index(?Request $request): View
+    public function index(?Request $request, ?string $type = null): View
     {
         $plans = $this->planRepo->getListWhere(
             orderBy: ['id' => 'DESC'],

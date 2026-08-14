@@ -20,7 +20,7 @@ class AffiliateWithdrawController extends BaseController
     {
     }
 
-    public function index(?Request $request): View
+    public function index(?Request $request, ?string $type = null): View
     {
         $withdrawRequests = $this->withdrawRequestRepo->getListWhere(
             orderBy: ['id' => 'DESC'],

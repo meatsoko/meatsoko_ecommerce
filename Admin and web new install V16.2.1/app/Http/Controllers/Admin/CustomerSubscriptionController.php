@@ -20,7 +20,7 @@ class CustomerSubscriptionController extends BaseController
     {
     }
 
-    public function index(?Request $request): View
+    public function index(?Request $request, ?string $type = null): View
     {
         $subscriptions = $this->subscriptionRepo->getListWhere(
             orderBy: ['id' => 'DESC'],
