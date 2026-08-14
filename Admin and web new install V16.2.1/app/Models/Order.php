@@ -212,6 +212,11 @@ class Order extends Model
         return $this->belongsTo(Affiliate::class);
     }
 
+    public function affiliateCommission(): HasOne
+    {
+        return $this->hasOne(AffiliateCommission::class, 'order_id');
+    }
+
     public function sellerName(): HasOne
     {
         return $this->hasOne(OrderDetail::class);

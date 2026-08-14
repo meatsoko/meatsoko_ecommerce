@@ -40,6 +40,10 @@
         </div>
     </div>
 
+    <div class="mb-4">
+        <a href="{{ route('affiliate.withdraw.index') }}" class="btn btn-outline-primary">{{ translate('request_a_withdrawal') }}</a>
+    </div>
+
     <div class="affiliate-card p-4">
         <h5 class="mb-3">{{ translate('recent_commissions') }}</h5>
         <div class="table-responsive">

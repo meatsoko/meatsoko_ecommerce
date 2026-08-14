@@ -3,6 +3,7 @@
 use App\Http\Controllers\Affiliate\Auth\LoginController;
 use App\Http\Controllers\Affiliate\Auth\RegisterController;
 use App\Http\Controllers\Affiliate\DashboardController;
+use App\Http\Controllers\Affiliate\WithdrawController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['prefix' => 'affiliate', 'as' => 'affiliate.'], function () {
@@ -20,4 +21,11 @@ Route::group(['prefix' => 'affiliate', 'as' => 'affiliate.'], function () {
     });
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::group(['prefix' => 'withdraw', 'as' => 'withdraw.'], function () {
+        Route::controller(WithdrawController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'store')->name('store');
+        });
+    });
 });

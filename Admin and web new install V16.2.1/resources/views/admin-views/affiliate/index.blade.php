@@ -8,9 +8,17 @@
             <h2 class="h1 mb-0 text-capitalize d-flex align-items-center gap-2">
                 {{translate('Affiliates')}}
             </h2>
-            <a href="{{ route('admin.affiliate.settings') }}" class="btn btn-outline-primary">
-                {{translate('Affiliate_Settings')}}
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.affiliate.add') }}" class="btn btn-primary">
+                    {{translate('Add_Affiliate')}}
+                </a>
+                <a href="{{ route('admin.affiliate.withdraw-list') }}" class="btn btn-outline-primary">
+                    {{translate('withdraws')}}
+                </a>
+                <a href="{{ route('admin.affiliate.settings') }}" class="btn btn-outline-primary">
+                    {{translate('Affiliate_Settings')}}
+                </a>
+            </div>
         </div>
 
         <div class="row">
@@ -49,7 +57,11 @@
                                 <tbody>
                                 @foreach($affiliates as $affiliate)
                                     <tr>
-                                        <td>{{ $affiliate->f_name }} {{ $affiliate->l_name }}</td>
+                                        <td>
+                                            <a class="text-dark" href="{{ route('admin.affiliate.view', $affiliate->id) }}">
+                                                {{ $affiliate->f_name }} {{ $affiliate->l_name }}
+                                            </a>
+                                        </td>
                                         <td>{{ $affiliate->email }}</td>
                                         <td><code>{{ $affiliate->affiliate_code }}</code></td>
                                         <td>{{ setCurrencySymbol(amount: usdToDefaultCurrency(amount: $affiliate->wallet->total_earning ?? 0)) }}</td>

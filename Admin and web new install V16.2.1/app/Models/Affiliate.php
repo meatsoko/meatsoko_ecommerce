@@ -66,6 +66,11 @@ class Affiliate extends Authenticatable
         return $this->hasMany(Order::class, 'affiliate_id');
     }
 
+    public function withdrawRequests(): HasMany
+    {
+        return $this->hasMany(AffiliateWithdrawRequest::class);
+    }
+
     public function getImageFullUrlAttribute(): array|string|null
     {
         $value = $this->image;

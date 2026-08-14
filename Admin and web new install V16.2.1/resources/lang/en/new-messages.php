@@ -2452,4 +2452,5 @@ ____________________________________________________on_search_engines_and_see_th
 	"Service_Fee" => "Service Fee",
 	"register_as_an_affiliate" => "Register as an affiliate",
 	"withdraw_request_has_been_approved_automatically" => "Withdraw request has been approved automatically",
+	"insufficient_balance_or_invalid_amount" => "Insufficient balance or invalid amount",
 ];

@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\POS\POSController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\AdvertisingController;
 use App\Http\Controllers\Admin\AffiliateController;
+use App\Http\Controllers\Admin\Affiliate\AffiliateWithdrawController;
 use App\Http\Controllers\Admin\ChattingController;
 use App\Http\Controllers\Admin\POS\CartController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -659,9 +660,17 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
     Route::group(['prefix' => 'affiliate', 'as' => 'affiliate.'], function () {
         Route::controller(AffiliateController::class)->group(function () {
             Route::get('list', 'index')->name('list');
+            Route::get('add', 'create')->name('add');
+            Route::post('add', 'store')->name('store');
+            Route::get('view/{id}', 'view')->name('view');
             Route::post('status-update/{id}', 'updateStatus')->name('status-update');
             Route::get('settings', 'settings')->name('settings');
             Route::post('settings', 'updateSettings')->name('settings.update');
+        });
+        Route::controller(AffiliateWithdrawController::class)->group(function () {
+            Route::get('withdraw-list', 'index')->name('withdraw-list');
+            Route::get('withdraw-view/{id}', 'view')->name('withdraw-view');
+            Route::post('withdraw-status-update/{id}', 'updateStatus')->name('withdraw-status-update');
         });
     });
 

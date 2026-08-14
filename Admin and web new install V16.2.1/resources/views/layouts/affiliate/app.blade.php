@@ -24,6 +24,7 @@
         <div class="ms-auto d-flex align-items-center gap-3">
             <span class="text-muted small">{{ auth('affiliate')->user()->f_name }}</span>
             <a href="{{ route('affiliate.dashboard') }}" class="btn btn-sm btn-outline-secondary">{{ translate('dashboard') }}</a>
+            <a href="{{ route('affiliate.withdraw.index') }}" class="btn btn-sm btn-outline-secondary">{{ translate('Withdrawals') }}</a>
             <a href="{{ route('affiliate.auth.logout') }}" class="btn btn-sm btn-outline-danger">{{ translate('logout') }}</a>
         </div>
     </nav>

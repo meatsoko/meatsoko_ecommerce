@@ -162,7 +162,7 @@
                         </a>
                     </div>
                     @php($businessMode = getWebConfig(name: 'business_mode'))
-                    @if ($businessMode == 'multi' && getWebConfig(name: 'seller_registration'))
+                    @if ($businessMode == 'multi')
                         <div class="navbar-tool dropdown d-md-none {{Session::get('direction') === "rtl" ? 'mr-md-3' : 'ml-md-3'}}">
                             @if(auth('seller')->check())
                                 <a class="navbar-tool-icon-box bg-secondary" href="{{route('vendor.dashboard.index')}}" title="{{ translate('vendor_zone') }}">
@@ -179,9 +179,36 @@
                                     <a class="dropdown-item" href="{{route('vendor.auth.login')}}">
                                         <i class="fa fa-sign-in mr-2"></i> {{ translate('vendor_login') }}
                                     </a>
+                                    @if(getWebConfig(name: 'seller_registration'))
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="{{route('vendor.auth.registration.index')}}">
+                                            <i class="fa fa-user-circle mr-2"></i> {{ translate('become_a_vendor') }}
+                                        </a>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                    @if(getWebConfig(name: 'affiliate_program_status'))
+                        <div class="navbar-tool dropdown d-md-none {{Session::get('direction') === "rtl" ? 'mr-md-3' : 'ml-md-3'}}">
+                            @if(auth('affiliate')->check())
+                                <a class="navbar-tool-icon-box bg-secondary" href="{{route('affiliate.dashboard')}}" title="{{ translate('affiliate_zone') }}">
+                                    <i class="fi fi-rr-megaphone"></i>
+                                </a>
+                            @else
+                                <a class="navbar-tool-icon-box bg-secondary dropdown-toggle" href="#" rel="nofollow"
+                                   type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                   title="{{ translate('affiliate_zone') }}">
+                                    <i class="fi fi-rr-megaphone"></i>
+                                </a>
+                                <div class="text-align-direction dropdown-menu __auth-dropdown dropdown-menu-{{Session::get('direction') === "rtl" ? 'left' : 'right'}}"
+                                     aria-labelledby="dropdownMenuButton">
+                                    <a class="dropdown-item" href="{{route('affiliate.auth.login')}}">
+                                        <i class="fa fa-sign-in mr-2"></i> {{ translate('affiliate_login') }}
+                                    </a>
                                     <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="{{route('vendor.auth.registration.index')}}">
-                                        <i class="fa fa-user-circle mr-2"></i> {{ translate('become_a_vendor') }}
+                                    <a class="dropdown-item" href="{{route('affiliate.auth.register')}}">
+                                        <i class="fa fa-share-alt mr-2"></i> {{ translate('become_an_affiliate') }}
                                     </a>
                                 </div>
                             @endif
@@ -557,27 +584,48 @@
                             </li>
                         @endif
                         @if ($businessMode == 'multi')
-                            @if(getWebConfig(name: 'seller_registration'))
-                                <li class="nav-item d-none d-md-block">
-                                    <div class="dropdown">
-                                        <button class="btn dropdown-toggle text-white text-max-md-dark text-capitalize ps-2 pe-0 fw-semibold"
-                                                type="button" id="dropdownMenuButton"
-                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            {{ translate('vendor_zone')}}
-                                        </button>
-                                        <div class="dropdown-menu __dropdown-menu-3 __min-w-165px text-align-direction"
-                                             aria-labelledby="dropdownMenuButton">
+                            <li class="nav-item d-none d-md-block">
+                                <div class="dropdown">
+                                    <button class="btn dropdown-toggle text-white text-max-md-dark text-capitalize ps-2 pe-0 fw-semibold"
+                                            type="button" id="dropdownMenuButton"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        {{ translate('vendor_zone')}}
+                                    </button>
+                                    <div class="dropdown-menu __dropdown-menu-3 __min-w-165px text-align-direction"
+                                         aria-labelledby="dropdownMenuButton">
+                                        <a class="dropdown-item text-nowrap" href="{{route('vendor.auth.login')}}">
+                                            {{ translate('vendor_login')}}
+                                        </a>
+                                        @if(getWebConfig(name: 'seller_registration'))
+                                            <div class="dropdown-divider"></div>
                                             <a class="dropdown-item text-nowrap text-capitalize" href="{{route('vendor.auth.registration.index')}}">
                                                 {{ translate('become_a_vendor')}}
                                             </a>
-                                            <div class="dropdown-divider"></div>
-                                            <a class="dropdown-item text-nowrap" href="{{route('vendor.auth.login')}}">
-                                                {{ translate('vendor_login')}}
-                                            </a>
-                                        </div>
+                                        @endif
                                     </div>
-                                </li>
-                            @endif
+                                </div>
+                            </li>
+                        @endif
+                        @if(getWebConfig(name: 'affiliate_program_status'))
+                            <li class="nav-item d-none d-md-block">
+                                <div class="dropdown">
+                                    <button class="btn dropdown-toggle text-white text-max-md-dark text-capitalize ps-2 pe-0 fw-semibold"
+                                            type="button" id="affiliateZoneDropdown"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        {{ translate('affiliate_zone')}}
+                                    </button>
+                                    <div class="dropdown-menu __dropdown-menu-3 __min-w-165px text-align-direction"
+                                         aria-labelledby="affiliateZoneDropdown">
+                                        <a class="dropdown-item text-nowrap" href="{{route('affiliate.auth.login')}}">
+                                            {{ translate('affiliate_login')}}
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item text-nowrap text-capitalize" href="{{route('affiliate.auth.register')}}">
+                                            {{ translate('become_an_affiliate')}}
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
                         @endif
                     </ul>
 

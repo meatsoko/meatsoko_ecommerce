@@ -439,6 +439,37 @@
                             <span class="v2-nav-child-label">{{ translate('blog_list') }}</span>
                         </a>
                     </div>
+
+                    <div class="v2-nav-item v2-has-children {{ Request::is('admin/affiliate*') ? 'v2-is-active' : '' }}" data-item="affiliate">
+                        <a class="v2-nav-btn" href="{{ route('admin.affiliate.list') }}">
+                            <span class="v2-nav-label">{{ translate('affiliate_marketers') }}</span>
+                        </a>
+                        <div class="v2-nav-right">
+                            <button class="v2-pin-btn" type="button" data-pin="affiliate" aria-label="Pin"></button>
+                            <span class="v2-nav-chev">
+                                <svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 5 5 5-5 5"/></svg>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="v2-nav-children v2-is-collapsed" data-children-for="affiliate">
+                        <a class="v2-nav-child {{ (Request::is('admin/affiliate/list') || Request::is('admin/affiliate/view*')) ? 'v2-is-on' : '' }}" href="{{ route('admin.affiliate.list') }}">
+                            <span class="v2-nav-child-dot" data-tone="primary"></span>
+                            <span class="v2-nav-child-label">{{ translate('all_affiliates') }}</span>
+                        </a>
+                        <a class="v2-nav-child {{ Request::is('admin/affiliate/add') ? 'v2-is-on' : '' }}" href="{{ route('admin.affiliate.add') }}">
+                            <span class="v2-nav-child-dot" data-tone="primary"></span>
+                            <span class="v2-nav-child-label">{{ translate('add_affiliate') }}</span>
+                        </a>
+                        <a class="v2-nav-child {{ (Request::is('admin/affiliate/withdraw-list') || Request::is('admin/affiliate/withdraw-view*')) ? 'v2-is-on' : '' }}" href="{{ route('admin.affiliate.withdraw-list') }}">
+                            <span class="v2-nav-child-dot" data-tone="warn"></span>
+                            <span class="v2-nav-child-label">{{ translate('withdraws') }}</span>
+                        </a>
+                        <a class="v2-nav-child {{ Request::is('admin/affiliate/settings') ? 'v2-is-on' : '' }}" href="{{ route('admin.affiliate.settings') }}">
+                            <span class="v2-nav-child-dot" data-tone="primary"></span>
+                            <span class="v2-nav-child-label">{{ translate('settings') }}</span>
+                        </a>
+                    </div>
                 </div>
             @endif
         </div>
