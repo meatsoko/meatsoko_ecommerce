@@ -146,6 +146,25 @@
                             </div>
                         </div>
 
+                        @if($gateway->key_name === 'mpesa_stk')
+                            @php($shortcodeType = $gateway->live_values['shortcode_type'] ?? 'paybill')
+                            <div class="mb-4">
+                                <label class="form-label" for="shortcode_type-{{ $gateway->key_name }}">
+                                    {{ translate('shortcode_type') }}
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select class="js-select form-select w-100" name="shortcode_type"
+                                        id="shortcode_type-{{ $gateway->key_name }}" required>
+                                    <option value="paybill" {{ $shortcodeType == 'paybill' ? 'selected' : '' }}>
+                                        {{ translate('paybill') }}
+                                    </option>
+                                    <option value="till" {{ $shortcodeType == 'till' ? 'selected' : '' }}>
+                                        {{ translate('till_buy_goods') }}
+                                    </option>
+                                </select>
+                            </div>
+                        @endif
+
                         @if($gateway->key_name === 'mpesa_c2b')
                             <div class="mb-4">
                                 <button type="button" class="btn btn-outline-primary w-100 mpesa-c2b-register-urls-btn"
@@ -161,6 +180,8 @@
 
                         @if($gateway->key_name === 'paystack')
                             @php($skip=['gateway', 'mode', 'status', 'supported_country', 'callback_url'])
+                        @elseif($gateway->key_name === 'mpesa_stk')
+                            @php($skip=['gateway', 'mode', 'status', 'supported_country', 'shortcode_type'])
                         @else
                             @php($skip=['gateway','mode','status', 'supported_country'])
                         @endif
