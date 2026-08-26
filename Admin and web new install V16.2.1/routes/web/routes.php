@@ -509,7 +509,10 @@ if (!$isGatewayPublished) {
         });
 
         //MPESA C2B (PAYBILL/TILL)
-        Route::group(['prefix' => 'mpesa-c2b', 'as' => 'mpesa-c2b.'], function () {
+        // NOTE: URI segment intentionally does not contain "mpesa" - Safaricom's C2B
+        // RegisterURL API rejects any ValidationURL/ConfirmationURL containing that word
+        // (error 400.003.02: "Invalid ValidationURL - URL has the word MPESA").
+        Route::group(['prefix' => 'c2b', 'as' => 'mpesa-c2b.'], function () {
             Route::get('pay', [MpesaC2bController::class, 'index'])->name('pay');
             Route::post('validation', [MpesaC2bController::class, 'validation'])->name('validation')
                 ->withoutMiddleware([VerifyCsrfToken::class])

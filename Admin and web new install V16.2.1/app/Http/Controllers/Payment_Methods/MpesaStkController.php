@@ -26,6 +26,7 @@ class MpesaStkController extends Controller
     private $consumer_secret;
     private $shortcode;
     private $passkey;
+    private $shortcode_type;
     private $base_url;
 
     public function __construct(PaymentRequest $payment, User $user)
@@ -43,6 +44,7 @@ class MpesaStkController extends Controller
             $this->consumer_secret = $values->consumer_secret;
             $this->shortcode = $values->shortcode;
             $this->passkey = $values->passkey;
+            $this->shortcode_type = $values->shortcode_type ?? 'paybill';
             $this->base_url = ($config->mode == 'live') ? 'https://api.safaricom.co.ke' : 'https://sandbox.safaricom.co.ke';
         }
 
@@ -135,7 +137,7 @@ class MpesaStkController extends Controller
             'BusinessShortCode' => $this->shortcode,
             'Password' => $password,
             'Timestamp' => $timestamp,
-            'TransactionType' => 'CustomerPayBillOnline',
+            'TransactionType' => $this->shortcode_type === 'till' ? 'CustomerBuyGoodsOnline' : 'CustomerPayBillOnline',
             'Amount' => (int)round($data->payment_amount),
             'PartyA' => $phone,
             'PartyB' => $this->shortcode,

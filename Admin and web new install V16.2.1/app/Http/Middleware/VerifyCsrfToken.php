@@ -22,6 +22,6 @@ class VerifyCsrfToken extends Middleware
         '/pay-via-ajax', '/success', '/cancel', '/fail', '/ipn', '/bkash/*',
         '/paytabs-response', '/customer/choose-shipping-address', '/system_settings',
         '/paytm*', 'payment/paytabs/callback*',
-        'payment/mpesa-stk/*', 'payment/mpesa-c2b/*',
+        'payment/mpesa-stk/*', 'payment/c2b/*',
     ];
 }

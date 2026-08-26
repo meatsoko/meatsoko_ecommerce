@@ -184,6 +184,7 @@ class PaymentMethodUpdateRequest extends FormRequest
                 'consumer_secret' => 'required',
                 'shortcode' => 'required',
                 'passkey' => 'required',
+                'shortcode_type' => 'required|in:paybill,till',
             ];
         } elseif ($this['gateway'] == 'mpesa_c2b') {
             $additionalDataRules = [
