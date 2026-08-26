@@ -34,6 +34,10 @@ class PriceConverter {
   }
 
 
+  static String convertPriceForWithdraw(BuildContext context, double? price) {
+    return convertPrice(context, price);
+  }
+
   static double? convertWithDiscount(BuildContext context, double? price, double? discount, String? discountType) {
     if(discountType == 'amount' || discountType == 'flat') {
       price = price! - discount!;

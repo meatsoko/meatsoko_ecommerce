@@ -131,7 +131,7 @@ class AuctionBidActionWidget extends StatelessWidget {
         description: getTranslated('are_you_sure_you_want_to_with_draw_bid', context) ?? 'Are you sure you want to withdraw your bid',
         onYesPressed: () async {
           await auctionController.withdrawAuctionBid(context, auctionProductId: auctionId);
-          Navigator.of(context).pop();
+          if(context.mounted) Navigator.of(context).pop();
         },
       ),
     );

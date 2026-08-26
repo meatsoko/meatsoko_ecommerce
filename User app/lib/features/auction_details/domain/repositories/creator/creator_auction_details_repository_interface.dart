@@ -1,0 +1,13 @@
+// STUB: auction feature not fully implemented — minimal shape to satisfy compile-time references only.
+import 'package:flutter_sixvalley_ecommerce/data/model/api_response.dart';
+import 'package:flutter_sixvalley_ecommerce/interface/repo_interface.dart';
+
+abstract class CreatorAuctionDetailsRepositoryInterface extends RepositoryInterface {
+  Future<ApiResponseModel> getAuctionDetails({required String slug});
+
+  Future<ApiResponseModel> updateDeliveryStatus({required int productId, required String status});
+
+  Future<ApiResponseModel> uploadTrackingUrl({required int productId, required String url});
+
+  Future<ApiResponseModel> getBidList({required int productId, int offset = 1});
+}

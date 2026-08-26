@@ -186,7 +186,10 @@ class LocationController with ChangeNotifier {
     ApiResponseModel response = await locationServiceInterface.getAddressFromGeocode(latLng);
     String address = '';
     if(response.response!.statusCode == 200 && response.response!.data['status'] == 'OK') {
-      address = response.response!.data['results'][0]['formatted_address'].toString();
+      final results = response.response!.data['results'];
+      if(results is List && results.isNotEmpty) {
+        address = results[0]['formatted_address'].toString();
+      }
     }
     return address;
   }

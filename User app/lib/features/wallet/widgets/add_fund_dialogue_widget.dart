@@ -169,7 +169,7 @@ class AddFundDialogueWidget extends StatelessWidget {
                                       }
                                       if(inputAmountController.text.trim().isEmpty){
                                         showCustomSnackBar(getTranslated('please_input_amount', context), context, isError: true);
-                                      }else if(double.parse(inputAmountController.text.trim()) <= 0){
+                                      }else if((double.tryParse(inputAmountController.text.trim()) ?? 0) <= 0){
                                         showCustomSnackBar(getTranslated('please_input_amount', context), context, isError: true);
                                       }else if(digitalPaymentProvider.paymentMethodIndex == -1){
                                         showCustomSnackBar(getTranslated('please_select_any_payment_type', context), context, isError: true);

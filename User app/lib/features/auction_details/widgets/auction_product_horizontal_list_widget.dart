@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sixvalley_ecommerce/common/basewidget/auction/auction_card_widget.dart';
 import 'package:flutter_sixvalley_ecommerce/common/enums/auction_enum.dart';
 import 'package:flutter_sixvalley_ecommerce/features/auction_details/domain/models/participator/participation_auction_details_model.dart';
+import 'package:flutter_sixvalley_ecommerce/features/auction_list/domain/models/auction_product_model.dart' hide AuctionDetails;
 import 'package:flutter_sixvalley_ecommerce/localization/language_constrants.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/custom_themes.dart';
 import 'package:flutter_sixvalley_ecommerce/utill/dimensions.dart';

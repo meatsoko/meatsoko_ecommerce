@@ -64,8 +64,10 @@ class _LoyaltyPointConverterDialogueWidgetState extends State<LoyaltyPointConver
                       inputType: TextInputType.number,
                       onChanged: (value) {
                         if(value.isNotEmpty) {
+                          final parsedValue = double.tryParse(value);
+                          if(parsedValue == null) return;
                           setState(() {
-                            convertPointAmount = double.parse(value) / ((exchangeRate ?? 0) /  (Provider.of<SplashController>(context, listen: false).myCurrency!.exchangeRate ?? 1));
+                            convertPointAmount = parsedValue / ((exchangeRate ?? 0) /  (Provider.of<SplashController>(context, listen: false).myCurrency!.exchangeRate ?? 1));
 
                           });
                         }else{

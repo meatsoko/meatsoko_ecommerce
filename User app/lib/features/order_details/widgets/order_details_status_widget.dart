@@ -240,9 +240,13 @@ class OrderDetailsStatusWidget extends StatelessWidget {
     );
   }
 
-  bool showRefundRequest(ConfigModel? configModel, OrderDetailsController orderDetailsController) => orderDetailsController.orderDetails?.first.order?.status == 'delivered'
-    && configModel?.refundDayLimit  == 0
-    && !refundRequested(orderDetailsController.orderDetails);
+  bool showRefundRequest(ConfigModel? configModel, OrderDetailsController orderDetailsController) {
+    final orderDetails = orderDetailsController.orderDetails;
+    if(orderDetails == null || orderDetails.isEmpty) return false;
+    return orderDetails.first.order?.status == 'delivered'
+      && configModel?.refundDayLimit == 0
+      && !refundRequested(orderDetails);
+  }
 
   bool refundRequested (List<OrderDetailsModel>? orderDetails) {
     if(orderDetails == null) return false;

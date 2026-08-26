@@ -309,12 +309,17 @@ class OrderPaymentMethodBottomSheetWidgetState extends State<OrderPaymentMethodB
                         } else if (orderDetailsController.isWalletChecked && (Provider.of<ProfileController>(context, listen: false).balance ?? 0) < widget.payableAmount) {
                           showCustomSnackBarWidget('wallet_balance_is_insufficient_to_pay', context, snackBarType: SnackBarType.error);
                         } else if (orderDetailsController.isOfflineChecked) {
+                          final orderDetailsList = orderDetailsController.orderDetails;
+                          if(orderDetailsList == null || orderDetailsList.isEmpty) {
+                            showCustomSnackBarWidget('order_details_not_available', context, snackBarType: SnackBarType.error);
+                            return;
+                          }
                           Navigator.of(context).pop();
 
                           RouterHelper.getOrderOfflinePaymentScreen(
-                            payableAmount: orderDetailsController.orderDetails![0].latestEditHistory!.orderDueAmount!,
+                            payableAmount: orderDetailsList[0].latestEditHistory!.orderDueAmount!,
                             callback: () {},
-                            orderId: int.parse(orderDetailsController.orderDetails![0].orderId.toString()),
+                            orderId: int.parse(orderDetailsList[0].orderId.toString()),
                           );
                         }
 
