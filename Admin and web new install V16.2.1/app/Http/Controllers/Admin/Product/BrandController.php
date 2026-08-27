@@ -20,7 +20,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Rap2hpoutre\FastExcel\FastExcel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BrandController extends BaseController
 {
@@ -134,6 +136,47 @@ class BrandController extends BaseController
                 'active' => $active,
                 'inactive' => $inactive,
             ]), 'Brand-list.xlsx');
+    }
+
+    public function getImportView(): View
+    {
+        return view('admin-views.brand.bulk-import', [
+            'pageTitle' => translate('brand_Bulk_Import'),
+            'formAction' => route('admin.brand.import.store'),
+            'templateAction' => route('admin.brand.import-template'),
+            'backRoute' => route('admin.brand.list'),
+            'importErrors' => session('brand_import_errors', []),
+        ]);
+    }
+
+    public function downloadImportTemplate(BrandService $brandService): StreamedResponse
+    {
+        return (new FastExcel(collect($brandService->getImportTemplateSample())))
+            ->download('brand-import-template.xlsx');
+    }
+
+    public function import(Request $request, BrandService $brandService): RedirectResponse
+    {
+        $request->validate(['brands_file' => 'required']);
+
+        $result = $brandService->getImportBulkBrandData(request: $request);
+        if (!$result['status']) {
+            ToastMagic::error($result['message']);
+            return back();
+        }
+
+        foreach ($result['rows'] as $row) {
+            $this->brandRepo->add(data: $row);
+        }
+
+        updateSetupGuideCacheKey(key: 'brand_setup', panel: 'admin');
+
+        if (count($result['errors'])) {
+            session()->flash('brand_import_errors', $result['errors']);
+        }
+
+        ToastMagic::success(count($result['rows']) . ' ' . translate('brands_imported_successfully'));
+        return redirect()->route('admin.brand.import');
     }
 
     public function loadMoreBrands(Request $request): JsonResponse

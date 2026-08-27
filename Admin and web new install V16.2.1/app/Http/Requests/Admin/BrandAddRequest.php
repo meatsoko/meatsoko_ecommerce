@@ -26,7 +26,7 @@ class BrandAddRequest extends FormRequest
             'name' => 'required|array',
             'name.0' => 'required|unique:brands,name',
             'image' => getRulesStringForImageValidation(
-                rules: ['required', 'image'],
+                rules: ['nullable', 'image'],
                 skipMimes: ['.svg', '.gif'],
             ),
         ];
@@ -38,7 +38,6 @@ class BrandAddRequest extends FormRequest
             'name.required' => translate('the_name_field_is_required'),
             'name.0.required' => translate('the_name_field_is_required'),
             'name.0.unique' => translate('The_brand_has_already_been_taken'),
-            'image.required' => translate('the_image_is_required'),
             'image.mimes' => translate('brand_image_must_be_jpg_jpeg_png_webp'),
             'image.max' => translate('brand_image_must_not_exceed_2mb'),
         ];
