@@ -530,6 +530,18 @@ a {
     background-color: #b4b4b430;
 }
 
+.__today-deal-box {
+    border-radius: 6px;
+}
+
+.__today-deal-item {
+    transition: opacity .2s ease;
+}
+
+.__today-deal-item:hover {
+    opacity: .75;
+}
+
 @media (min-width: 768px) {
     .__top-slider-images .__slide-img {
         height: 340px;
@@ -573,8 +585,17 @@ a {
         max-width: calc(100% - 254px);
         flex: 0 0 calc(100% - 254px);
     }
+    .has-todays-deal .__top-slider-images {
+        width: calc(100% - 254px - 230px);
+        max-width: calc(100% - 254px - 230px);
+        flex: 0 0 calc(100% - 254px - 230px);
+    }
     .__top-slider-cate {
         flex: 0 0 254px;
+    }
+    .__top-slider-deal {
+        flex: 0 0 230px;
+        max-width: 230px;
     }
     .__slide-img {
         height: unset;
