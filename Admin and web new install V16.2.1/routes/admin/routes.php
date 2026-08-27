@@ -301,6 +301,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
             Route::post('update/{id}', 'update');
             Route::post('delete', 'delete')->name('delete');
             Route::get('export', 'exportList')->name('export');
+            Route::get('import', 'getImportView')->name('import');
+            Route::get('import-template', 'downloadImportTemplate')->name('import-template');
+            Route::post('import', 'import')->name('import.store');
             Route::post('status-update', 'updateStatus')->name('status-update');
             Route::post('load-more-brands', 'loadMoreBrands')->name('load-more-brands');
         });

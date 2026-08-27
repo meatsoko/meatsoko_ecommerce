@@ -163,8 +163,8 @@
                                                 <h4 class="mb-0"><span class="text-info-dark" id="theme_ratio"> ( {{ translate('ratio') }} 4:1 )</span></h4>
                                             </div>
                                             <div class="upload-file">
-                                                <input type="file" name="image" class="upload-file__input single_file_input"
-                                                       id="banner" accept="{{ getFileUploadFormats(skip: '.svg') }}" required  data-max-size="{{ getFileUploadMaxSize() }}"
+                                                <input type="file" name="image[]" class="upload-file__input single_file_input"
+                                                       id="banner" accept="{{ getFileUploadFormats(skip: '.svg') }}" required multiple data-max-size="{{ getFileUploadMaxSize() }}"
                                                        data-required-msg="{{ translate('banner_image_is_required') }}"
                                                        value="">
                                                 <div class="upload-file__wrapper ratio-4-1">
@@ -195,6 +195,10 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <p class="fs-12 text-center max-w-360 m-auto mb-0" id="banner_multi_select_count"></p>
+                                            <p class="fs-12 text-center max-w-360 m-auto">
+                                                {{ translate('you_can_select_multiple_images_at_once_each_image_will_be_added_as_a_separate_slide') }}
+                                            </p>
                                             <p class="fs-12 text-center max-w-360 m-auto">
                                                 {{ getFileUploadFormats(skip: '.svg', asBladeMessage: true).' '. translate('Image_size'). ' : '. translate('Max').' '. getFileUploadMaxSize() . 'MB' }}
                                             </p>
@@ -374,6 +378,12 @@
         elementBannerTypeSelect.on('change', function () {
             getThemeWiseRatio();
 
+        });
+
+        let imagesSelectedLabel = @json(translate('images_selected'));
+        $('#banner').on('change', function () {
+            let count = this.files ? this.files.length : 0;
+            $('#banner_multi_select_count').text(count > 1 ? (count + ' ' + imagesSelectedLabel) : '');
         });
     </script>
 @endpush

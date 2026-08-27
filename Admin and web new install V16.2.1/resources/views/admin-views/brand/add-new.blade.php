@@ -86,15 +86,13 @@
                                     <div class="d-flex flex-column align-items-center">
                                         <label for="" class="form-label fw-semibold mb-1 text-capitalize">
                                             {{ translate('Brand_image') }}
-                                            <span class="text-danger">*</span>
                                         </label>
                                         <p class="fs-12 mb-0">{{ translate('Upload_your_Brand_Image') }}</p>
                                     </div>
                                     <div class="upload-file">
                                         <input type="file" name="image" id="brand-image" class="upload-file__input single_file_input action-preview-for-uploaded-image"
                                                data-max-size="{{ getFileUploadMaxSize() }}"
-                                               data-required-msg="{{ translate('Brand_image_is_required') }}"
-                                               accept="{{ getFileUploadFormats(skip:'.svg,.gif') }}" required
+                                               accept="{{ getFileUploadFormats(skip:'.svg,.gif') }}"
                                                 data-preview-elements=".show-in-meta-thumbnail">
                                         <label
                                             class="upload-file__wrapper">

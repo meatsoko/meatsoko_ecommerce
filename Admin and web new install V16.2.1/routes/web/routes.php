@@ -555,3 +555,16 @@ if (!$isGatewayPublished) {
         });
     });
 }
+
+// Safaricom's production go-live approval for this Till locked the C2B Validation/
+// Confirmation URLs to these paths (set outside our app, via the Daraja portal) before
+// the /payment/c2b/* routes above existed. Keep both live so callbacks land regardless
+// of which URL Safaricom actually has on file for this shortcode.
+Route::group(['prefix' => 'api/payments/c2b'], function () {
+    Route::post('validation', [MpesaC2bController::class, 'validation'])->name('mpesa-c2b.legacy-validation')
+        ->withoutMiddleware([VerifyCsrfToken::class])
+        ->middleware(['mpesa.ip', 'throttle:60,1']);
+    Route::post('confirmation', [MpesaC2bController::class, 'confirmation'])->name('mpesa-c2b.legacy-confirmation')
+        ->withoutMiddleware([VerifyCsrfToken::class])
+        ->middleware(['mpesa.ip', 'throttle:60,1']);
+});

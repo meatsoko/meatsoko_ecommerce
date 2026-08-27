@@ -104,7 +104,7 @@
                 <div class="p-12 p-sm-20 bg-section rounded">
                     <div class="d-flex flex-column gap-20 text-center">
                        <div>
-                            <label class="form-label fw-semibold mb-1">{{ translate('Brand_image') }} <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold mb-1">{{ translate('Brand_image') }}</label>
                             <p class="fs-12 mb-0">{{ translate('Upload_your_Brand_Image') }}</p>
                         </div>
                         <div class="upload-file">
