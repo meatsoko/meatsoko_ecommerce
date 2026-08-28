@@ -120,6 +120,14 @@ class MpesaStkController extends Controller
             return response()->json($this->response_formatter(GATEWAYS_DEFAULT_204), 200);
         }
 
+        $lock = Cache::lock('mpesa_stk_push_lock_' . $data->id, 15);
+        if (!$lock->get()) {
+            return response()->json([
+                'status' => 0,
+                'message' => translate('stk_push_already_sent_check_your_phone'),
+            ]);
+        }
+
         if (!$this->shortcode || !$this->passkey) {
             return response()->json(['status' => 0, 'message' => translate('mpesa_is_not_configured_properly')]);
         }
