@@ -114,8 +114,27 @@ h1, h2, h3, h4, h5, h6,
     color: var(--ms-cream) !important;
 }
 
+.navbar-stuck-menu .nav-item.active > .nav-link {
+    position: relative;
+}
+
+.navbar-stuck-menu .nav-item.active > .nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 2px;
+    background: var(--ms-rust);
+    border-radius: 2px;
+}
+
 .mega-nav .nav-item .nav-link {
     color: rgba(241, 242, 234, 0.82) !important;
+}
+
+.navbar-stuck-menu .mega-nav {
+    background: transparent !important;
 }
 
 .category-menu-toggle-btn-text,
@@ -544,7 +563,7 @@ h2.text-black.font-bold {
     color: var(--ms-olive) !important;
 }
 
-/* ---------- Auth pages (login / register) ---------- */
+/* ---------- Auth pages (login / register) — two-panel swap layout ---------- */
 .login-card {
     background: var(--ms-paper);
     border: 1px solid var(--ms-stone-line);
@@ -554,6 +573,125 @@ h2.text-black.font-bold {
 
 .login-card img[src*="user-vector"] {
     filter: brightness(0) saturate(100%) invert(23%) sepia(45%) saturate(1200%) hue-rotate(110deg);
+}
+
+.ms-auth-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 560px;
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-card);
+    overflow: hidden;
+    background: var(--ms-paper);
+}
+
+@media (max-width: 860px) {
+    .ms-auth-layout {
+        grid-template-columns: 1fr;
+        min-height: 0;
+    }
+}
+
+.ms-auth-side {
+    background: var(--ms-ink);
+    color: var(--ms-cream);
+    padding: 3rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    order: 1;
+}
+
+.ms-auth-layout--register .ms-auth-side {
+    order: 2;
+}
+
+.ms-auth-side h2 {
+    color: var(--ms-cream);
+    font-size: clamp(1.6rem, 1.6vw + 1rem, 2.2rem);
+    margin-bottom: 0.5em;
+}
+
+.ms-auth-side p {
+    color: rgba(241, 242, 234, 0.68);
+    margin-bottom: 1.5rem;
+    max-width: 38ch;
+}
+
+.ms-auth-side ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ms-auth-side li {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    font-size: 0.875rem;
+    color: rgba(241, 242, 234, 0.85);
+}
+
+.ms-auth-side li svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--ms-rust);
+}
+
+.ms-auth-form-wrap {
+    padding: 3rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    order: 2;
+}
+
+.ms-auth-layout--register .ms-auth-form-wrap {
+    order: 1;
+}
+
+.ms-auth-tabs {
+    display: flex;
+    gap: 2rem;
+    border-bottom: 1px solid var(--ms-stone-line);
+    margin-bottom: 2rem;
+}
+
+.ms-auth-tab {
+    background: none;
+    border: none;
+    padding: 0.2em 0 0.9em;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--ms-ink-muted);
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -1px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.ms-auth-tab:hover {
+    color: var(--ms-ink);
+    text-decoration: none;
+}
+
+.ms-auth-tab.active {
+    color: var(--ms-ink);
+    border-color: var(--ms-rust);
+}
+
+.ms-auth-panel {
+    position: relative;
+}
+
+.ms-auth-panel > .row:not(.or-sign-in-with-row) {
+    max-width: 460px;
 }
 
 /* ---------- Business pages / FAQ / contact ---------- */
@@ -665,12 +803,38 @@ h2.text-black.font-bold {
     margin-bottom: 2rem;
 }
 
+.ms-section-head.ms-section-head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
 .ms-section-head h2 {
     font-size: clamp(1.9rem, 2.4vw + 1rem, 2.9rem);
 }
 
 .ms-on-ink .ms-section-head h2 {
     color: var(--ms-cream);
+}
+
+.ms-section-head .ms-sub {
+    color: var(--ms-ink-muted);
+    margin-top: 0.4em;
+    max-width: 46ch;
+}
+
+.ms-view-all {
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    border-bottom: 1.5px solid currentColor;
+    padding-bottom: 2px;
+    flex-shrink: 0;
+    color: inherit;
 }
 
 .ms-trust-grid {
@@ -781,4 +945,27 @@ h2.text-black.font-bold {
 .ms-step p {
     color: var(--ms-ink-muted);
     font-size: 0.875rem;
+}
+
+/* ---------- Footer: app download coming-soon badge ---------- */
+.ms-coming-soon-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    border: 1px solid rgba(241, 242, 234, 0.25);
+    border-radius: 999px;
+    padding: 0.55em 1.1em;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ms-cream);
+}
+
+.ms-coming-soon-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ms-rust);
 }

@@ -28,16 +28,23 @@
     ?>
 
     <div class="container py-4 py-lg-5 my-4 text-align-direction">
-        <div class="row justify-content-center">
-            <div class="{{ $multiColumn ? 'col-md-9' : 'col-md-6' }} login-card">
-                <div class="d-flex justify-content-center align-items-center flex-column">
-                    <img src="{{ theme_asset(path: 'public/assets/front-end/img/icons/user-vector.svg') }}" alt=""
-                        class="w-70px">
-                    <h2 class="text-center font-bold text-capitalize fs-20 my-4 fs-18-mobile">
-                        {{ translate('Sign_In') }}
-                    </h2>
+        <div class="ms-auth-layout ms-auth-layout--login">
+            <div class="ms-auth-side">
+                <span class="ms-eyebrow">Welcome back</span>
+                <h2>Good to see you again.</h2>
+                <p>Log in to pick up right where you left off — your details are already saved.</p>
+                <ul>
+                    <li><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/></svg>Your delivery address is already saved</li>
+                    <li><svg viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2-7 4 14 2-7h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>See your past and current orders instantly</li>
+                    <li><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.7"/></svg>Checkout in a couple of taps</li>
+                </ul>
+            </div>
+            <div class="ms-auth-form-wrap">
+                <div class="ms-auth-tabs">
+                    <span class="ms-auth-tab active">{{ translate('Sign_In') }}</span>
+                    <a href="{{ route('customer.auth.sign-up') }}" class="ms-auth-tab">{{ translate('sign_up') }}</a>
                 </div>
-                <div class="position-relative">
+                <div class="ms-auth-panel">
                     <div
                         class="row justify-content-center align-items-center g-4 {{ $multiColumn ? 'or-sign-in-with-row' : '' }}">
                         @if ($customerOTPLogin && !$customerManualLogin && !$customerSocialLogin)

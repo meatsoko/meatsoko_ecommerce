@@ -102,34 +102,14 @@
                                  src="{{ getStorageImages(path: $web_config['footer_logo'], type: 'logo') }}"
                                  alt="{{ $web_config['company_name'] }}"/>
                         </a>
-                        @if((isset($web_config['ios']['status']) && $web_config['ios']['status']) || (isset($web_config['android']['status']) &&  $web_config['android']['status']))
-                            <div class="mt-4 pt-lg-4">
-                                <h6 class="text-uppercase font-weight-bold footer-header align-items-center text-center text-md-start">
-                                    {{ translate('download_our_app') }}
-                                </h6>
-                            </div>
-                        @endif
+                        <div class="mt-4 pt-lg-4">
+                            <h6 class="text-uppercase font-weight-bold footer-header align-items-center text-center text-md-start">
+                                {{ translate('download_our_app') }}
+                            </h6>
+                        </div>
 
-                        <div class="store-contents d-flex justify-content-center pr-lg-4">
-                            @if(isset($web_config['ios']['status']) && $web_config['ios']['status'])
-                                <div class="me-2 mb-2">
-                                    <a class="" href="{{ $web_config['ios']['link'] }}" role="button">
-                                        <img width="100"
-                                             src="{{ theme_asset(path: "public/assets/front-end/png/apple_app.png")}}"
-                                             alt="{{ translate('App') }}">
-                                    </a>
-                                </div>
-                            @endif
-
-                            @if(isset($web_config['android']['status']) && $web_config['android']['status'])
-                                <div class="me-2 mb-2">
-                                    <a href="{{ $web_config['android']['link'] }}" role="button">
-                                        <img width="100"
-                                             src="{{ theme_asset(path: "public/assets/front-end/png/google_app.png")}}"
-                                             alt="{{ translate('App') }}">
-                                    </a>
-                                </div>
-                            @endif
+                        <div class="store-contents d-flex justify-content-center justify-content-md-start pr-lg-4">
+                            <span class="ms-coming-soon-badge">Coming Soon</span>
                         </div>
                     </div>
                     <div class="col-md-9">

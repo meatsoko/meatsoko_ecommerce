@@ -153,7 +153,30 @@
             </div>
         @endif
 
-        @include('web-views.partials._category-section-home')
+        @if ($categories->count() > 0)
+            <section class="ms-section" id="shop-meat">
+                <div class="ms-wrap">
+                    <div class="ms-section-head ms-section-head-row">
+                        <div>
+                            <span class="ms-eyebrow">The consumer shopping path</span>
+                            <h2>{{ translate('categories') }}</h2>
+                            <p class="ms-sub">{{ translate('Find_your_favorite_categories') }}</p>
+                        </div>
+                        <a href="{{ route('categories') }}" class="ms-view-all">{{ translate('View_All') }} →</a>
+                    </div>
+                    <div class="ms-cat-grid">
+                        @foreach($categories as $key => $category)
+                            @if ($key < 6)
+                                <a href="{{ route('category-products', ['slug' => $category['slug']]) }}" class="ms-cat-card">
+                                    <img loading="lazy" src="{{ getStorageImages(path: $category->icon_full_url, type: 'category') }}" alt="{{ $category->name }}">
+                                    <div class="ms-cat-label"><div class="ms-name">{{ Str::limit($category->name, 20) }}</div></div>
+                                </a>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endif
 
          @if(getFeaturedDealsProductList() && (count(getFeaturedDealsProductList()) > 0))
             <section class="featured_deal pb-3">
@@ -300,12 +323,6 @@
                     </div>
                 </div>
             </section>
-        @endif
-
-        @if ($homeCategories->count() > 0)
-            @foreach($homeCategories as $category)
-                @include('web-views.partials._category-wise-product', ['decimal_point_settings'=>$decimalPointSettings])
-            @endforeach
         @endif
 
         <section class="ms-section ms-on-ink">
