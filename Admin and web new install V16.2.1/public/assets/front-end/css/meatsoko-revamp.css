@@ -1,0 +1,455 @@
+/* ==========================================================================
+   MeatSoko revamp — visual skin layered on top of the existing theme.
+   Loaded last, so it wins the cascade without touching any markup/JS hooks.
+   Design tokens sourced from meatsoko-mockup/ (home.html etc).
+   ========================================================================== */
+
+:root {
+    --ms-ink: #14180f;
+    --ms-ink-soft: #202417;
+    --ms-stone: #edeee7;
+    --ms-stone-line: #dcded2;
+    --ms-paper: #fafaf6;
+    --ms-rust: #d61a1a;
+    --ms-rust-dark: #ad1414;
+    --ms-olive: #016b38;
+    --ms-olive-light: #1f8a54;
+    --ms-ochre: #b8842e;
+    --ms-cream: #f1f2ea;
+    --ms-ink-muted: #5f6357;
+    --ms-radius-card: 12px;
+    --ms-radius-btn: 8px;
+
+    /* Re-point the site-wide theme variables at the MeatSoko brand palette
+       so every existing --web-primary/--web-secondary consumer (buttons,
+       links, icons) picks up the new colors automatically. */
+    --base: var(--ms-olive);
+    --web-primary: var(--ms-olive);
+    --web-primary-rgb: 1, 107, 56;
+    --base-2: var(--ms-rust);
+    --web-secondary: var(--ms-rust);
+}
+
+body {
+    font-family: 'Work Sans', system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6,
+.categories-title, .arrival-title, .feature-product-title,
+.footer-cta-heading {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+}
+
+/* ---------- Header ---------- */
+.topbar {
+    background: var(--ms-ink) !important;
+    border-bottom: 1px solid rgba(241, 242, 234, 0.08);
+}
+
+.topbar .topbar-link,
+.topbar .topbar-text {
+    color: rgba(241, 242, 234, 0.75) !important;
+}
+
+.topbar .topbar-link:hover {
+    color: var(--ms-cream) !important;
+}
+
+.navbar-sticky.mobile-head {
+    background: var(--ms-ink) !important;
+}
+
+.navbar-sticky .navbar-brand img {
+    filter: brightness(0) invert(1);
+}
+
+.search-bar-input {
+    background: rgba(241, 242, 234, 0.09);
+    border: 1px solid rgba(241, 242, 234, 0.18);
+    border-radius: 999px 0 0 999px;
+    color: var(--ms-cream);
+}
+
+.search-bar-input::placeholder {
+    color: rgba(241, 242, 234, 0.5);
+}
+
+.search_button {
+    background-color: var(--ms-rust) !important;
+    border-radius: 0 999px 999px 0;
+}
+
+.navbar-toolbar .navbar-tool-icon-box {
+    background: transparent !important;
+    color: var(--ms-cream) !important;
+    border-radius: 999px;
+}
+
+.navbar-toolbar .navbar-tool-icon-box:hover {
+    background: rgba(241, 242, 234, 0.1) !important;
+}
+
+.navbar-tool .navbar-tool-label {
+    background-color: var(--ms-rust) !important;
+    color: var(--ms-cream) !important;
+}
+
+.navbar-tool-text {
+    color: var(--ms-cream) !important;
+}
+
+.navbar-stuck-menu {
+    background-color: var(--ms-ink-soft) !important;
+    border-top: 1px solid rgba(241, 242, 234, 0.08);
+}
+
+.navbar-stuck-menu .nav-link {
+    color: rgba(241, 242, 234, 0.82) !important;
+    font-weight: 600;
+}
+
+.navbar-stuck-menu .nav-link:hover,
+.navbar-stuck-menu .nav-item.active .nav-link {
+    color: var(--ms-cream) !important;
+}
+
+.mega-nav .nav-item .nav-link {
+    color: rgba(241, 242, 234, 0.82) !important;
+}
+
+.category-menu-toggle-btn-text,
+.category-menu-toggle-btn svg path {
+    color: var(--ms-cream);
+}
+
+.megamenu-wrap {
+    background: var(--ms-paper);
+    border-top: 1px solid var(--ms-stone-line);
+}
+
+/* ---------- Buttons ---------- */
+.btn--primary,
+.btn-primary {
+    background-color: var(--ms-rust) !important;
+    border-color: var(--ms-rust) !important;
+    color: var(--ms-cream) !important;
+    border-radius: var(--ms-radius-btn);
+}
+
+.btn--primary:hover,
+.btn-primary:hover {
+    background-color: var(--ms-rust-dark) !important;
+    border-color: var(--ms-rust-dark) !important;
+}
+
+.web-text-primary,
+.text-primary {
+    color: var(--ms-olive) !important;
+}
+
+/* ---------- Section headers on the home page ---------- */
+.categories-title,
+.arrival-title,
+.feature-product-title,
+h2.text-black.font-bold {
+    color: var(--ms-ink);
+}
+
+.view-all-btn-text {
+    font-weight: 600;
+    color: var(--ms-rust) !important;
+}
+
+/* ---------- Hero / promo slider ---------- */
+.hero-slider {
+    border-radius: var(--ms-radius-card);
+    overflow: hidden;
+}
+
+.hero-slider .__slide-img {
+    border-radius: var(--ms-radius-card);
+}
+
+/* ---------- Category rail (category-section-home) ---------- */
+.categories-title .fw-bold {
+    letter-spacing: 0.01em;
+}
+
+.__cate-item .__img {
+    border-radius: 50%;
+    background: var(--ms-stone);
+    padding: 8px;
+}
+
+.__cate-item h3 {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    color: var(--ms-ink);
+}
+
+/* ---------- Product cards ---------- */
+.product-single-hover {
+    border-radius: var(--ms-radius-card);
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    overflow: hidden;
+}
+
+.product-single-hover .single-product-details h3 a {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    color: var(--ms-ink);
+}
+
+.product-single-hover .product-price .text-accent {
+    color: var(--ms-rust-dark) !important;
+    font-weight: 700;
+}
+
+.for-discount-value {
+    background: var(--ms-rust) !important;
+    color: var(--ms-cream) !important;
+}
+
+.flash_deal_product {
+    border-radius: var(--ms-radius-card);
+    border-color: var(--ms-stone-line) !important;
+}
+
+.flash-product-title {
+    font-family: 'Fraunces', serif;
+    color: var(--ms-ink);
+}
+
+.flash-product-price {
+    color: var(--ms-rust-dark) !important;
+}
+
+/* ---------- Company reliability strip -> trust cards ---------- */
+.shipping-method-system {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-card);
+    padding: 1.25rem 1rem;
+}
+
+.shopping-method-icon {
+    background: var(--ms-stone) !important;
+}
+
+/* ---------- Footer ---------- */
+.page-footer {
+    background: var(--ms-ink);
+    color: rgba(241, 242, 234, 0.65);
+}
+
+.page-footer .custom-light-primary-color-20 {
+    background: var(--ms-ink) !important;
+}
+
+.page-footer .footer-header {
+    color: var(--ms-cream);
+    font-family: 'Work Sans', sans-serif;
+    letter-spacing: 0.06em;
+}
+
+.page-footer .widget-list-link {
+    color: rgba(241, 242, 234, 0.65);
+}
+
+.page-footer .widget-list-link:hover {
+    color: var(--ms-cream);
+}
+
+.page-footer .subscribe-button {
+    background: var(--ms-rust);
+    color: var(--ms-cream);
+}
+
+.page-footer .social-btn {
+    background: rgba(241, 242, 234, 0.1) !important;
+}
+
+.page-footer .social-btn:hover {
+    background: var(--ms-rust) !important;
+}
+
+.page-footer .bg-white-overlay-50 {
+    background: var(--ms-ink-soft) !important;
+    border-top: 1px solid rgba(241, 242, 234, 0.08);
+}
+
+.footer-slide-item {
+    border-radius: var(--ms-radius-card);
+}
+
+/* ==========================================================================
+   New static sections added to the home page — no dynamic-data equivalent
+   existed before, styled to match the mockup's component classes.
+   ========================================================================== */
+.ms-wrap {
+    max-width: 1520px;
+    margin: 0 auto;
+    padding: 0 1.75rem;
+}
+
+@media (max-width: 640px) {
+    .ms-wrap {
+        padding: 0 1rem;
+    }
+}
+
+.ms-section {
+    padding: 3rem 0;
+}
+
+.ms-section.ms-on-ink {
+    background: var(--ms-ink);
+    color: var(--ms-cream);
+}
+
+.ms-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ms-rust);
+    margin-bottom: 0.75rem;
+}
+
+.ms-on-ink .ms-eyebrow {
+    color: #ef9c9c;
+}
+
+.ms-eyebrow::before {
+    content: '';
+    width: 18px;
+    height: 1.5px;
+    background: currentColor;
+}
+
+.ms-section-head {
+    margin-bottom: 2rem;
+}
+
+.ms-section-head h2 {
+    font-size: clamp(1.9rem, 2.4vw + 1rem, 2.9rem);
+}
+
+.ms-on-ink .ms-section-head h2 {
+    color: var(--ms-cream);
+}
+
+.ms-trust-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 860px) {
+    .ms-trust-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .ms-trust-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ms-trust-card {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-card);
+    padding: 1.5rem;
+}
+
+.ms-trust-card h3 {
+    font-size: 1.15rem;
+    margin-bottom: 0.35em;
+    color: var(--ms-ink);
+}
+
+.ms-trust-card p {
+    font-size: 0.875rem;
+    color: var(--ms-ink-muted);
+    margin: 0;
+}
+
+.ms-why-grid,
+.ms-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2.25rem;
+}
+
+.ms-steps {
+    gap: 1.5rem;
+    counter-reset: step;
+}
+
+@media (max-width: 860px) {
+    .ms-why-grid,
+    .ms-steps {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .ms-why-grid,
+    .ms-steps {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ms-why-item .ms-num {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--ms-rust);
+    display: block;
+    margin-bottom: 0.6em;
+    letter-spacing: 0.02em;
+}
+
+.ms-why-item h3 {
+    font-size: clamp(1.4rem, 1.2vw + 1rem, 1.85rem);
+    margin-bottom: 0.4em;
+    color: var(--ms-cream);
+}
+
+.ms-why-item p {
+    color: rgba(241, 242, 234, 0.66);
+    font-size: 0.875rem;
+    max-width: 32ch;
+}
+
+.ms-step {
+    padding-top: 1.5rem;
+    border-top: 1.5px solid var(--ms-stone-line);
+}
+
+.ms-step .ms-step-no {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--ms-rust);
+    display: block;
+    margin-bottom: 0.5em;
+}
+
+.ms-step h3 {
+    font-size: clamp(1.15rem, 0.9vw + 0.9rem, 1.4rem);
+    margin-bottom: 0.3em;
+    color: var(--ms-ink);
+}
+
+.ms-step p {
+    color: var(--ms-ink-muted);
+    font-size: 0.875rem;
+}
