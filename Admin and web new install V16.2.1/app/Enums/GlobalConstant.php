@@ -1178,7 +1178,6 @@ enum GlobalConstant
         'mercadopago',
         'bkash',
         'mpesa_stk',
-        'mpesa_c2b',
     ];
 
     const DEFAULT_SMS_GATEWAYS = [

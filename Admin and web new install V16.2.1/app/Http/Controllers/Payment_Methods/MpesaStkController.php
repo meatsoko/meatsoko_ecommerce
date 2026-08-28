@@ -167,6 +167,12 @@ class MpesaStkController extends Controller
             $additionalData['mpesa_merchant_request_id'] = $response['MerchantRequestID'] ?? null;
             $this->payment::where(['id' => $data->id])->update(['additional_data' => json_encode($additionalData)]);
 
+            Log::info('Mpesa STK push accepted by Safaricom, awaiting callback', [
+                'payment_id' => $data->id,
+                'checkout_request_id' => $response['CheckoutRequestID'] ?? null,
+                'callback_url' => $requestBody['CallBackURL'],
+            ]);
+
             return response()->json([
                 'status' => 1,
                 'message' => translate('stk_push_sent_check_your_phone'),
@@ -184,6 +190,12 @@ class MpesaStkController extends Controller
     {
         $payload = json_decode($request->getContent(), true);
         $callback = $payload['Body']['stkCallback'] ?? null;
+
+        Log::info('Mpesa STK callback received', [
+            'payment_id' => $payment_id,
+            'ip' => $request->ip(),
+            'payload' => $payload,
+        ]);
 
         if (!$callback) {
             return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
