@@ -285,6 +285,335 @@ h2.text-black.font-bold {
 }
 
 /* ==========================================================================
+   Cross-page additions (breadcrumb, page head) — used by categories,
+   category listing, product, cart, checkout, etc.
+   ========================================================================== */
+.ms-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    font-size: 0.8rem;
+    color: var(--ms-ink-muted);
+    padding: 1rem 0;
+}
+
+.ms-breadcrumb a:hover {
+    color: var(--ms-olive);
+}
+
+.ms-breadcrumb .ms-sep {
+    opacity: 0.5;
+}
+
+.ms-breadcrumb .ms-current {
+    color: var(--ms-ink);
+    font-weight: 600;
+}
+
+.ms-page-head {
+    padding: 0.5rem 0 2.25rem;
+    border-bottom: 1px solid var(--ms-stone-line);
+    margin-bottom: 2.25rem;
+}
+
+.ms-page-head h1 {
+    font-size: clamp(1.9rem, 2.4vw + 1rem, 2.9rem);
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    color: var(--ms-ink);
+}
+
+.ms-page-head .ms-sub {
+    color: var(--ms-ink-muted);
+    margin-top: 0.5em;
+    max-width: 60ch;
+}
+
+/* ---------- Categories overview page: real-data card grid ---------- */
+.ms-cat-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 980px) {
+    .ms-cat-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 560px) {
+    .ms-cat-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.ms-cat-card {
+    position: relative;
+    display: block;
+    border-radius: var(--ms-radius-card);
+    overflow: hidden;
+    aspect-ratio: 3/3.6;
+    background: var(--ms-stone);
+    transition: transform 0.2s ease;
+}
+
+.ms-cat-card:hover {
+    transform: translateY(-3px);
+}
+
+.ms-cat-card img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ms-cat-card .ms-cat-label {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1rem 1rem 1rem;
+    background: linear-gradient(0deg, rgba(20, 24, 15, 0.86), rgba(20, 24, 15, 0));
+    color: var(--ms-cream);
+}
+
+.ms-cat-card .ms-cat-label .ms-name {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: clamp(1.15rem, 0.9vw + 0.9rem, 1.4rem);
+}
+
+/* ---------- Product listing page (filter sidebar + grid) ---------- */
+.cz-sidebar {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line) !important;
+    border-radius: var(--ms-radius-card) !important;
+}
+
+.shop-sidebar-scroll h5,
+.shop-sidebar-scroll h6 {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ms-ink);
+}
+
+.menu--caret-accordion .for-hover-label {
+    font-size: 0.875rem;
+    color: var(--ms-ink);
+}
+
+.menu--caret-accordion .for-hover-label.text-primary {
+    color: var(--ms-olive) !important;
+    font-weight: 600;
+}
+
+#price_range_slider {
+    background: var(--ms-stone-line) !important;
+}
+
+#price_range_slider .slider-range {
+    background: var(--ms-olive) !important;
+}
+
+#price_range_slider .slider-thumb {
+    background: var(--ms-paper) !important;
+    border: 2.5px solid var(--ms-olive) !important;
+}
+
+.search-page-header {
+    border-bottom: 1px solid var(--ms-stone-line);
+    padding-bottom: 1rem;
+}
+
+.search-page-header h5 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    color: var(--ms-ink);
+}
+
+.sorting-item {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-btn);
+}
+
+.product-list-filter-input {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--ms-ink);
+}
+
+/* ---------- Product details page ---------- */
+.pd-img-wrap .swiper-container,
+.easyzoom img {
+    border-radius: var(--ms-radius-card) !important;
+}
+
+.discounted-unit-price {
+    color: var(--ms-rust-dark) !important;
+    font-family: 'Work Sans', sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+
+.quantity-box {
+    border-radius: var(--ms-radius-btn) !important;
+    border-color: var(--ms-stone-line) !important;
+}
+
+.product-action-add-wishlist .web-text-primary,
+.wishlist_icon_ {
+    color: var(--ms-rust) !important;
+}
+
+.chat_with_seller-buttons .btn {
+    border-radius: var(--ms-radius-btn);
+}
+
+/* ---------- Cart & order summary (shared with checkout) ---------- */
+.__card.cart_information,
+.cart_information {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line) !important;
+    border-radius: var(--ms-radius-card) !important;
+}
+
+.__cart-table thead {
+    background: var(--ms-stone) !important;
+}
+
+.qty .tio-add,
+.qty .tio-remove {
+    color: var(--ms-olive);
+}
+
+.free-delivery-progress .progress-bar {
+    background-color: var(--ms-olive) !important;
+}
+
+.__cart-total {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-card);
+    padding: 1.5rem;
+}
+
+.cart_title {
+    color: var(--ms-ink-muted);
+    font-size: 0.875rem;
+}
+
+.cart_value {
+    color: var(--ms-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Generic form controls (checkout, auth, account, contact/FAQ) ---------- */
+.form-control,
+.form-select {
+    border-radius: var(--ms-radius-btn);
+    border-color: var(--ms-stone-line);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--ms-olive);
+    box-shadow: 0 0 0 0.2rem rgba(1, 107, 56, 0.15);
+}
+
+.form-check-input:checked,
+.custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--ms-olive) !important;
+    border-color: var(--ms-olive) !important;
+}
+
+.card.__card,
+.card__card,
+.card {
+    border-radius: var(--ms-radius-card) !important;
+    border-color: var(--ms-stone-line) !important;
+}
+
+.__color-0f9d58 {
+    color: var(--ms-olive) !important;
+}
+
+/* ---------- Auth pages (login / register) ---------- */
+.login-card {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-card);
+    padding: 2rem;
+}
+
+.login-card img[src*="user-vector"] {
+    filter: brightness(0) saturate(100%) invert(23%) sepia(45%) saturate(1200%) hue-rotate(110deg);
+}
+
+/* ---------- Business pages / FAQ / contact ---------- */
+.btnF:hover span,
+.btnF:not(.collapsed) span {
+    color: var(--ms-olive);
+}
+
+.business-pages-banner-section h1 {
+    color: var(--ms-cream);
+}
+
+/* ---------- Account dashboard sidebar ---------- */
+.user-profile-aside {
+    border-radius: var(--ms-radius-card);
+}
+
+.aside-link.active-menu,
+.aside-link.active-menu i {
+    color: var(--ms-olive) !important;
+    font-weight: 600;
+}
+
+/* ---------- Checkout step indicator ---------- */
+.checkout-steps-custom {
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    padding: 1rem 0;
+}
+
+.checkout-steps-custom .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0.55;
+}
+
+.checkout-steps-custom .step.completed {
+    opacity: 1;
+}
+
+.checkout-steps-custom .step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ms-stone);
+    color: var(--ms-ink-muted);
+}
+
+.checkout-steps-custom .step.completed .step-circle {
+    background: var(--ms-olive);
+    color: var(--ms-cream);
+}
+
+/* ==========================================================================
    New static sections added to the home page — no dynamic-data equivalent
    existed before, styled to match the mockup's component classes.
    ========================================================================== */

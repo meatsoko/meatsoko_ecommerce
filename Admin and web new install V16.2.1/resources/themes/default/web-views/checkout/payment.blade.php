@@ -7,6 +7,13 @@
 @endpush
 
 @section('content')
+    <div class="container mt-3 rtl px-0 px-md-3 text-align-direction">
+        <nav class="ms-breadcrumb" aria-label="Breadcrumb">
+            <a href="{{ route('home') }}">{{ translate('home') }}</a>
+            <span class="ms-sep">/</span>
+            <span class="ms-current">{{ translate('choose_Payment_Method') }}</span>
+        </nav>
+    </div>
     <div class="container pb-5 mb-2 mb-md-4 rtl px-0 px-md-3 text-align-direction">
         <div class="row mx-max-md-0">
             <section class="col-lg-8 px-max-md-0 mt-4">

@@ -15,7 +15,14 @@
 @endpush
 
 @section('content')
-    <div class="container mt-3 rtl px-0 px-md-3 text-align-direction" id="cart-summary">
+    <div class="container mt-3 rtl px-0 px-md-3 text-align-direction">
+        <nav class="ms-breadcrumb" aria-label="Breadcrumb">
+            <a href="{{ route('home') }}">{{ translate('home') }}</a>
+            <span class="ms-sep">/</span>
+            <span class="ms-current">{{ translate('shopping_cart') }}</span>
+        </nav>
+    </div>
+    <div class="container mt-1 rtl px-0 px-md-3 text-align-direction" id="cart-summary">
         @include(VIEW_FILE_NAMES['products_cart_details_partials'])
     </div>
 

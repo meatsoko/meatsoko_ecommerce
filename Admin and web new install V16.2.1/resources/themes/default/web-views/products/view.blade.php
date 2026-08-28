@@ -16,6 +16,12 @@
 @section('content')
     <div class="container py-3" dir="{{ session('direction') }}">
 
+        <nav class="ms-breadcrumb" aria-label="Breadcrumb">
+            <a href="{{ route('home') }}">{{ translate('home') }}</a>
+            <span class="ms-sep">/</span>
+            <span class="ms-current">{{ $pageTitleContent }}</span>
+        </nav>
+
         <form method="POST" action="{{ url()->current() }}" class="product-list-filter">
             <input hidden name="offer_type" value="{{ $data['offer_type'] }}">
             <input hidden name="data_from" value="{{ request('data_from') }}">

@@ -9,6 +9,13 @@
 
 @section('content')
     @php($billingInputByCustomer=getWebConfig(name: 'billing_input_by_customer'))
+    <div class="container mt-3 rtl px-0 px-md-3 text-align-direction">
+        <nav class="ms-breadcrumb" aria-label="Breadcrumb">
+            <a href="{{ route('home') }}">{{ translate('home') }}</a>
+            <span class="ms-sep">/</span>
+            <span class="ms-current">{{ translate('shipping_Address') }}</span>
+        </nav>
+    </div>
     <div class="container py-4 pt-3 rtl __inline-56 px-0 px-md-3 text-align-direction">
         <div class="row mx-max-md-0">
             <section class="col-lg-8 px-max-md-0">

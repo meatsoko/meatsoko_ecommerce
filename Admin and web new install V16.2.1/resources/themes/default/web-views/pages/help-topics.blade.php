@@ -5,6 +5,11 @@
 @section('content')
     <div class="__inline-60">
         <div class="container rtl">
+            <nav class="ms-breadcrumb" aria-label="Breadcrumb">
+                <a href="{{ route('home') }}">{{ translate('home') }}</a>
+                <span class="ms-sep">/</span>
+                <span class="ms-current">{{ translate('FAQ') }}</span>
+            </nav>
             <div class="row">
                 <div class="col-md-12 sidebar_heading text-center mb-2">
                     <h1 class="text-center pt-4 fs-24 font-semi-bold text-capitalize">{{ translate('frequently_asked_question') }}</h1>

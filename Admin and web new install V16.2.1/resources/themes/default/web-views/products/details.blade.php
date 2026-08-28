@@ -9,6 +9,13 @@
 
 @section('content')
     <div class="__inline-23">
+        <div class="container mt-3 rtl text-align-direction">
+            <nav class="ms-breadcrumb" aria-label="Breadcrumb">
+                <a href="{{ route('home') }}">{{ translate('home') }}</a>
+                <span class="ms-sep">/</span>
+                <span class="ms-current">{{ $product['name'] }}</span>
+            </nav>
+        </div>
         <div class="container my-4 rtl text-align-direction">
             <div class="row g-3 {{Session::get('direction') === "rtl" ? '__dir-rtl' : ''}}">
                 <div class="col-lg-9">

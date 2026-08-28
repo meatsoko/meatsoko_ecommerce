@@ -10,6 +10,11 @@
 @section('content')
     <div class="__inline-58">
         <div class="container rtl">
+            <nav class="ms-breadcrumb" aria-label="Breadcrumb">
+                <a href="{{ route('home') }}">{{ translate('home') }}</a>
+                <span class="ms-sep">/</span>
+                <span class="ms-current">{{ translate('contact_us') }}</span>
+            </nav>
             <div class="row">
                 <div class="col-md-12 contact-us-page sidebar_heading text-center mb-2">
                     <h1 class="h3 mb-0 headerTitle">{{ translate('contact_us') }}</h1>
