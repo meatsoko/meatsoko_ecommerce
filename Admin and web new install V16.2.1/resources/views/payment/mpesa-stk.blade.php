@@ -90,6 +90,9 @@
             const resendAfterMs = 90000;
 
             function sendStkPush() {
+                if (pushButton.disabled) {
+                    return;
+                }
                 errorEl.style.display = 'none';
                 const phone = document.getElementById('mpesa-phone').value.trim();
                 if (!phone) {
@@ -97,6 +100,8 @@
                     errorEl.style.display = 'block';
                     return;
                 }
+
+                pushButton.disabled = true;
 
                 fetch("{{ route('mpesa-stk.push') }}", {
                     method: 'POST',
@@ -116,11 +121,13 @@
                         } else {
                             errorEl.textContent = result.message || "{{ translate('Unable to initiate M-Pesa payment') }}";
                             errorEl.style.display = 'block';
+                            pushButton.disabled = false;
                         }
                     })
                     .catch(() => {
                         errorEl.textContent = "{{ translate('Something went wrong, please try again') }}";
                         errorEl.style.display = 'block';
+                        pushButton.disabled = false;
                     });
             }
 
@@ -146,6 +153,7 @@
                 resendButton.style.display = 'none';
                 waitingStep.style.display = 'none';
                 formStep.style.display = 'flex';
+                pushButton.disabled = false;
             });
         });
     </script>
