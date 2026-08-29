@@ -426,7 +426,7 @@
                         @if(
                             count(getFeaturedDealsProductList()) > 0 &&
                             !(($web_config['flash_deals'] || count($web_config['flash_deals_products']) > 0) || $web_config['discount_product'] > 0 || $web_config['clearance_sale_product_count'] > 0))
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown {{ request()->routeIs('featured-deal-products') ? 'active' : '' }}">
                                 <a class="nav-link fw-semibold text-capitalize"
                                    href="{{ route('featured-deal-products') }}">
                                     {{ translate('featured_Deal')}}
@@ -436,7 +436,7 @@
                             ($web_config['flash_deals'] && count($web_config['flash_deals_products']) > 0) &&
                             !(count(getFeaturedDealsProductList()) > 0 || $web_config['discount_product'] > 0 || $web_config['clearance_sale_product_count'] > 0)
                             )
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown {{ request()->routeIs('flash-deals') ? 'active' : '' }}">
                                 <a class="nav-link fw-semibold text-capitalize"
                                    href="{{ route('flash-deals', ['id' => $web_config['flash_deals']['id'] ?? 0]) }}">
                                     {{ translate('flash_deal')}}
@@ -446,7 +446,7 @@
                             ($web_config['discount_product'] > 0) &&
                             !(count(getFeaturedDealsProductList()) > 0 || ($web_config['flash_deals'] && count($web_config['flash_deals_products']) > 0) || $web_config['clearance_sale_product_count'] > 0)
                             )
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown {{ request()->routeIs('discounted-products') ? 'active' : '' }}">
                                 <a class="nav-link fw-semibold text-capitalize"
                                    href="{{ route('discounted-products') }}">
                                     {{ translate('discounted_products')}}
@@ -456,7 +456,7 @@
                             ($web_config['clearance_sale_product_count'] > 0) &&
                             !(count(getFeaturedDealsProductList()) > 0 || ($web_config['flash_deals'] || count($web_config['flash_deals_products']) > 0) || $web_config['discount_product'] > 0)
                             )
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown {{ request()->routeIs('clearance-sale-products') ? 'active' : '' }}">
                                 <a class="nav-link fw-semibold text-capitalize"
                                    href="{{ route('clearance-sale-products') }}">
                                     {{ translate('clearance_Sale')}}
