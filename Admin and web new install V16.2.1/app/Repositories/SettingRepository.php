@@ -109,7 +109,12 @@ class SettingRepository implements SettingRepositoryInterface
 
     public function updateOrInsert(array $params, array $data): bool
     {
-        $this->setting->updateOrInsert($params, $data);
+        // Model::updateOrInsert() forwards straight to the base query builder,
+        // bypassing Eloquent's attribute casts - an array value (live_values,
+        // test_values) would be bound to PDO as the literal string "Array"
+        // instead of JSON. updateOrCreate() goes through fill()/save(), so
+        // casts (including 'array'/'encrypted:array') are applied correctly.
+        $this->setting->updateOrCreate($params, $data);
         return true;
     }
 
