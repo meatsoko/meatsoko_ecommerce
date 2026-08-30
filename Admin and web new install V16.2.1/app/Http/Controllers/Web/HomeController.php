@@ -18,6 +18,7 @@ use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\Seller;
 use App\Models\Review;
+use App\Services\ProductRecommendationService;
 use App\Utils\ProductManager;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -99,6 +100,32 @@ class HomeController extends Controller
         $auctionProducts = getWebConfig(name: 'auction_feature_status') ? $this->getHomePageAuctionProductsList() : null;
         if ($auctionProducts && auth('customer')->check()) {
             $auctionProducts->load(['myBid', 'myParticipation']);
+        }
+
+        $recommendation = app(ProductRecommendationService::class);
+        if ($recommendation->isActive()) {
+            $flashDealProducts = collect($flashDeal['flashDealProducts'] ?? []);
+            $recommendation->prime(array_merge(
+                $featuredProductsList->pluck('id')->all(),
+                $topRatedProducts->pluck('id')->all(),
+                $bestSellProduct->pluck('id')->all(),
+                $newArrivalProducts->pluck('id')->all(),
+                $latestProductsList->pluck('id')->all(),
+                $clearanceSaleProducts->pluck('id')->all(),
+                $flashDealProducts->pluck('id')->all(),
+                getFeaturedDealsProductList()->pluck('id')->all(),
+                $homeCategories->flatMap(fn($category) => collect($category['products'] ?? [])->pluck('id'))->all(),
+            ));
+            $featuredProductsList = $recommendation->reorder($featuredProductsList);
+            $topRatedProducts = $recommendation->reorder($topRatedProducts);
+            $bestSellProduct = $recommendation->reorder($bestSellProduct);
+            $newArrivalProducts = $recommendation->reorder($newArrivalProducts);
+            $latestProductsList = $recommendation->reorder($latestProductsList);
+            $clearanceSaleProducts = $recommendation->reorder($clearanceSaleProducts);
+            if ($flashDealProducts->isNotEmpty()) {
+                $flashDeal['flashDealProducts'] = $recommendation->reorder($flashDealProducts);
+            }
+            $this->personalizeCategoryProducts($homeCategories, $recommendation);
         }
 
         return view(VIEW_FILE_NAMES['home'],
@@ -344,6 +371,30 @@ class HomeController extends Controller
             $auctionProducts->load(['myBid', 'myParticipation']);
         }
 
+        $recommendation = app(ProductRecommendationService::class);
+        if ($recommendation->isActive()) {
+            $flashDealProducts = collect($flashDeal['flashDealProducts'] ?? []);
+            $recommendation->prime(array_merge(
+                $featuredProductsList->pluck('id')->all(),
+                $topRatedProducts->pluck('id')->all(),
+                $bestSellProduct->pluck('id')->all(),
+                $latestProductsList->pluck('id')->all(),
+                $clearanceSaleProducts->pluck('id')->all(),
+                $flashDealProducts->pluck('id')->all(),
+                getFeaturedDealsProductList()->pluck('id')->all(),
+                $homeCategories->flatMap(fn($category) => collect($category['products'] ?? [])->pluck('id'))->all(),
+            ));
+            $featuredProductsList = $recommendation->reorder($featuredProductsList);
+            $topRatedProducts = $recommendation->reorder($topRatedProducts);
+            $bestSellProduct = $recommendation->reorder($bestSellProduct);
+            $latestProductsList = $recommendation->reorder($latestProductsList);
+            $clearanceSaleProducts = $recommendation->reorder($clearanceSaleProducts);
+            if ($flashDealProducts->isNotEmpty()) {
+                $flashDeal['flashDealProducts'] = $recommendation->reorder($flashDealProducts);
+            }
+            $this->personalizeCategoryProducts($homeCategories, $recommendation);
+        }
+
         return view(VIEW_FILE_NAMES['home'],
             compact(
                 'flashDeal', 'topRatedProducts', 'bestSellProduct', 'latestProductsList', 'featuredProductsList', 'dealOfTheDay', 'topVendorsList',
@@ -352,6 +403,21 @@ class HomeController extends Controller
                 'categories', 'topVendorsListSectionShowingStatus', 'clearanceSaleProducts', 'recommendedProduct', 'robotsMetaContentData', 'auctionProducts'
             )
         );
+    }
+
+    /**
+     * Reorder each home category's products in place using the personalization layer.
+     * Keeps both the array accessor ($category['products']) and the 'product' relation in sync.
+     */
+    private function personalizeCategoryProducts($homeCategories, ProductRecommendationService $recommendation): void
+    {
+        $homeCategories?->each(function ($category) use ($recommendation) {
+            if (!empty($category['products'])) {
+                $reordered = $recommendation->reorder(collect($category['products']));
+                $category['products'] = $reordered;
+                $category->setRelation('product', $reordered);
+            }
+        });
     }
 
     public function getHomePageAuctionProductsList()

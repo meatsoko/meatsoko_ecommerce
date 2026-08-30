@@ -3,20 +3,25 @@
 use Illuminate\Support\Facades\Route;
 use Modules\AI\app\Http\Controllers\AIController;
 use Modules\AI\app\Http\Controllers\API\V3\AIAuctionProductController;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
+use Modules\AI\app\Http\Controllers\ShoppingAssistantController;
 
 Route::group([], function () {
     Route::resource('ai', AIController::class)->names('ai');
+});
+
+Route::group([
+    'prefix'     => 'ai/assistant',
+    'as'         => 'ai.assistant.',
+    // guestCheck seeds session('guest_id') with the storefront GuestUser id so AI cart rows land in the same guest cart checkout reads, not under the AI's UUID.
+    'middleware' => ['guestCheck', 'throttle:60,1'],
+], function () {
+    // Tighter limits on the paid endpoints (provider + vision calls).
+    Route::post('upload-image',          [ShoppingAssistantController::class, 'uploadImage'])->middleware('throttle:15,1')->name('upload-image');
+    Route::post('sessions',              [ShoppingAssistantController::class, 'startSession'])->middleware('throttle:30,1')->name('sessions.start');
+    Route::get('sessions',               [ShoppingAssistantController::class, 'listSessions'])->name('sessions.list');
+    Route::get('sessions/{id}',          [ShoppingAssistantController::class, 'getSession'])->name('sessions.show');
+    Route::delete('sessions/{id}',       [ShoppingAssistantController::class, 'deleteSession'])->middleware('throttle:30,1')->name('sessions.delete');
+    Route::post('sessions/{id}/message', [ShoppingAssistantController::class, 'sendMessage'])->middleware('throttle:20,1')->name('sessions.message');
 });
 
 Route::group(['prefix' => 'customer', 'as' => 'customer.', 'middleware' => ['customer']], function () {

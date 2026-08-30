@@ -207,12 +207,32 @@
                     </div>
                 </div>
             </div>
+            @php($recommendationSetup = getWebConfig('product_recommendation_setup'))
+            @php($recommendationSetup = is_array($recommendationSetup) ? $recommendationSetup : [])
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <h3 class="text-capitalize">{{ translate('Personalized_Product_Recommendation') }}</h3>
+                            <p class="mb-0 fs-12">
+                                {{ translate('when_enabled_the_homepage_product_sections_are_automatically_reordered_for_each_logged-in_customer_based_on_their_recent_activity_the_system_manages_all_personalization_internally_no_configuration_needed') }}
+                            </p>
+                        </div>
+                        <label class="switcher {{ env('APP_MODE') == 'demo'? 'call-demo-alert' : '' }}" for="product-recommendation-status">
+                            <input class="switcher_input" type="checkbox" value="1" name="product_recommendation_status"
+                                   id="product-recommendation-status" {{ ($recommendationSetup['status'] ?? 0) ? 'checked' : '' }} {{ env('APP_MODE') == 'demo'? 'disabled' : '' }}>
+                            <span class="switcher_control"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <div class="d-flex justify-content-end trans3 mt-4 action-btn-wrapper-container">
                 <div class="d-flex justify-content-sm-end justify-content-center gap-3 flex-grow-1 flex-grow-sm-0 bg-white action-btn-wrapper trans3">
                     <button type="reset" class="btn btn-secondary px-3 px-sm-4 w-120">
                         {{ translate('Reset') }}
                     </button>
-                    <button type="submit" class="btn btn-primary px-3 px-sm-4 text-capitalize">
+                    <button type="{{ getDemoModeFormButton(type: 'button') }}" class="btn btn-primary px-3 px-sm-4 text-capitalize {{ getDemoModeFormButton(type: 'class') }}">
                         <i class="fi fi-sr-disk"></i>
                         {{ translate('Save_Information') }}
                     </button>

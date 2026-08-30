@@ -151,7 +151,7 @@
                             </div>
                         </div>
                         <div class="owl-carousel owl-theme new-arrivals-product" data-slide-items="{{ count(getFeaturedDealsProductList()) }}">
-                           @foreach(getFeaturedDealsProductList() as $key=>$product)
+                           @foreach(personalizeProducts(getFeaturedDealsProductList()) as $key=>$product)
                                 @include('web-views.partials._product-card-1',['product'=>$product, 'decimal_point_settings'=>$decimalPointSettings])
                             @endforeach
                         </div>

@@ -147,6 +147,38 @@
                 </div>
                 @endif
 
+                @if(function_exists('getCheckAddonPublishedStatus') && getCheckAddonPublishedStatus(moduleName: 'AI'))
+                <div class="card">
+                    <div class="card-body">
+                        <div class="p-12 p-sm-20 bg-section rounded">
+                            @php($aiShoppingAssistantStatus = getWebConfig(name: 'ai_shopping_assistant_status') ?? 0)
+                            <div class="d-flex justify-content-between align-items-center gap-3">
+                                <div>
+                                    <h2>{{ translate('AI_Shopping_Assistant') }}</h2>
+                                    <p class="mb-0">
+                                        {{ translate('if_enabled,_the_AI_shopping_assistant_floating_icon_will_be_visible_to_customers_on_the_storefront._once_turned_off,_the_assistant_will_be_hidden_from_all_pages.') }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="switcher {{ env('APP_MODE') == 'demo'? 'call-demo-alert' : '' }}" for="ai-shopping-assistant-status">
+                                        <input class="switcher_input custom-modal-plugin" type="checkbox" value="1"
+                                            name="ai_shopping_assistant_status" id="ai-shopping-assistant-status"
+                                            {{ $aiShoppingAssistantStatus == 1 ? 'checked' : '' }}
+                                            {{ env('APP_MODE') == 'demo'? 'disabled' : '' }}
+                                            data-modal-type="input-change"
+                                            data-on-title="{{ translate('want_to_Turn_ON_AI_Shopping_Assistant') }}"
+                                            data-off-title="{{ translate('want_to_Turn_OFF_AI_Shopping_Assistant') }}"
+                                            data-on-message="<p>{{ translate('if_enabled,_the_AI_shopping_assistant_floating_icon_will_be_visible_to_customers.') }}</p>"
+                                            data-off-message="<p>{{ translate('once_turned_off,_the_AI_shopping_assistant_will_be_hidden_from_all_pages.') }}</p>">
+                                        <span class="switcher_control"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 <div class="card">
                     <div class="card-body d-flex flex-column gap-3 gap-sm-20">
                         @php($loyaltyPointStatus = getWebConfig(name: 'loyalty_point_status'))

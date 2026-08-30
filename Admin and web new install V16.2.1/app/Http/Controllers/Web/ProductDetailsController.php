@@ -14,6 +14,7 @@ use App\Models\Product;
 use App\Models\Review;
 use App\Repositories\DealOfTheDayRepository;
 use App\Repositories\WishlistRepository;
+use App\Services\ProductRecommendationService;
 use App\Services\ProductService;
 use App\Traits\ProductTrait;
 use App\Utils\CartManager;
@@ -39,6 +40,7 @@ class ProductDetailsController extends Controller
         private readonly TagRepositoryInterface            $tagRepo,
         private readonly SellerRepositoryInterface         $sellerRepo,
         private readonly ProductService                    $productService,
+        private readonly ProductRecommendationService      $productRecommendationService,
     )
     {
     }
@@ -67,6 +69,7 @@ class ProductDetailsController extends Controller
         );
 
         if ($product) {
+            $this->productRecommendationService->recordView((int)$product->id);
 
             $initialProductConfig = ProductManager::getInitialProductQuantity($product);
             $initialProductQuantity = $initialProductConfig['quantity'];
@@ -152,6 +155,8 @@ class ProductDetailsController extends Controller
         );
 
         if ($product ) {
+            $this->productRecommendationService->recordView((int)$product->id);
+
             $initialProductConfig = ProductManager::getInitialProductQuantity($product);
             $productDetailsMeta = $product?->seoInfo;
             $productAuthorsInfo = $this->productService->getProductAuthorsInfo(product: $product);
@@ -269,6 +274,8 @@ class ProductDetailsController extends Controller
         );
 
         if ($product != null) {
+            $this->productRecommendationService->recordView((int)$product->id);
+
             $productDetailsMeta = $product?->seoInfo;
             $productAuthorsInfo = $this->productService->getProductAuthorsInfo(product: $product);
             $productPublishingHouseInfo = $this->productService->getProductPublishingHouseInfo(product: $product);

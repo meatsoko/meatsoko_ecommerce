@@ -200,6 +200,8 @@
 @include('layouts.front-end.partials._footer')
 @include('layouts.front-end.partials.modal._dynamic-modals')
 
+@include('ai::partials.shopping-assistant._sidebar')
+
 <div class="floating-btn-grp">
     <div class="__floating-btn">
         @php($whatsapp = getWebConfig(name: 'whatsapp'))

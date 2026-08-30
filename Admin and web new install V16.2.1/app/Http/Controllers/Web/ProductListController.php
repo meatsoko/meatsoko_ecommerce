@@ -14,6 +14,7 @@ use App\Utils\CategoryManager;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Services\ProductRecommendationService;
 use App\Utils\ProductManager;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Contracts\View\View;
@@ -30,6 +31,11 @@ class ProductListController extends Controller
 {
     public function products(Request $request)
     {
+        $searchKeyword = $request->filled('name') ? $request['name'] : $request->input('product_name');
+        if ($searchKeyword && auth('customer')->check()) {
+            dispatch(fn() => app(ProductRecommendationService::class)->recordSearch($searchKeyword))->afterResponse();
+        }
+
         $pageTitle = translate('Products');
         if ($request->has('publishing_house_id')) {
             $pageTitle = PublishingHouse::firstWhere('id', $request['publishing_house_id'])?->name .' '.translate('Products');
@@ -68,7 +74,7 @@ class ProductListController extends Controller
         $category = Category::where('slug', $slug)->with(['seo'])->first();
         if (!$category) {
             Toastr::warning(translate('category_not_found'));
-            return back();
+            return redirect()->route('home');
         }
 
         $dataForm = 'category';

@@ -416,6 +416,7 @@ class CustomerController extends BaseController
         $this->businessSettingRepo->updateOrInsert(type: 'ref_earning_exchange_rate', value: currencyConverter(amount: $request->get('ref_earning_exchange_rate', getWebConfig('ref_earning_exchange_rate'))));
         $this->businessSettingRepo->updateOrInsert(type: 'add_funds_to_wallet', value: $request->get('add_funds_to_wallet', 0));
         $this->businessSettingRepo->updateOrInsert(type: 'active_auction_for_customer', value: $request->get('active_auction_for_customer', 0));
+        $this->businessSettingRepo->updateOrInsert(type: 'ai_shopping_assistant_status', value: $request->get('ai_shopping_assistant_status', 0));
         $this->businessSettingRepo->updateOrInsert(type: 'ref_earning_customer', value: json_encode($data));
         if ($request->has('minimum_add_fund_amount') && $request->has('maximum_add_fund_amount')) {
             if ($request['maximum_add_fund_amount'] > $request['minimum_add_fund_amount']) {

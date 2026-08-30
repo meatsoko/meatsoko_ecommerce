@@ -95,6 +95,8 @@
 @include('theme-views.layouts.partials._feature')
 @include('theme-views.layouts.partials._footer')
 
+@include('ai::partials.shopping-assistant._sidebar')
+
 <a href="#" class="back-to-top">
     <i class="bi bi-arrow-up"></i>
 </a>

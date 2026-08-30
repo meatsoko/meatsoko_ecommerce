@@ -125,6 +125,11 @@ class BusinessSettingsController extends BaseController
 
     public function updateSettings(BusinessSettingRequest $request, BusinessSettingService $businessSettingService): RedirectResponse
     {
+        if (env('APP_MODE') === 'demo') {
+            ToastMagic::info(translate('Update option is disable for demo'));
+            return redirect()->route('admin.business-settings.web-config.index');
+        }
+
         if ($request['email_verification'] == 1) {
             $request['phone_verification'] = 0;
         } elseif ($request['phone_verification'] == 1) {
@@ -476,6 +481,11 @@ class BusinessSettingsController extends BaseController
         $this->businessSettingRepo->updateOrInsert(type: 'digital_product', value: $request->get('digital_product', 0));
         $this->businessSettingRepo->updateOrInsert(type: 'new_product_approval', value: $request->get('new_product_approval', 0));
         $this->businessSettingRepo->updateOrInsert(type: 'product_wise_shipping_cost_approval', value: $request->get('product_wise_shipping_cost_approval', 0));
+        // Only the enable/disable state is stored. All scoring constants live in
+        // ProductRecommendationService and are self-managed; no merchant tuning.
+        $this->businessSettingRepo->updateOrInsert(type: 'product_recommendation_setup', value: json_encode([
+            'status' => $request->boolean('product_recommendation_status') ? 1 : 0,
+        ]));
 
         clearWebConfigCacheKeys();
         ToastMagic::success(translate('updated_successfully'));

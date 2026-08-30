@@ -303,3 +303,19 @@ if (!function_exists('getFeaturedDealsProductList')) {
         });
     }
 }
+
+if (!function_exists('personalizeProducts')) {
+    /**
+     * Reorder a homepage section's products toward the logged-in customer's interests.
+     * Returns the input untouched for guests or when the feature is off. Never mutates the
+     * cached source collection (operates on a copy), so it is safe on globally-cached lists.
+     */
+    function personalizeProducts($products)
+    {
+        if (empty($products)) {
+            return $products;
+        }
+        $copy = is_object($products) && method_exists($products, 'values') ? $products->values() : $products;
+        return app(\App\Services\ProductRecommendationService::class)->reorder($copy);
+    }
+}

@@ -242,6 +242,7 @@ class ConfigController extends Controller
             'system_tax_type' => $systemTax?->tax_type ?? 'order_wise',
             'system_tax_include_status' => (int)$systemTax?->is_included,
             'is_ai_features_enabled' => (int)$this->getActiveAIProviderConfig()?->status ?? 0,
+            'ai_shopping_assistant_status' => (int)getWebConfig(name: 'ai_shopping_assistant_status') ?? 0,
             'server_upload_max_filesize' => ini_get('upload_max_filesize'),
             'server_post_max_size' => ini_get('post_max_size'),
             'system_image_file_upload_max_size' => getFileUploadMaxSize(type: 'image'),

@@ -64,6 +64,8 @@ class AppServiceProvider extends ServiceProvider
         $loader->alias('Madzipper', \Madnest\Madzipper\Madzipper::class);
         $loader->alias('Excel', \Maatwebsite\Excel\Facades\Excel::class);
 
+        $this->app->singleton(\App\Services\ProductRecommendationService::class);
+
         if (addon_published_status('Courier') && interface_exists(\Modules\Courier\app\Contracts\CourierOwnerResolver::class)) {
             $this->app->bind(
                 \Modules\Courier\app\Contracts\CourierOwnerResolver::class,
