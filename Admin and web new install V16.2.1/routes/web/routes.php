@@ -15,7 +15,6 @@ use App\Http\Controllers\Payment_Methods\BkashPaymentController;
 use App\Http\Controllers\Payment_Methods\FlutterwaveV3Controller;
 use App\Http\Controllers\Payment_Methods\LiqPayController;
 use App\Http\Controllers\Payment_Methods\MercadoPagoController;
-use App\Http\Controllers\Payment_Methods\MpesaC2bController;
 use App\Http\Controllers\Payment_Methods\MpesaStkController;
 use App\Http\Controllers\Payment_Methods\PaymobController;
 use App\Http\Controllers\Payment_Methods\PaypalPaymentController;
@@ -508,21 +507,6 @@ if (!$isGatewayPublished) {
             Route::get('status', [MpesaStkController::class, 'status'])->name('status');
         });
 
-        //MPESA C2B (PAYBILL/TILL)
-        // NOTE: URI segment intentionally does not contain "mpesa" - Safaricom's C2B
-        // RegisterURL API rejects any ValidationURL/ConfirmationURL containing that word
-        // (error 400.003.02: "Invalid ValidationURL - URL has the word MPESA").
-        Route::group(['prefix' => 'c2b', 'as' => 'mpesa-c2b.'], function () {
-            Route::get('pay', [MpesaC2bController::class, 'index'])->name('pay');
-            Route::post('validation', [MpesaC2bController::class, 'validation'])->name('validation')
-                ->withoutMiddleware([VerifyCsrfToken::class])
-                ->middleware(['mpesa.ip', 'throttle:60,1']);
-            Route::post('confirmation', [MpesaC2bController::class, 'confirmation'])->name('confirmation')
-                ->withoutMiddleware([VerifyCsrfToken::class])
-                ->middleware(['mpesa.ip', 'throttle:60,1']);
-            Route::get('status', [MpesaC2bController::class, 'status'])->name('status');
-        });
-
         //Liqpay
         Route::group(['prefix' => 'liqpay', 'as' => 'liqpay.'], function () {
             Route::get('payment', [LiqPayController::class, 'payment'])->name('payment');
@@ -555,16 +539,3 @@ if (!$isGatewayPublished) {
         });
     });
 }
-
-// Safaricom's production go-live approval for this Till locked the C2B Validation/
-// Confirmation URLs to these paths (set outside our app, via the Daraja portal) before
-// the /payment/c2b/* routes above existed. Keep both live so callbacks land regardless
-// of which URL Safaricom actually has on file for this shortcode.
-Route::group(['prefix' => 'api/payments/c2b'], function () {
-    Route::post('validation', [MpesaC2bController::class, 'validation'])->name('mpesa-c2b.legacy-validation')
-        ->withoutMiddleware([VerifyCsrfToken::class])
-        ->middleware(['mpesa.ip', 'throttle:60,1']);
-    Route::post('confirmation', [MpesaC2bController::class, 'confirmation'])->name('mpesa-c2b.legacy-confirmation')
-        ->withoutMiddleware([VerifyCsrfToken::class])
-        ->middleware(['mpesa.ip', 'throttle:60,1']);
-});

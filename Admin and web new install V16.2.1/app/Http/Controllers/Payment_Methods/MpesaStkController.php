@@ -16,40 +16,56 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * Lipa Na M-Pesa Online (STK Push). Flow: index() renders the phone-number
+ * prompt -> stkPush() asks Safaricom to prompt the customer's phone -> the
+ * customer enters their PIN on-device -> Safaricom POSTs the result to
+ * callback() -> the browser, which has been polling status(), picks up the
+ * paid flag and redirects.
+ */
 class MpesaStkController extends Controller
 {
     use Processor;
 
+    private const REQUEST_TIMEOUT = 20;
+    private const TOKEN_CACHE_TTL = 3500;
+    private const PUSH_LOCK_TTL = 15;
+
     private PaymentRequest $payment;
     private $user;
-    private $consumer_key;
-    private $consumer_secret;
-    private $shortcode;
-    private $passkey;
-    private $shortcode_type;
-    private $base_url;
+    private ?string $consumer_key = null;
+    private ?string $consumer_secret = null;
+    private ?string $shortcode = null;
+    private ?string $passkey = null;
+    private string $shortcode_type = 'paybill';
+    private string $base_url = 'https://sandbox.safaricom.co.ke';
 
     public function __construct(PaymentRequest $payment, User $user)
     {
-        $config = $this->payment_config('mpesa_stk', 'payment_config');
-        $values = false;
-        if (!is_null($config) && $config->mode == 'live') {
-            $values = json_decode($config->live_values);
-        } elseif (!is_null($config) && $config->mode == 'test') {
-            $values = json_decode($config->test_values);
-        }
-
-        if ($values) {
-            $this->consumer_key = $values->consumer_key;
-            $this->consumer_secret = $values->consumer_secret;
-            $this->shortcode = $values->shortcode;
-            $this->passkey = $values->passkey;
-            $this->shortcode_type = $values->shortcode_type ?? 'paybill';
-            $this->base_url = ($config->mode == 'live') ? 'https://api.safaricom.co.ke' : 'https://sandbox.safaricom.co.ke';
-        }
-
         $this->payment = $payment;
         $this->user = $user;
+
+        $config = $this->payment_config('mpesa_stk', 'payment_config');
+        if (is_null($config)) {
+            return;
+        }
+
+        $values = $config->mode == 'live' ? json_decode($config->live_values) : json_decode($config->test_values);
+        if (!$values) {
+            return;
+        }
+
+        $this->consumer_key = $values->consumer_key ?? null;
+        $this->consumer_secret = $values->consumer_secret ?? null;
+        $this->shortcode = $values->shortcode ?? null;
+        $this->passkey = $values->passkey ?? null;
+        $this->shortcode_type = $values->shortcode_type ?? 'paybill';
+        $this->base_url = $config->mode == 'live' ? 'https://api.safaricom.co.ke' : 'https://sandbox.safaricom.co.ke';
+    }
+
+    private function isConfigured(): bool
+    {
+        return $this->consumer_key && $this->consumer_secret && $this->shortcode && $this->passkey;
     }
 
     private function shortReference(string $paymentId): string
@@ -57,38 +73,72 @@ class MpesaStkController extends Controller
         return 'MS' . strtoupper(substr(str_replace('-', '', $paymentId), -8));
     }
 
-    private function getAccessToken(): ?string
+    /**
+     * Accepts 07XXXXXXXX, 7XXXXXXXX, or 254XXXXXXXXX and normalizes to
+     * 254XXXXXXXXX (what Daraja expects for PartyA/PhoneNumber). Returns
+     * null for anything that isn't a plausible Kenyan mobile number, so
+     * stkPush() can reject it before spending an API call on it.
+     */
+    private function normalizePhone(string $phone): ?string
     {
-        return Cache::remember('mpesa_stk_access_token_' . $this->shortcode, 3500, function () {
-            $url = curl_init($this->base_url . '/oauth/v1/generate?grant_type=client_credentials');
-            curl_setopt($url, CURLOPT_HTTPHEADER, ['Content-Type:application/json']);
-            curl_setopt($url, CURLOPT_USERPWD, $this->consumer_key . ':' . $this->consumer_secret);
-            curl_setopt($url, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($url, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-            $result = curl_exec($url);
-            curl_close($url);
+        $digits = preg_replace('/\D/', '', $phone);
 
-            $response = json_decode($result, true);
-            return $response['access_token'] ?? null;
-        });
+        if (str_starts_with($digits, '254') && strlen($digits) === 12) {
+            return $digits;
+        }
+        if (str_starts_with($digits, '0') && strlen($digits) === 10) {
+            return '254' . substr($digits, 1);
+        }
+        if (strlen($digits) === 9) {
+            return '254' . $digits;
+        }
+
+        return null;
     }
 
-    private function normalizePhone(string $phone): string
+    /**
+     * Caches the OAuth token on success only - the old implementation cached
+     * Cache::remember()'s return value unconditionally, which meant a single
+     * transient failure against Safaricom's OAuth endpoint got memoized as
+     * "no token" for the full TTL and silently broke STK push for up to an
+     * hour even after Safaricom recovered.
+     */
+    private function getAccessToken(): ?string
     {
-        $phone = preg_replace('/\D/', '', $phone);
-        if (str_starts_with($phone, '0')) {
-            return '254' . substr($phone, 1);
+        $cacheKey = 'mpesa_stk_access_token_' . $this->shortcode;
+        $cached = Cache::get($cacheKey);
+        if ($cached) {
+            return $cached;
         }
-        if (str_starts_with($phone, '254')) {
-            return $phone;
+
+        $url = curl_init($this->base_url . '/oauth/v1/generate?grant_type=client_credentials');
+        curl_setopt($url, CURLOPT_HTTPHEADER, ['Content-Type:application/json']);
+        curl_setopt($url, CURLOPT_USERPWD, $this->consumer_key . ':' . $this->consumer_secret);
+        curl_setopt($url, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($url, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        curl_setopt($url, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($url, CURLOPT_TIMEOUT, self::REQUEST_TIMEOUT);
+        $result = curl_exec($url);
+        $curlError = curl_error($url);
+        curl_close($url);
+
+        if ($result === false) {
+            Log::error('Mpesa STK: OAuth request failed', ['error' => $curlError]);
+            return null;
         }
-        return '254' . $phone;
+
+        $token = json_decode($result, true)['access_token'] ?? null;
+        if ($token) {
+            Cache::put($cacheKey, $token, self::TOKEN_CACHE_TTL);
+        }
+
+        return $token;
     }
 
     public function index(Request $request): View|Factory|JsonResponse|Application
     {
         $validator = Validator::make($request->all(), [
-            'payment_id' => 'required|uuid'
+            'payment_id' => 'required|uuid',
         ]);
 
         if ($validator->fails()) {
@@ -120,7 +170,21 @@ class MpesaStkController extends Controller
             return response()->json($this->response_formatter(GATEWAYS_DEFAULT_204), 200);
         }
 
-        $lock = Cache::lock('mpesa_stk_push_lock_' . $data->id, 15);
+        if (!$this->isConfigured()) {
+            return response()->json(['status' => 0, 'message' => translate('mpesa_is_not_configured_properly')]);
+        }
+
+        $phone = $this->normalizePhone($request['phone']);
+        if (!$phone) {
+            return response()->json(['status' => 0, 'message' => translate('please_enter_a_valid_mpesa_phone_number')]);
+        }
+
+        // Guards against the customer (or a double-clicked button) firing a
+        // second STK push while the first is still on the customer's phone
+        // awaiting their PIN. Held for the duration of a push attempt and
+        // released early on every failure path below so a genuine error
+        // doesn't force the customer to wait out the full TTL to retry.
+        $lock = Cache::lock('mpesa_stk_push_lock_' . $data->id, self::PUSH_LOCK_TTL);
         if (!$lock->get()) {
             return response()->json([
                 'status' => 0,
@@ -128,16 +192,12 @@ class MpesaStkController extends Controller
             ]);
         }
 
-        if (!$this->shortcode || !$this->passkey) {
-            return response()->json(['status' => 0, 'message' => translate('mpesa_is_not_configured_properly')]);
-        }
-
         $token = $this->getAccessToken();
         if (!$token) {
+            $lock->release();
             return response()->json(['status' => 0, 'message' => translate('unable_to_reach_mpesa_please_try_again')]);
         }
 
-        $phone = $this->normalizePhone($request['phone']);
         $timestamp = now()->format('YmdHis');
         $password = base64_encode($this->shortcode . $this->passkey . $timestamp);
 
@@ -164,8 +224,17 @@ class MpesaStkController extends Controller
         curl_setopt($url, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($url, CURLOPT_POSTFIELDS, json_encode($requestBody));
         curl_setopt($url, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+        curl_setopt($url, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($url, CURLOPT_TIMEOUT, self::REQUEST_TIMEOUT);
         $result = curl_exec($url);
+        $curlError = curl_error($url);
         curl_close($url);
+
+        if ($result === false) {
+            $lock->release();
+            Log::error('Mpesa STK push: request to Safaricom failed', ['payment_id' => $data->id, 'error' => $curlError]);
+            return response()->json(['status' => 0, 'message' => translate('unable_to_reach_mpesa_please_try_again')]);
+        }
 
         $response = json_decode($result, true);
 
@@ -187,6 +256,7 @@ class MpesaStkController extends Controller
             ]);
         }
 
+        $lock->release();
         Log::warning('Mpesa STK push failed', ['payment_id' => $data->id, 'response' => $response]);
         return response()->json([
             'status' => 0,
@@ -221,8 +291,17 @@ class MpesaStkController extends Controller
                 return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
             }
 
+            // The result is in, one way or another - free the push lock now
+            // rather than making a "resend" wait out the rest of its TTL.
+            Cache::lock('mpesa_stk_push_lock_' . $payment_id, self::PUSH_LOCK_TTL)->forceRelease();
+
             if (($callback['ResultCode'] ?? null) !== 0) {
-                if (isset($data->failure_hook) && function_exists($data->failure_hook)) {
+                Log::info('Mpesa STK push not completed by customer', [
+                    'payment_id' => $payment_id,
+                    'result_code' => $callback['ResultCode'] ?? null,
+                    'result_desc' => $callback['ResultDesc'] ?? null,
+                ]);
+                if (!empty($data->failure_hook) && function_exists($data->failure_hook)) {
                     call_user_func($data->failure_hook, $data);
                 }
                 return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
@@ -248,9 +327,11 @@ class MpesaStkController extends Controller
             ]);
 
             $paidData = $this->payment::where(['id' => $payment_id])->first();
-            if (isset($paidData) && function_exists($paidData->success_hook)) {
+            if ($paidData && !empty($paidData->success_hook) && function_exists($paidData->success_hook)) {
                 call_user_func($paidData->success_hook, $paidData);
             }
+
+            Log::info('Mpesa STK payment confirmed', ['payment_id' => $payment_id, 'receipt' => $receiptNumber]);
 
             return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
         });
