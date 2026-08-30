@@ -165,19 +165,6 @@
                             </div>
                         @endif
 
-                        @if($gateway->key_name === 'mpesa_c2b')
-                            <div class="mb-4">
-                                <button type="button" class="btn btn-outline-primary w-100 mpesa-c2b-register-urls-btn"
-                                        data-url="{{ route('admin.third-party.payment-method.register-c2b-urls') }}">
-                                    <i class="fi fi-rr-refresh"></i>
-                                    {{ translate('register_urls_with_safaricom') }}
-                                </button>
-                                <p class="fs-12 mt-2 text-body-light mb-0">
-                                    {{ translate('save_the_shortcode_and_credentials_below_first,_then_click_this_button_to_register_the_confirmation_and_validation_webhook_urls_with_safaricom') }}
-                                </p>
-                            </div>
-                        @endif
-
                         @if($gateway->key_name === 'paystack')
                             @php($skip=['gateway', 'mode', 'status', 'supported_country', 'callback_url'])
                         @elseif($gateway->key_name === 'mpesa_stk')
@@ -185,19 +172,26 @@
                         @else
                             @php($skip=['gateway','mode','status', 'supported_country'])
                         @endif
+                        @php($sensitiveFields = \App\Enums\GlobalConstant::SENSITIVE_PAYMENT_FIELDS[$gateway->key_name] ?? [])
                         @foreach($gateway->live_values as $gatewayKey => $value)
                             @if(!in_array($gatewayKey , $skip))
+                                @php($isSensitive = in_array($gatewayKey, $sensitiveFields))
+                                @php($isAlreadySet = $isSensitive && !empty($value))
                                 <div class="mb-4">
                                     <label for="gateway-key-{{ $gateway->key_name }}-{{ $gatewayKey }}" class="form-label">
                                         {{ucwords(str_replace('_',' ',$gatewayKey))}}
-                                        <span class="text-danger">*</span>
+                                        @if(!$isAlreadySet)
+                                            <span class="text-danger">*</span>
+                                        @endif
                                     </label>
-                                    <input type="text" class="form-control"
+                                    <input type="{{ $isSensitive ? 'password' : 'text' }}" class="form-control"
                                            name="{{$gatewayKey}}"
+                                           autocomplete="new-password"
                                            data-required-msg="{{ translate($gatewayKey). translate('_key_field_is_required')}}"
                                            id="gateway-key-{{ $gateway->key_name }}-{{ $gatewayKey }}"
-                                           placeholder="{{ ucwords(str_replace('_',' ',$gatewayKey)) }} *"
-                                           value="{{ showDemoModeInputValue(value: $value) }}" required>
+                                           placeholder="{{ $isAlreadySet ? translate('leave_blank_to_keep_the_current_value') : ucwords(str_replace('_',' ',$gatewayKey)) . ' *' }}"
+                                           value="{{ $isSensitive ? '' : showDemoModeInputValue(value: $value) }}"
+                                           {{ $isAlreadySet ? '' : 'required' }}>
                                 </div>
                             @endif
                         @endforeach

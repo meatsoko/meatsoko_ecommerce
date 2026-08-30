@@ -541,7 +541,6 @@ enum GlobalConstant
         ['key' => 'mercadopago', 'value' => 'Mercadopago'],
         ['key' => 'bkash', 'value' => 'Bkash'],
         ['key' => 'mpesa_stk', 'value' => 'M-Pesa (STK Push)'],
-        ['key' => 'mpesa_c2b', 'value' => 'M-Pesa (Paybill/Till)'],
         ['key' => 'fatoorah', 'value' => 'Fatoorah'],
         ['key' => 'xendit', 'value' => 'Xendit'],
         ['key' => 'amazon_pay', 'value' => 'Amazon Pay'],
@@ -1187,6 +1186,46 @@ enum GlobalConstant
         'msg91',
         'releans',
         'alphanet_sms',
+    ];
+
+    // Field names, per payment gateway, that hold a private API secret rather
+    // than a public/account identifier. Used to mask these inputs in the
+    // admin settings form and to let them be left blank on re-save (keeping
+    // the previously stored value) instead of forcing the secret to be
+    // retyped and shown in plaintext every time the form is opened.
+    const SENSITIVE_PAYMENT_FIELDS = [
+        'ssl_commerz' => ['store_password'],
+        'paypal' => ['client_secret'],
+        'stripe' => ['api_key'],
+        'razor_pay' => ['api_secret'],
+        'senang_pay' => ['secret_key'],
+        'paytabs' => ['server_key'],
+        'paystack' => ['secret_key'],
+        'paymob_accept' => ['api_key', 'hmac'],
+        'mercadopago' => ['access_token'],
+        'liqpay' => ['private_key'],
+        'flutterwave' => ['secret_key', 'hash'],
+        'paytm' => ['merchant_key'],
+        'bkash' => ['app_secret', 'password'],
+        'mpesa_stk' => ['consumer_key', 'consumer_secret', 'passkey'],
+        'momo' => ['api_key', 'subscription_key'],
+        'hyper_pay' => ['access_code'],
+        'amazon_pay' => ['pass_phrase', 'access_code'],
+        'sixcash' => ['secret_key'],
+        'worldpay' => ['mac', 'xml_password'],
+        'payfast' => ['secured_key'],
+        'maxicash' => ['merchantPassword'],
+        'hubtel' => ['api_key'],
+        'viva_wallet' => ['client_secret'],
+        'tap' => ['secret_key'],
+        'thawani' => ['private_key'],
+        'moncash' => ['secret_key'],
+        'pvit' => ['access_token'],
+        'ccavenue' => ['working_key', 'access_code'],
+        'foloosi' => ['merchant_key'],
+        'iyzi_pay' => ['api_key', 'secret_key'],
+        'xendit' => ['api_key'],
+        'fatoorah' => ['api_key'],
     ];
 
     const TIMEZONE_ARRAY = [

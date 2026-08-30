@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\IpUtils;
 
 /**
- * Safaricom does not sign Daraja C2B/STK webhook payloads, so anyone who
- * discovers these public URLs can POST a fake "payment confirmed" callback.
+ * Safaricom does not sign Daraja STK Push callback payloads, so anyone who
+ * discovers this public URL can POST a fake "payment confirmed" callback.
  * When MPESA_ALLOWED_IPS is set (comma-separated IPs/CIDR ranges, get the
  * current list from Safaricom support before go-live), only requests from
  * those addresses are accepted. Left unset, this middleware is a no-op so

@@ -27,7 +27,7 @@ class PaymentMethodUpdateRequest extends FormRequest
     {
         $validationRules = [
             'gateway' => 'required',
-            Rule::in(['ssl_commerz', 'sixcash', 'worldpay', 'payfast', 'swish', 'esewa', 'maxicash', 'hubtel', 'viva_wallet', 'tap', 'thawani', 'moncash', 'pvit', 'ccavenue', 'foloosi', 'iyzi_pay', 'xendit', 'fatoorah', 'hyper_pay', 'amazon_pay', 'paypal', 'stripe', 'razor_pay', 'senang_pay', 'paytabs', 'paystack', 'paymob_accept', 'paytm', 'flutterwave', 'liqpay', 'bkash', 'mercadopago', 'cash_after_service', 'digital_payment', 'momo', 'mpesa_stk', 'mpesa_c2b']),
+            Rule::in(['ssl_commerz', 'sixcash', 'worldpay', 'payfast', 'swish', 'esewa', 'maxicash', 'hubtel', 'viva_wallet', 'tap', 'thawani', 'moncash', 'pvit', 'ccavenue', 'foloosi', 'iyzi_pay', 'xendit', 'fatoorah', 'hyper_pay', 'amazon_pay', 'paypal', 'stripe', 'razor_pay', 'senang_pay', 'paytabs', 'paystack', 'paymob_accept', 'paytm', 'flutterwave', 'liqpay', 'bkash', 'mercadopago', 'cash_after_service', 'digital_payment', 'momo', 'mpesa_stk']),
             'mode' => 'required|in:live,test',
         ];
         $additionalDataRules = $this->getAdditionalDataRules();
@@ -186,13 +186,6 @@ class PaymentMethodUpdateRequest extends FormRequest
                 'passkey' => 'required',
                 'shortcode_type' => 'required|in:paybill,till',
             ];
-        } elseif ($this['gateway'] == 'mpesa_c2b') {
-            $additionalDataRules = [
-                'status' => 'required|in:1,0',
-                'consumer_key' => 'required',
-                'consumer_secret' => 'required',
-                'shortcode' => 'required',
-            ];
         } elseif ($this['gateway'] == 'cash_after_service') {
             $additionalDataRules = [
                 'status' => 'required|in:1,0'
@@ -327,6 +320,22 @@ class PaymentMethodUpdateRequest extends FormRequest
                 'status' => 'required|in:1,0',
                 'api_key' => 'required',
             ];
+        }
+
+        // Secret fields (API keys, passwords, passkeys, ...) are masked in the
+        // settings form and not pre-filled with their real value, so a re-save
+        // that doesn't touch them submits blank. If a value is already stored
+        // and the field was left blank, accept the blank instead of demanding
+        // the secret be retyped - UpdatePaymentConfig() fills it back in from
+        // the existing stored value before saving.
+        $sensitiveFields = \App\Enums\GlobalConstant::SENSITIVE_PAYMENT_FIELDS[$this['gateway']] ?? [];
+        if (!empty($sensitiveFields)) {
+            $existingValues = (array)($settings['live_values'] ?? []);
+            foreach ($sensitiveFields as $field) {
+                if (!empty($existingValues[$field] ?? null) && empty($this[$field]) && isset($additionalDataRules[$field])) {
+                    $additionalDataRules[$field] = 'nullable';
+                }
+            }
         }
 
         return $additionalDataRules;

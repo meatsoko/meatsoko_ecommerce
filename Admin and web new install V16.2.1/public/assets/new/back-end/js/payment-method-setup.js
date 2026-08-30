@@ -35,33 +35,3 @@ $('#payment-method-offline').on('submit', function(event){
         }
     });
 });
-
-$(document).on('click', '.mpesa-c2b-register-urls-btn', function (event) {
-    event.preventDefault();
-    let button = $(this);
-    let url = button.attr('data-url');
-
-    button.prop('disabled', true);
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-        }
-    });
-    $.ajax({
-        url: url,
-        method: 'POST',
-        success: function (data) {
-            if (parseInt(data.status) === 1) {
-                toastMagic.success(data.message);
-            } else {
-                toastMagic.error(data.message);
-            }
-        },
-        error: function () {
-            toastMagic.error('Something went wrong. Please try again.');
-        },
-        complete: function () {
-            button.prop('disabled', false);
-        }
-    });
-});

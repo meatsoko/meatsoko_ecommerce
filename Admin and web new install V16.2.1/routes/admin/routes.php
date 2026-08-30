@@ -919,7 +919,6 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
                     Route::get('/', 'index')->name('index');
                     Route::put('addon-payment-set', 'UpdatePaymentConfig')->name('addon-payment-set');
                     Route::post('payment-status', 'UpdateStatus')->name('payment-status');
-                    Route::post('register-c2b-urls', 'registerC2bUrls')->name('register-c2b-urls');
                 });
             });
 
