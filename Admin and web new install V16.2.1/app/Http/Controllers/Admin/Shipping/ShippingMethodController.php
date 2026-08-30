@@ -86,7 +86,18 @@ class ShippingMethodController extends BaseController
         )->filter(function ($item) use ($request) {
             return $item?->category != null;
         });
-        return view('admin-views.shipping-method.index', compact('allCategoryShippingCost', 'shippingMethods', 'adminShipping'));
+        $isCourierAddonPublished = getCheckAddonPublishedStatus(moduleName: 'Courier');
+        $isThirdPartyDeliveryEnabled = $isCourierAddonPublished && (bool)getWebConfig(name: 'third_party_delivery_service');
+        $isVendorDeliveryPartnerSetupEnabled = (bool)(getWebConfig(name: 'vendor_delivery_partner_setup') ?? 1);
+
+        return view('admin-views.shipping-method.index', compact(
+            'allCategoryShippingCost',
+            'shippingMethods',
+            'adminShipping',
+            'isCourierAddonPublished',
+            'isThirdPartyDeliveryEnabled',
+            'isVendorDeliveryPartnerSetupEnabled',
+        ));
     }
 
 
@@ -161,6 +172,40 @@ class ShippingMethodController extends BaseController
         $this->businessSettingRepo->updateOrInsert(type: 'shipping_method', value: $request['shipping_method']);
 
         updateSetupGuideCacheKey(key: 'shipping_method', panel: 'admin');
+        ToastMagic::success(translate('successfully_updated'));
+        return redirect()->route('admin.business-settings.shipping-method.index');
+    }
+
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateThirdPartyDeliveryMode(Request $request): RedirectResponse
+    {
+        if (env('APP_MODE') === 'demo') {
+            ToastMagic::info(translate('Update option is disable for demo'));
+            return redirect()->route('admin.business-settings.shipping-method.index');
+        }
+
+        $this->businessSettingRepo->updateOrInsert(type: 'third_party_delivery_service', value: $request->boolean('status') ? 1 : 0);
+
+        ToastMagic::success(translate('successfully_updated'));
+        return redirect()->route('admin.business-settings.shipping-method.index');
+    }
+
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateVendorDeliveryPartnerSetup(Request $request): RedirectResponse
+    {
+        if (env('APP_MODE') === 'demo') {
+            ToastMagic::info(translate('Update option is disable for demo'));
+            return redirect()->route('admin.business-settings.shipping-method.index');
+        }
+
+        $this->businessSettingRepo->updateOrInsert(type: 'vendor_delivery_partner_setup', value: $request->boolean('status') ? 1 : 0);
+
         ToastMagic::success(translate('successfully_updated'));
         return redirect()->route('admin.business-settings.shipping-method.index');
     }

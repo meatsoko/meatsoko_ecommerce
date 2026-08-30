@@ -563,6 +563,9 @@ if (!function_exists('getCheckAddonPublishedStatus')) {
     function getCheckAddonPublishedStatus(string $moduleName): int
     {
         try {
+            if (in_array($moduleName, ['Courier'])) {
+                return 1;
+            }
             $statusFile = base_path('modules_statuses.json');
             if (file_exists($statusFile)) {
                 $statuses = json_decode((string)file_get_contents($statusFile), true);
@@ -578,6 +581,13 @@ if (!function_exists('getCheckAddonPublishedStatus')) {
         } catch (Exception $exception) {
         }
         return 0;
+    }
+}
+
+if (!function_exists('addon_published_status')) {
+    function addon_published_status(string $moduleName): bool
+    {
+        return getCheckAddonPublishedStatus(moduleName: $moduleName) === 1;
     }
 }
 
@@ -642,6 +652,136 @@ if (!function_exists('getTaxModuleSystemTypesConfig')) {
                 'taxVats' => $taxVats ?? []
             ];
         });
+    }
+}
+
+if (!function_exists('courierService')) {
+    function courierService(): ?object
+    {
+        return addon_published_status('Courier')
+            && class_exists(\Modules\Courier\app\Services\CourierService::class)
+            && app()->bound(\Modules\Courier\app\Services\CourierService::class)
+                ? app(\Modules\Courier\app\Services\CourierService::class)
+                : null;
+    }
+}
+
+if (!function_exists('deliveryPartnerServiceAvailable')) {
+    function deliveryPartnerServiceAvailable(): bool
+    {
+        return (bool)getWebConfig('third_party_delivery_service') && courierService() !== null;
+    }
+}
+
+if (!function_exists('deliveryPartnerConfigAvailable')) {
+
+    function deliveryPartnerConfigAvailable(): bool
+    {
+        return courierService() !== null;
+    }
+}
+
+if (!function_exists('deliveryPartnerAvailable')) {
+    function deliveryPartnerAvailable(object|array|null $order, string $panel): bool
+    {
+        if (empty($order)) {
+            return false;
+        }
+
+        $isVendorResponsible = ($order['shipping_responsibility'] ?? null) === 'sellerwise_shipping'
+            && ($order['seller_is'] ?? null) === 'seller';
+
+        if ($isVendorResponsible && !vendorDeliveryPartnerSetupAvailable()) {
+            return false;
+        }
+
+        return deliveryPartnerServiceAvailable()
+            && $panel === ($isVendorResponsible ? 'vendor' : 'admin')
+            && (bool)courierService()?->isEnabled();
+    }
+}
+
+if (!function_exists('vendorDeliveryPartnerConfigAvailable')) {
+    function vendorDeliveryPartnerConfigAvailable(): bool
+    {
+        return deliveryPartnerConfigAvailable()
+            && (getWebConfig('vendor_delivery_partner_setup') ?? 1);
+    }
+}
+
+if (!function_exists('vendorDeliveryPartnerSetupAvailable')) {
+    function vendorDeliveryPartnerSetupAvailable(): bool
+    {
+        return deliveryPartnerServiceAvailable()
+            && vendorDeliveryPartnerConfigAvailable();
+    }
+}
+
+if (!function_exists('deliveryPartnerShipment')) {
+    function deliveryPartnerShipment(string|int $orderId): ?array
+    {
+        return courierService()?->summaryFor((string)$orderId);
+    }
+}
+
+if (!function_exists('deliveryPartnerAssigned')) {
+    function deliveryPartnerAssigned(object|array|null $order): bool
+    {
+        if (empty($order)) {
+            return false;
+        }
+
+        if (!empty($order['id']) && deliveryPartnerShipment($order['id']) !== null) {
+            return true;
+        }
+
+        return ($order['delivery_type'] ?? null) === 'third_party_delivery'
+            && (filled($order['delivery_service_name'] ?? null) || filled($order['third_party_delivery_tracking_id'] ?? null));
+    }
+}
+
+if (!function_exists('deliveryPartnerTrackingInfo')) {
+    function deliveryPartnerTrackingInfo(object|null $order): ?array
+    {
+        if (empty($order)) {
+            return null;
+        }
+
+        $instruction = translate('This_order_is_being_delivered_by_a_3rd_party_delivery_partner_Use_the_tracking_details_above_on_the_delivery_partner_website_or_app_to_follow_your_parcel') . '. '
+            . translate('For_delivery_time_rescheduling_or_any_delivery_issue_contact_the_delivery_partner_directly_with_these_tracking_details') . '.';
+
+        $shipment = deliveryPartnerShipment($order->id);
+
+        if ($shipment !== null) {
+            return [
+                'delivery_partner' => $shipment['provider_label'],
+                'tracking_number' => $shipment['tracking_number'],
+                'shipment_status' => $shipment['status'],
+                'shipment_status_label' => $shipment['status_label'],
+                'tracking_url' => $shipment['tracking_url'],
+                'instruction' => $instruction,
+            ];
+        }
+
+        if (blank($order->delivery_service_name) && blank($order->third_party_delivery_tracking_id)) {
+            return null;
+        }
+
+        return [
+            'delivery_partner' => $order->delivery_service_name,
+            'tracking_number' => $order->third_party_delivery_tracking_id,
+            'shipment_status' => null,
+            'shipment_status_label' => null,
+            'tracking_url' => null,
+            'instruction' => $instruction,
+        ];
+    }
+}
+
+if (!function_exists('deliveryPartnerShipmentDetails')) {
+    function deliveryPartnerShipmentDetails(string|int $orderId): ?array
+    {
+        return courierService()?->shipmentDetailsFor((string)$orderId);
     }
 }
 

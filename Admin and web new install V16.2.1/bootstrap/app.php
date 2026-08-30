@@ -98,6 +98,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'logUserBrowsingNavigation' => \App\Http\Middleware\LogUserBrowsingNavigationMiddleware::class,
             'detectMobile' => \App\Http\Middleware\DetectMobile::class,
             'mpesa.ip' => VerifyMpesaCallbackIp::class,
+            'delivery_partner_service' => \App\Http\Middleware\DeliveryPartnerServiceMiddleware::class,
+            'vendor_delivery_partner_setup' => \App\Http\Middleware\VendorDeliveryPartnerSetupMiddleware::class,
+            'delivery_partner_config' => \App\Http\Middleware\DeliveryPartnerConfigMiddleware::class,
+            'vendor_delivery_partner_config' => \App\Http\Middleware\VendorDeliveryPartnerConfigMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

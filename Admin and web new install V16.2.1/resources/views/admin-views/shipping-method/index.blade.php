@@ -94,6 +94,87 @@
             </div>
         </form>
 
+        @if ($isCourierAddonPublished)
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form action="{{ route('admin.business-settings.shipping-method.update-third-party-mode') }}"
+                          method="post" id="third-party-delivery-mode-form">
+                        @csrf
+                        <div class="d-flex justify-content-between align-items-center gap-4 flex-wrap">
+                            <div class="flex-1">
+                                <h3 class="text-capitalize">{{ translate('Third_Party_Delivery_Service') }}</h3>
+                                <p class="mb-0 fs-12">
+                                    {{ translate('turn_this_on_to_ship_orders_through_your_integrated_third_party_delivery_partners.') }}
+                                    {{ translate('your_regular_shipping_methods_stay_available,_and_when_it_is_off_every_order_is_shipped_with_the_default_shipping_method.') }}
+                                </p>
+                            </div>
+                            <div class="p-3 bg-section rounded d-flex align-items-center gap-3 flex-shrink-0 ms-auto">
+                                <label class="form-label fw-semibold mb-0 text-capitalize" for="third-party-delivery-mode">
+                                    {{ translate('Third_Party_Delivery_Mode') }}
+                                </label>
+                                <label class="switcher" for="third-party-delivery-mode">
+                                    <input class="switcher_input custom-modal-plugin" type="checkbox" value="1"
+                                           name="status" id="third-party-delivery-mode"
+                                           {{ $isThirdPartyDeliveryEnabled ? 'checked' : '' }}
+                                           data-modal-type="input-change-form"
+                                           data-modal-form="#third-party-delivery-mode-form"
+                                           data-on-image="{{ dynamicAsset(path: 'public/assets/new/back-end/img/third-party-delivery.png') }}"
+                                           data-off-image="{{ dynamicAsset(path: 'public/assets/new/back-end/img/third-party-delivery.png') }}"
+                                           data-on-title="{{ translate('want_to_turn_on_third_party_delivery_mode') . '?' }}"
+                                           data-off-title="{{ translate('want_to_turn_off_third_party_delivery_mode') . '?' }}"
+                                           data-on-message="<p>{{ translate('delivery_partners_will_be_available_for_selection_on_the_order_details_page_when_you_turn_this_on') . '.' }}</p>"
+                                           data-off-message="<p>{{ translate('delivery_partners_will_no_longer_be_available_for_selection_on_the_order_details_page_when_you_turn_this_off') . '.' }}</p>"
+                                           data-on-button-text="{{ translate('turn_on') }}"
+                                           data-off-button-text="{{ translate('turn_off') }}">
+                                    <span class="switcher_control"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            @if ($isThirdPartyDeliveryEnabled)
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <form action="{{ route('admin.business-settings.shipping-method.update-vendor-partner-setup') }}"
+                              method="post" id="vendor-delivery-partner-setup-form">
+                            @csrf
+                            <div class="d-flex justify-content-between align-items-center gap-4 flex-wrap">
+                                <div class="flex-1">
+                                    <h3 class="text-capitalize">{{ translate('Vendor_Delivery_Partner_Setup') }}</h3>
+                                    <p class="mb-0 fs-12">
+                                        {{ translate('vendors_can_connect_their_own_delivery_partner_accounts_and_ship_on_their_own_credentials_when_you_turn_this_on.') }}
+                                    </p>
+                                </div>
+                                <div class="p-3 bg-section rounded d-flex align-items-center gap-3 flex-shrink-0 ms-auto">
+                                    <label class="form-label fw-semibold mb-0 text-capitalize" for="vendor-delivery-partner-setup">
+                                        {{ translate('Vendor_Delivery_Partner_Setup') }}
+                                    </label>
+                                    <label class="switcher" for="vendor-delivery-partner-setup">
+                                        <input class="switcher_input custom-modal-plugin" type="checkbox" value="1"
+                                               name="status" id="vendor-delivery-partner-setup"
+                                               {{ $isVendorDeliveryPartnerSetupEnabled ? 'checked' : '' }}
+                                               data-modal-type="input-change-form"
+                                               data-modal-form="#vendor-delivery-partner-setup-form"
+                                               data-on-image="{{ dynamicAsset(path: 'public/assets/new/back-end/img/third-party-delivery.png') }}"
+                                               data-off-image="{{ dynamicAsset(path: 'public/assets/new/back-end/img/third-party-delivery.png') }}"
+                                               data-on-title="{{ translate('want_to_let_vendors_set_up_their_own_delivery_partners') . '?' }}"
+                                               data-off-title="{{ translate('want_to_stop_vendors_setting_up_their_own_delivery_partners') . '?' }}"
+                                               data-on-message="<p>{{ translate('vendors_will_get_a_delivery_partner_integration_page_and_will_ship_on_their_own_carrier_accounts') . '.' }}</p>"
+                                               data-off-message="<p>{{ translate('the_page_will_be_hidden_from_vendors_their_saved_credentials_are_kept_but_will_not_be_used') . '.' }}</p>"
+                                               data-on-button-text="{{ translate('turn_on') }}"
+                                               data-off-button-text="{{ translate('turn_off') }}">
+                                        <span class="switcher_control"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            @endif
+        @endif
+
         <div class="card mb-3">
             <div class="card-body">
                 <div class="mb-4">

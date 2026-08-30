@@ -247,6 +247,7 @@ class ConfigController extends Controller
             'system_image_file_upload_max_size' => getFileUploadMaxSize(type: 'image'),
             'system_general_file_upload_max_size' => getFileUploadMaxSize(type: 'file'),
             'vendor_can_edit_order_status' => getWebConfig('vendor_can_edit_order') ?? 0,
+            'vendor_delivery_partner_setup_status' => (int)vendorDeliveryPartnerSetupAvailable(),
 
             'auction_feature_status' => $auctionFeatureStatus,
             'auction_commission_percentage' => getWebConfig(name: 'auction_commission_percentage'),

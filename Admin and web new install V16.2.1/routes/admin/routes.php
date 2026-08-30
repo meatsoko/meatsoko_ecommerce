@@ -1081,6 +1081,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
                     Route::post('update-status', 'updateStatus')->name('update-status');
                     Route::post('delete', 'delete')->name('delete');
                     Route::post('update-shipping-responsibility', 'updateShippingResponsibility')->name('update-shipping-responsibility');
+                    Route::post('update-third-party-mode', 'updateThirdPartyDeliveryMode')->name('update-third-party-mode');
+                    Route::post('update-vendor-partner-setup', 'updateVendorDeliveryPartnerSetup')->name('update-vendor-partner-setup');
                 });
             });
 

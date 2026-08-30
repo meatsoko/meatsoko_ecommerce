@@ -137,5 +137,20 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        // Guarded so removing or deactivating the addon leaves no dangling reference.
+        if (addon_published_status('Courier') && class_exists(\Modules\Courier\app\Events\ShipmentStatusUpdated::class)) {
+            \Illuminate\Support\Facades\Event::listen(
+                \Modules\Courier\app\Events\ShipmentStatusUpdated::class,
+                \App\Listeners\CourierShipmentStatusListener::class,
+            );
+        }
+
+        if (addon_published_status('Courier') && class_exists(\Modules\Courier\app\Events\ShipmentDispatched::class)) {
+            \Illuminate\Support\Facades\Event::listen(
+                \Modules\Courier\app\Events\ShipmentDispatched::class,
+                \App\Listeners\CourierShipmentDispatchedListener::class,
+            );
+        }
     }
 }

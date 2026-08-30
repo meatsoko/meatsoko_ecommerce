@@ -103,18 +103,13 @@ $('.js-data-example-ajax').select2({
 });
 
 
+function toggleDeliveryTypeBlocks(value) {
+    $('.choose_delivery_man').toggle(value === 'self_delivery');
+    $('#by_third_party_delivery_service_info').toggle(value === 'third_party_delivery');
+}
+
 $(document).ready(function () {
-    let delivery_type = $("#delivery-type").data('type');
-    if (delivery_type === 'self_delivery') {
-        $('.choose_delivery_man').show();
-        $('#by_third_party_delivery_service_info').hide();
-    } else if (delivery_type === 'third_party_delivery') {
-        $('.choose_delivery_man').hide();
-        $('#by_third_party_delivery_service_info').show();
-    } else {
-        $('.choose_delivery_man').hide();
-        $('#by_third_party_delivery_service_info').hide();
-    }
+    toggleDeliveryTypeBlocks($("#delivery-type").data('type'));
 });
 
 $('.payment-status-alert').on('click',function (){
@@ -210,19 +205,7 @@ $("#order_status").on('change', function (e) {
 });
 
 $("#choose_delivery_type").on('change', function () {
-    let value = $(this).val();
-    if (value === 'self_delivery') {
-        $('.choose_delivery_man').show();
-        $('#by_third_party_delivery_service_info').hide();
-    } else if (value === 'third_party_delivery') {
-        $('.choose_delivery_man').hide();
-        $('#by_third_party_delivery_service_info').show();
-        $('#third_party_delivery_service_modal').modal("show");
-    } else {
-        $('.choose_delivery_man').hide();
-        $('#by_third_party_delivery_service_info').hide();
-    }
-
+    toggleDeliveryTypeBlocks($(this).val());
 });
 
 $("#addDeliveryMan").on('change', function () {

@@ -33,6 +33,77 @@
                 </div>
             </div>
         </div>
+        @if ($isCourierAddonPublished)
+            <div class="p-12 p-sm-20 bg-section rounded mb-3 mb-sm-20">
+                <div class="d-flex gap-3 align-items-center justify-content-between overflow-hidden">
+                    <button class="btn-collapse d-flex gap-3 align-items-center bg-transparent border-0 p-0 collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#collapseShippingMethod_04" aria-expanded="true">
+                        <div class="btn-collapse-icon border bg-light icon-btn rounded-circle text-dark collapsed">
+                            <i class="fi fi-sr-angle-right"></i>
+                        </div>
+                        <span class="fw-bold text-start">{{ translate('Third_Party_Delivery_Service') }}</span>
+                    </button>
+
+                </div>
+
+                <div class="collapse mt-3" id="collapseShippingMethod_04">
+                    <div class="card card-body">
+                        <p class="fs-12">
+                            {{ translate('connects_your_store_to_the_courier_companies_you_have_set_up_under_delivery_partner_integration.') }}
+                        </p>
+                        <ul class="d-flex flex-column gap-12 fs-12">
+                            <li>
+                                <strong>{{ translate('when_on') }}:</strong>
+                                {{ translate('delivery_partners_become_selectable_on_the_order_details_page,_so_an_order_can_be_booked_with_a_courier_instead_of_being_delivered_by_your_own_team.') }}
+                                {{ translate('your_existing_shipping_methods_keep_working_exactly_as_before,_this_adds_a_way_to_ship_instead_of_replacing_one.') }}
+                            </li>
+                            <li>
+                                <strong>{{ translate('when_off') }}:</strong>
+                                {{ translate('delivery_partners_are_no_longer_offered_on_the_order_details_page_and_every_order_is_shipped_with_the_default_shipping_method.') }}
+                                {{ translate('saved_partner_credentials_are_kept.') }}
+                            </li>
+                            <li>
+                                <strong>{{ translate('who_selects_the_partner') }}:</strong>
+                                {{ translate('follows_the_shipping_responsibility_setting,_with_inhouse_shipping_the_admin_books_the_shipment_and_with_vendor_wise_shipping_the_vendor_does.') }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        @endif
+        @if ($isThirdPartyDeliveryEnabled)
+            <div class="p-12 p-sm-20 bg-section rounded mb-3 mb-sm-20">
+                <div class="d-flex gap-3 align-items-center justify-content-between overflow-hidden">
+                    <button class="btn-collapse d-flex gap-3 align-items-center bg-transparent border-0 p-0 collapsed" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#collapseShippingMethod_05" aria-expanded="true">
+                        <div class="btn-collapse-icon border bg-light icon-btn rounded-circle text-dark collapsed">
+                            <i class="fi fi-sr-angle-right"></i>
+                        </div>
+                        <span class="fw-bold text-start">{{ translate('Vendor_Delivery_Partner_Setup') }}</span>
+                    </button>
+
+                </div>
+
+                <div class="collapse mt-3" id="collapseShippingMethod_05">
+                    <div class="card card-body">
+                        <p class="fs-12">
+                            {{ translate('decides_whether_vendors_manage_their_own_courier_accounts.') }}
+                            {{ translate('this_option_is_available_only_while_third_party_delivery_mode_is_on.') }}
+                        </p>
+                        <ul class="d-flex flex-column gap-12 fs-12">
+                            <li>
+                                <strong>{{ translate('when_on') }}:</strong>
+                                {{ translate('each_vendor_gets_a_delivery_partner_integration_page_and_ships_on_their_own_carrier_accounts_and_credentials.') }}
+                            </li>
+                            <li>
+                                <strong>{{ translate('when_off') }}:</strong>
+                                {{ translate('that_page_is_hidden_from_the_vendor_panel_and_vendor_app,_and_the_credentials_vendors_already_saved_are_kept_instead_of_being_deleted.') }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        @endif
         <div class="p-12 p-sm-20 bg-section rounded mb-3 mb-sm-20">
             <div class="d-flex gap-3 align-items-center justify-content-between overflow-hidden">
                 <button class="btn-collapse d-flex gap-3 align-items-center bg-transparent border-0 p-0 collapsed" type="button"

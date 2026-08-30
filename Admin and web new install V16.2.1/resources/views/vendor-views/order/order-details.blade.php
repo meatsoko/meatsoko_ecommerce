@@ -940,6 +940,12 @@
                             </div>
                         </div>
                         <?php $disableDeliveryType = !$physicalProduct && $shippingAddress; ?>
+                        @php($courierPartnerEnabled = deliveryPartnerAvailable(order: $order, panel: 'vendor'))
+                        @php($courierShipped = deliveryPartnerShipment($order['id']) !== null)
+                        @php($courierAssigned = $order->delivery_type == 'third_party_delivery' || ($courierShipped && $order->delivery_type != 'self_delivery'))
+                        @php($courierPaid = $order->payment_status == 'paid')
+                        @php($courierCod = $courierPaid ? 0 : ($order['order_amount'] ?? 0))
+                        @php($courierHasCoordinates = (float) ($shippingAddress?->latitude ?? 0) !== 0.0 && (float) ($shippingAddress?->longitude ?? 0) !== 0.0)
                         @if($physicalProduct || $shippingAddress)
                             <ul class="list-unstyled d-flex flex-column mb-0 pr-0">
                                 @if ($order->shipping_type == 'order_wise')
@@ -980,10 +986,11 @@
                                                 value="self_delivery" {{$order->delivery_type=='self_delivery'?'selected':''}}>
                                                 {{translate('by_self_delivery_man')}}
                                             </option>
-                                            <option
-                                                value="third_party_delivery" {{$order->delivery_type=='third_party_delivery'?'selected':''}} >
-                                                {{translate('by_third_party_delivery_service')}}
-                                            </option>
+                                            @if ($courierPartnerEnabled || $courierAssigned)
+                                                <option value="third_party_delivery" {{ $courierAssigned ? 'selected' : '' }}>
+                                                    {{ translate('current_delivery_partner') }}
+                                                </option>
+                                            @endif
                                         </select>
                                     </li>
                                     @if(!$disableDeliveryType)
@@ -1067,7 +1074,28 @@
                                                        class="form-control set-today-date-minimum deliveryDateUpdate" {{ $order->order_status == 'delivered'? 'disabled' : 'required' }} >
                                             </li>
                                         @endif
-                                        <li class="mt-1" id="by_third_party_delivery_service_info">
+                                    @endif
+                                @endif
+
+                                @if (!$disableDeliveryType && ($courierPartnerEnabled || $courierAssigned))
+                                    <li class="mt-1" id="by_third_party_delivery_service_info">
+                                        @if (courierService())
+                                            @include('courier::vendor.delivery-partner-selection', ['courierOrder' => [
+                                                'id' => $order['id'],
+                                                'name' => $shippingAddress?->contact_person_name,
+                                                'phone' => $shippingAddress?->phone,
+                                                'address' => $shippingAddress?->address,
+                                                'cod' => $courierCod,
+                                                'cod_locked' => $courierPaid,
+                                                'amount' => $order['order_amount'] ?? 0,
+                                                'has_delivery_man' => (bool) $order->delivery_man_id,
+                                                'can_dispatch' => $courierPartnerEnabled,
+                                                'manual_assignment' => $courierAssigned ? [
+                                                    'partner' => $order->delivery_service_name,
+                                                    'tracking_id' => $order->third_party_delivery_tracking_id,
+                                                ] : null,
+                                            ]])
+                                        @else
                                             <div class="p-2 bg-light rounded mt-3">
                                                 <div class="media m-1 gap-3">
                                                     <img class="avatar rounded-circle"
@@ -1080,13 +1108,28 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </li>
-                                    @endif
+                                        @endif
+                                    </li>
                                 @endif
                             </ul>
                         @endif
                     </div>
                 </div>
+
+                @if ($courierPartnerEnabled)
+                    @include('courier::vendor.send-to-courier', ['courierOrder' => [
+                        'id' => $order['id'],
+                        'name' => $shippingAddress?->contact_person_name,
+                        'phone' => $shippingAddress?->phone,
+                        'address' => $shippingAddress?->address,
+                        'latitude' => $courierHasCoordinates ? $shippingAddress->latitude : null,
+                        'longitude' => $courierHasCoordinates ? $shippingAddress->longitude : null,
+                        'cod' => $courierCod,
+                        'cod_locked' => $courierPaid,
+                        'amount' => $order['order_amount'] ?? 0,
+                    ]])
+                @endif
+
                 <div class="card">
                     @if(!empty((array) $shippingAddress))
                         <div class="card-body">
@@ -2040,7 +2083,7 @@
           data-text="{{ translate("deliveryman_man_can_not_assign_or_change_in_that_status") }}"></span>
     <span id="message-deliveryman-add-invalid-text"
           data-text="{{ translate("deliveryman_man_can_not_assign_or_change_in_that_status") }}"></span>
-    <span id="delivery-type" data-type="{{ $order->delivery_type }}"></span>
+    <span id="delivery-type" data-type="{{ $courierAssigned ? 'third_party_delivery' : $order->delivery_type }}"></span>
     <span id="add-delivery-man-url" data-url="{{url('/vendor/orders/add-delivery-man/'.$order['id'])}}/"></span>
 
     <span id="message-deliveryman-charge-success-text"

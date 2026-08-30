@@ -63,6 +63,20 @@ class AppServiceProvider extends ServiceProvider
         $loader->alias('Helper', \App\Utils\Helpers::class);
         $loader->alias('Madzipper', \Madnest\Madzipper\Madzipper::class);
         $loader->alias('Excel', \Maatwebsite\Excel\Facades\Excel::class);
+
+        if (addon_published_status('Courier') && interface_exists(\Modules\Courier\app\Contracts\CourierOwnerResolver::class)) {
+            $this->app->bind(
+                \Modules\Courier\app\Contracts\CourierOwnerResolver::class,
+                \App\Services\Courier\HostCourierOwnerResolver::class,
+            );
+        }
+
+        if (addon_published_status('Courier') && interface_exists(\Modules\Courier\app\Contracts\CourierShipmentAccessResolver::class)) {
+            $this->app->bind(
+                \Modules\Courier\app\Contracts\CourierShipmentAccessResolver::class,
+                \App\Services\Courier\HostCourierShipmentAccessResolver::class,
+            );
+        }
     }
 
     /**
@@ -76,6 +90,8 @@ class AppServiceProvider extends ServiceProvider
         if (!in_array(request()->ip(), ['127.0.0.1', '::1']) && env('FORCE_HTTPS')) {
             \URL::forceScheme('https');
         }
+
+        $this->shareDeliveryPartnerServiceStatusWithCourierConfigScreens();
         // runningInConsole() is also true for PHPUnit's HTTP test client (it's
         // still a CLI process, unlike php-fpm/php -S serving real traffic) —
         // without the runningUnitTests() carve-out, $web_config and friends
@@ -281,6 +297,13 @@ class AppServiceProvider extends ServiceProvider
                     'pageName' => $pageName,
                 ]
             );
+        });
+    }
+
+    protected function shareDeliveryPartnerServiceStatusWithCourierConfigScreens(): void
+    {
+        View::composer(['courier::admin.config.index', 'courier::vendor.config.index'], function ($view) {
+            $view->with('deliveryPartnerServiceEnabled', deliveryPartnerServiceAvailable());
         });
     }
 
