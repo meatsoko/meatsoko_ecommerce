@@ -4,7 +4,7 @@ namespace App\Utils;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Facades\Image;
+use Intervention\Image\ImageManager as InterventionImageManager;
 
 class ImageManager
 {
@@ -26,10 +26,12 @@ class ImageManager
                 if (in_array(request()->ip(), ['127.0.0.1', '::1']) && !(imagetypes() & IMG_WEBP) || env('APP_DEBUG') && !(imagetypes() & IMG_WEBP)) {
                     $format = 'png';
                 }
-                $imageWebp = Image::make($image)->encode($format, 85);
+                $decoded = InterventionImageManager::gd()->read($image);
+                $imageWebp = $format === 'png'
+                    ? $decoded->encodeByExtension($format)
+                    : $decoded->encodeByExtension($format, quality: 85);
                 $imageName = Carbon::now()->toDateString() . "-" . uniqid() . "." . $format;
-                Storage::disk($storage)->put($dir . $imageName, $imageWebp);
-                $imageWebp->destroy();
+                Storage::disk($storage)->put($dir . $imageName, (string) $imageWebp);
             }
         } else {
             $imageName = 'def.webp';

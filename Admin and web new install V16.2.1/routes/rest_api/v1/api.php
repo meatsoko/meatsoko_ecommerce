@@ -20,6 +20,9 @@ use App\Http\Controllers\RestAPI\v1\CustomerRestockRequestController;
 use App\Http\Controllers\RestAPI\v1\DealController;
 use App\Http\Controllers\RestAPI\v1\DealOfTheDayController;
 use App\Http\Controllers\RestAPI\v1\FlashDealController;
+use App\Http\Controllers\RestAPI\v1\Erp\ErpIntegrationController;
+use App\Http\Controllers\RestAPI\v1\Erp\RefundController;
+use App\Http\Controllers\RestAPI\v1\Erp\VendorController;
 use App\Http\Controllers\RestAPI\v1\GeneralController;
 use App\Http\Controllers\RestAPI\v1\MapApiController;
 use App\Http\Controllers\RestAPI\v1\NotificationController;
@@ -433,5 +436,21 @@ Route::group(['prefix' => 'v1', 'middleware' => ['api_lang']], function () {
         Route::get('faq', 'faq');
         Route::get('get-guest-id', 'get_guest_id');
         Route::post('contact-us', 'contact_store');
+    });
+
+    Route::group(['prefix' => 'erp', 'middleware' => ['erp_token']], function () {
+        Route::controller(ErpIntegrationController::class)->group(function () {
+            Route::get('ping', 'ping');
+        });
+        Route::controller(VendorController::class)->group(function () {
+            Route::get('vendors', 'index');
+            Route::get('vendors/{id}', 'show');
+        });
+
+        Route::controller(RefundController::class)->group(function () {
+            Route::get('refunds', 'index');
+            Route::get('refunds/count', 'count');
+            Route::get('refunds/{id}', 'show');
+        });
     });
 });

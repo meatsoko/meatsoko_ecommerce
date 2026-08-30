@@ -8,6 +8,7 @@ use App\Http\Middleware\CaptureAffiliateReferral;
 use App\Http\Middleware\CustomerMiddleware;
 use App\Http\Middleware\DatabaseRefreshMiddleware;
 use App\Http\Middleware\DeliveryManAuth;
+use App\Http\Middleware\ErpTokenAuthMiddleware;
 use App\Http\Middleware\GuestMiddleware;
 use App\Http\Middleware\InstallationMiddleware;
 use App\Http\Middleware\MaintenanceModeMiddleware;
@@ -102,6 +103,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'vendor_delivery_partner_setup' => \App\Http\Middleware\VendorDeliveryPartnerSetupMiddleware::class,
             'delivery_partner_config' => \App\Http\Middleware\DeliveryPartnerConfigMiddleware::class,
             'vendor_delivery_partner_config' => \App\Http\Middleware\VendorDeliveryPartnerConfigMiddleware::class,
+            'erp_token' => ErpTokenAuthMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -87,6 +87,7 @@ use App\Http\Controllers\Admin\ThirdParty\PaymentMethodController;
 use App\Http\Controllers\Admin\Notification\NotificationController;
 use App\Http\Controllers\Admin\Settings\BusinessSettingsController;
 use App\Http\Controllers\Admin\Settings\RobotsMetaContentController;
+use App\Http\Controllers\Admin\ThirdParty\ErpController;
 use App\Http\Controllers\Admin\ThirdParty\SocialMediaChatController;
 use App\Http\Controllers\Admin\Deliveryman\EmergencyContactController;
 use App\Http\Controllers\Admin\HelpAndSupport\SupportTicketController;
@@ -964,6 +965,15 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
                     Route::get('index', 'index')->name('index');
                     Route::post('update-storage-type', 'updateStorageType')->name('update-storage-type');
                     Route::post('s3-credential', 'updateS3Credential')->name('s3-credential');
+                });
+            });
+
+            Route::group(['prefix' => 'erp', 'as' => 'erp.'], function () {
+                Route::controller(ErpController::class)->group(function () {
+                    Route::get('index', 'index')->name('index');
+                    Route::post('store', 'store')->name('store');
+                    Route::post('revoke', 'revoke')->name('revoke');
+                    Route::post('delete', 'delete')->name('delete');
                 });
             });
 

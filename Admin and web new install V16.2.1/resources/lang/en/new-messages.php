@@ -2453,4 +2453,11 @@ ____________________________________________________on_search_engines_and_see_th
 	"register_as_an_affiliate" => "Register as an affiliate",
 	"withdraw_request_has_been_approved_automatically" => "Withdraw request has been approved automatically",
 	"insufficient_balance_or_invalid_amount" => "Insufficient balance or invalid amount",
+	"mpesa_is_not_configured_properly" => "Mpesa is not configured properly",
+	"Something_went_wrong,_please_try_again" => "Something went wrong, please try again",
+	"Show_me_trending_products" => "Show me trending products",
+	"What_brands_do_you_have" => "What brands do you have",
+	"API_key_and_secret_are_required" => "API key and secret are required",
+	"Show_me_todays_best_deals" => "Show me todays best deals",
+	"Suggest_a_good_phone_under_1000" => "Suggest a good phone under 1000",
 ];

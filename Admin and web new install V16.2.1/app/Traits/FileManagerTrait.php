@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Facades\Image;
+use Intervention\Image\ImageManager as InterventionImageManager;
 
 trait FileManagerTrait
 {
@@ -34,10 +34,9 @@ trait FileManagerTrait
                 if (in_array(request()->ip(), ['127.0.0.1', '::1']) && !(imagetypes() & IMG_WEBP) || env('APP_DEBUG') && !(imagetypes() & IMG_WEBP)) {
                     $format = 'png';
                 }
-                $imageWebp = Image::make($image)->encode($format);
+                $imageWebp = InterventionImageManager::gd()->read($image)->encodeByExtension($format);
                 $imageName = Carbon::now()->toDateString() . "-" . uniqid() . "." . $format;
-                Storage::disk($storage)->put($dir . $imageName, $imageWebp);
-                $imageWebp->destroy();
+                Storage::disk($storage)->put($dir . $imageName, (string) $imageWebp);
             }
         } else {
             $imageName = 'def.png';

@@ -41,6 +41,13 @@
                 {{ translate('storage_Connection') }}
             </a>
         </li>
+
+        <li class="nav-item">
+            <a class="nav-link {{ Request::is('admin/third-party/erp/index') ?'active':'' }}"
+               href="{{ route('admin.third-party.erp.index') }}">
+                {{ translate('Integration') }}
+            </a>
+        </li>
     </ul>
     <div class="nav--tab__prev">
         <button type="button" class="btn btn-circle border-0 bg-white text-primary">
