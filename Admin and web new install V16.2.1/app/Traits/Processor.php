@@ -56,13 +56,27 @@ trait  Processor
     public function payment_config($key, $settings_type): object|null
     {
         try {
-            $config = DB::table('addon_settings')->where('key_name', $key)
+            $config = Setting::where('key_name', $key)
                 ->where('settings_type', $settings_type)->first();
         } catch (Exception $exception) {
             return new Setting();
         }
 
-        return (isset($config)) ? $config : null;
+        if (!isset($config)) {
+            return null;
+        }
+
+        // live_values/test_values are cast to encrypted:array on the model, so
+        // $config->live_values/test_values here are already decrypted PHP
+        // arrays. Every gateway controller calls json_decode($config->live_values)
+        // expecting a JSON string (the pre-encryption contract), so hand back a
+        // plain object with that same shape rather than changing 15 call sites.
+        $result = new \stdClass();
+        $result->mode = $config->mode;
+        $result->live_values = json_encode($config->live_values);
+        $result->test_values = json_encode($config->test_values);
+
+        return $result;
     }
 
     public function file_uploader(string $dir, string $format, $image = null, $old_image = null)
