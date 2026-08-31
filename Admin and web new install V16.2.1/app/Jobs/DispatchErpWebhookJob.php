@@ -8,8 +8,10 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 
@@ -24,10 +26,14 @@ class DispatchErpWebhookJob implements ShouldQueue
 
     public int $timeout = 120;
 
+    public string $dispatchId;
+
     public function __construct(
         protected string $event,
         protected array $payload,
-    ) {}
+    ) {
+        $this->dispatchId = (string) Str::uuid();
+    }
 
     public function retryUntil(): \DateTime
     {
@@ -50,12 +56,23 @@ class DispatchErpWebhookJob implements ShouldQueue
         $transientFailures = [];
 
         foreach (ErpApiToken::withWebhook()->get() as $token) {
+            // A retry re-runs this whole loop from a fresh deserialize of the job, so a
+            // subscriber that already got this event (success or a definitive 4xx) is
+            // remembered here — otherwise a transient failure on one subscriber would
+            // cause every OTHER subscriber to receive the same event twice.
+            $resolvedKey = "erp-webhook-resolved:{$this->dispatchId}:{$token->id}";
+
+            if (Cache::has($resolvedKey)) {
+                continue;
+            }
+
             $secret = $token->decryptedSecret();
             if (!$secret) {
                 Log::warning('ERP webhook skipped: secret not recoverable', [
                     'token_id' => $token->id,
                     'event' => $this->event,
                 ]);
+                Cache::put($resolvedKey, true, now()->addHours(7));
                 continue;
             }
 
@@ -78,11 +95,13 @@ class DispatchErpWebhookJob implements ShouldQueue
                         'event' => $this->event,
                         'status' => $response->status(),
                     ]);
+                    Cache::put($resolvedKey, true, now()->addHours(7));
                     continue;
                 }
 
                 $response->throw();
                 $token->forceFill(['webhook_last_dispatched_at' => now()])->saveQuietly();
+                Cache::put($resolvedKey, true, now()->addHours(7));
             } catch (Throwable $exception) {
                 // Connection error / timeout / 5xx: retryable for this subscriber.
                 $transientFailures[] = $token->id;

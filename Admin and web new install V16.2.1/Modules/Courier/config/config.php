@@ -1,6 +1,7 @@
 <?php
 
 use Modules\Courier\CourierProviders\AramexProvider;
+use Modules\Courier\CourierProviders\BoltProvider;
 use Modules\Courier\CourierProviders\DelhiveryProvider;
 use Modules\Courier\CourierProviders\DhlProvider;
 use Modules\Courier\CourierProviders\GarudaExpressProvider;
@@ -10,6 +11,7 @@ use Modules\Courier\CourierProviders\PathaoProvider;
 use Modules\Courier\CourierProviders\RedxProvider;
 use Modules\Courier\CourierProviders\ShiprocketProvider;
 use Modules\Courier\CourierProviders\TcsProvider;
+use Modules\Courier\CourierProviders\UberProvider;
 
 return [
     'name' => 'Courier',
@@ -27,6 +29,8 @@ return [
         'shiprocket' => ShiprocketProvider::class,
         'tcs'       => TcsProvider::class,
         'garuda_express' => GarudaExpressProvider::class,
+        'bolt'      => BoltProvider::class,
+        'uber'      => UberProvider::class,
     ],
 
     'webhook' => [

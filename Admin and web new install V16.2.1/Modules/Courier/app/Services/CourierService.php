@@ -5,6 +5,8 @@ namespace Modules\Courier\app\Services;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 use Modules\Courier\app\Contracts\CourierShipmentAccessResolver;
 use Modules\Courier\app\DataTransferObjects\Requests\OrderData;
 use Modules\Courier\app\DataTransferObjects\Requests\QuoteData;
@@ -251,6 +253,7 @@ class CourierService
             'shipment_status_label' => $summary['status_label'],
             'status_tone'           => $summary['status_tone'],
             'delivery_fee'          => $shipment->delivery_fee,
+            'cod_amount'            => $shipment->cod_amount,
             'tracking_url'          => $summary['tracking_url'],
             'dispatched_at'         => optional($shipment->created_at)->format('d M Y, h:i A'),
             'can_track'             => $this->supportsTracking($shipment->provider, $shipment->owner()),
@@ -300,9 +303,19 @@ class CourierService
             return $storedStatus;
         }
 
-        $result = rescue(fn (): ShipmentResult => $driver->getOrderStatus($consignmentId), report: false);
+        try {
+            $result = $driver->getOrderStatus($consignmentId);
+        } catch (Throwable $exception) {
+            Log::warning('Courier status refresh failed', [
+                'provider'       => $driver->getName(),
+                'consignment_id' => $consignmentId,
+                'message'        => $exception->getMessage(),
+            ]);
 
-        if ($result === null || $result->status === ShipmentStatus::Unknown || $result->status === $storedStatus) {
+            return $storedStatus;
+        }
+
+        if ($result->status === ShipmentStatus::Unknown || $result->status === $storedStatus) {
             return $storedStatus;
         }
 

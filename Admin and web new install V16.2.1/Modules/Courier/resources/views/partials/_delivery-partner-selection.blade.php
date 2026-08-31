@@ -49,6 +49,22 @@
                     <strong>{{ $courierShipment['delivery_fee'] }}</strong>
                 </div>
             @endif
+            @if (!is_null($courierShipment['cod_amount']) && (float) $courierShipment['cod_amount'] > 0)
+                @php($courierOrderAmount = round((float) ($courierOrder['amount'] ?? 0), 2))
+                @php($courierCodAmount = round((float) $courierShipment['cod_amount'], 2))
+                <div class="d-flex justify-content-between align-items-center gap-2">
+                    <span class="text-muted">{{ translate('Cash_to_Collect') }}</span>
+                    <span class="courier-summary-value">
+                        <strong>{{ $courierShipment['cod_amount'] }}</strong>
+                        @if ($courierCodAmount !== $courierOrderAmount)
+                            <span class="badge {{ $toneClasses['warning'] }} ms-1"
+                                  title="{{ translate('Order_total_is') }} {{ $courierOrderAmount }}">
+                                {{ translate('differs_from_order_total') }}
+                            </span>
+                        @endif
+                    </span>
+                </div>
+            @endif
             @if ($courierShipment['dispatched_at'])
                 <div class="d-flex justify-content-between align-items-center gap-2">
                     <span class="text-muted">{{ translate('Dispatched_On') }}</span>

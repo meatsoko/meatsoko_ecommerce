@@ -12,12 +12,16 @@ use Modules\Courier\app\Http\Requests\Admin\EstimateCourierChargeRequest;
 use Modules\Courier\app\Http\Requests\Admin\ReviseCourierDetailsRequest;
 use Modules\Courier\app\Http\Requests\Admin\SendToCourierRequest;
 use Modules\Courier\app\Services\CourierService;
+use Modules\Courier\app\Services\ProviderRegistry;
 
 class CourierDispatchController extends Controller
 {
     use PresentsTrackingEvents;
 
-    public function __construct(private readonly CourierService $courier) {}
+    public function __construct(
+        private readonly CourierService $courier,
+        private readonly ProviderRegistry $providers,
+    ) {}
 
     public function store(SendToCourierRequest $request): RedirectResponse
     {
@@ -75,9 +79,11 @@ class CourierDispatchController extends Controller
 
     public function track(string $consignmentId): JsonResponse
     {
+        $owner = $this->providers->owner();
+
         try {
-            $status = $this->presentShipmentStatus($this->courier->refreshStatus($consignmentId));
-            $events = $this->courier->track($consignmentId);
+            $status = $this->presentShipmentStatus($this->courier->refreshStatus($consignmentId, $owner));
+            $events = $this->courier->track($consignmentId, $owner);
         } catch (CourierException $exception) {
             return response()->json(['ok' => false, 'message' => $exception->getMessage()]);
         }
