@@ -16,6 +16,7 @@ use App\Http\Controllers\Payment_Methods\FlutterwaveV3Controller;
 use App\Http\Controllers\Payment_Methods\LiqPayController;
 use App\Http\Controllers\Payment_Methods\MercadoPagoController;
 use App\Http\Controllers\Payment_Methods\MpesaStkController;
+use App\Http\Controllers\Payment_Methods\JengaEquityController;
 use App\Http\Controllers\Payment_Methods\PaymobController;
 use App\Http\Controllers\Payment_Methods\PaypalPaymentController;
 use App\Http\Controllers\Payment_Methods\PaystackController;
@@ -505,6 +506,17 @@ if (!$isGatewayPublished) {
                 ->withoutMiddleware([VerifyCsrfToken::class])
                 ->middleware(['mpesa.ip', 'throttle:60,1']);
             Route::get('status', [MpesaStkController::class, 'status'])->name('status');
+        });
+
+        //EQUITY BANK (JENGA/EQUITEL PUSH)
+        Route::group(['prefix' => 'jenga-equity', 'as' => 'jenga-equity.'], function () {
+            Route::get('pay', [JengaEquityController::class, 'index'])->name('pay');
+            Route::post('push', [JengaEquityController::class, 'push'])->name('push')
+                ->withoutMiddleware([VerifyCsrfToken::class]);
+            Route::post('callback/{payment_id}', [JengaEquityController::class, 'callback'])->name('callback')
+                ->withoutMiddleware([VerifyCsrfToken::class])
+                ->middleware(['throttle:60,1']);
+            Route::get('status', [JengaEquityController::class, 'status'])->name('status');
         });
 
         //Liqpay

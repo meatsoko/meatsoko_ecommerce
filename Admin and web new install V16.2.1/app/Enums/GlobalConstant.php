@@ -1177,6 +1177,7 @@ enum GlobalConstant
         'mercadopago',
         'bkash',
         'mpesa_stk',
+        'jenga_equity',
     ];
 
     const DEFAULT_SMS_GATEWAYS = [
@@ -1208,6 +1209,7 @@ enum GlobalConstant
         'paytm' => ['merchant_key'],
         'bkash' => ['app_secret', 'password'],
         'mpesa_stk' => ['consumer_key', 'consumer_secret', 'passkey'],
+        'jenga_equity' => ['consumer_secret', 'private_key'],
         'momo' => ['api_key', 'subscription_key'],
         'hyper_pay' => ['access_code'],
         'amazon_pay' => ['pass_phrase', 'access_code'],

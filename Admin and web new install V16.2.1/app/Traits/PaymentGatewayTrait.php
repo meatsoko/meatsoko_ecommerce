@@ -24,6 +24,9 @@ trait PaymentGatewayTrait
             "mpesa_stk" => [
                 "KES" => "Kenyan Shilling"
             ],
+            "jenga_equity" => [
+                "KES" => "Kenyan Shilling"
+            ],
             "cashfree" => [
                 "INR" => "Indian Rupee"
             ],
