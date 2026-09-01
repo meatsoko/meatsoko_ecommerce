@@ -1,10 +1,2 @@
 __MACOSX/
 .DS_Store
-
-# Mobile apps split out into their own repo (github.com/meatsoko/mobile_app.git),
-# now living under Apps/ instead of the top level. See xdocs/ history in that
-# repo for the docs that moved along with them.
-/User app/
-/Vendor app/
-/xdocs/
-/Apps/

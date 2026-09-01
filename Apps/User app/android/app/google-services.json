@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "657371211329",
+    "project_id": "meatlab-29f15",
+    "storage_bucket": "meatlab-29f15.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:657371211329:android:dbe31cc42e7919f1a548c0",
+        "android_client_info": {
+          "package_name": "com.meatsokogroup.user"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0dOjYOfaG7W9GCL5YNOsZzyccO5yKJVY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

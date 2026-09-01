@@ -1,0 +1,42 @@
+*V16.5 Upgrade & New Features Report*
+
+*Phase 1 — Delivery Partner Integration*
+
+* Added 9 delivery partners.
+* Customers/vendors can now have orders handled through supported delivery partners.
+* Added automatic shipment tracking and status updates.
+* Added separate controls for platform and vendor delivery.
+* Fixed missing setup components from the original vendor package.
+* Verified booking, tracking, vendor separation, and disabling controls.
+
+*Phase 2 — AI Shopping Assistant & Personalized Homepage*
+
+1. Added an AI shopping assistant that helps customers find products.
+2. Customers can ask for similar products and add products to their cart through the assistant.
+3. The assistant does not place or pay for orders; customers remain in control of checkout.
+4. Added personalized homepage recommendations based on customer activity.
+5. Sponsored products remain unaffected by personalization.
+6. Added safeguards and usage limits to control AI usage.
+
+*Phase 3 — Image Management & 6amERP Integration*
+
+1. Upgraded the image system to improve image processing and format handling.
+2. Added a complete connection between the store and 6amERP.
+3. ERP can securely retrieve vendor and refund information.
+4. The store can automatically send vendor and refund updates to the ERP.
+5. Added secure API access, token management, verification, and automatic retry for failed updates.
+6. Tested the integration and restored all existing tests after resolving a testing issue.
+
+*Deployment & Verification*
+
+* All three phases were implemented without replacing existing custom features.
+* Existing functionality was preserved while the new V16.5 features were added.
+* Existing project tests passed: 24/24.
+* Courier functionality was tested separately with 180 tests, with one test-order issue remaining that does not affect the production feature.
+* New features are off by default and can be enabled when ready.
+
+*Follow-ups*
+
+Vendor/Restaurant Website Builder was not included in the vendor's V16.5 package, so it was not added.
+Courier configuration pages need sidebar/menu links.
+Claude AI is technically supported but is not yet selectable from the admin settings screen.
