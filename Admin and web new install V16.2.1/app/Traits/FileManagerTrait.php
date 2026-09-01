@@ -34,7 +34,11 @@ trait FileManagerTrait
                 if (in_array(request()->ip(), ['127.0.0.1', '::1']) && !(imagetypes() & IMG_WEBP) || env('APP_DEBUG') && !(imagetypes() & IMG_WEBP)) {
                     $format = 'png';
                 }
-                $imageWebp = InterventionImageManager::gd()->read($image)->encodeByExtension($format);
+                $decoded = InterventionImageManager::gd()->read($image);
+                // Cap runaway-large vendor uploads without touching anything
+                // already at or under this size - scaleDown() only shrinks.
+                $decoded->scaleDown(width: 1600);
+                $imageWebp = $decoded->encodeByExtension($format);
                 $imageName = Carbon::now()->toDateString() . "-" . uniqid() . "." . $format;
                 Storage::disk($storage)->put($dir . $imageName, (string) $imageWebp);
             }

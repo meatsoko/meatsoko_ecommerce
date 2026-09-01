@@ -307,21 +307,8 @@ class DashboardController extends BaseController
     protected function getOrderStatusArray(string $type): array
     {
         $vendorId = auth('seller')->id();
-        $status = getOrderStatusList();
 
-        $statusWiseOrders = [];
-        foreach ($status as $key) {
-            $count = $this->orderRepo->getListWhereDate(
-                filters: [
-                    'seller_is' => 'seller',
-                    'seller_id' => $vendorId,
-                    'order_status' => $key
-                ],
-                dateType: $type,
-            )->count();
-            $statusWiseOrders[$key] = $count;
-        }
-        return $statusWiseOrders;
+        return $this->orderRepo->getOrderStatusCountsBySeller(sellerId: $vendorId, dateType: $type);
     }
 
     /**

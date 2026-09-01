@@ -1164,6 +1164,10 @@ const CACHE_FOR_3_HOURS = 60 * 60 * 3;
 
 const CACHE_FOR_7_DAYS = 60 * 60 * 24 * 7;
 
+const CACHE_FOR_15_MINUTES = 60 * 15;
+
+const CACHE_FOR_ADMIN_ORDER_SELLER_FILTER_LIST = 'cache_for_admin_order_seller_filter_list';
+
 const CACHE_BUSINESS_SETTINGS_TABLE = 'cache_business_settings_table';
 const CACHE_IN_HOUSE_SHOP_TABLE = 'cache_in_house_shop_table';
 const CACHE_CLEARANCE_SALE_SETUP_TABLE = 'cache_clearance_sale_setup_table';

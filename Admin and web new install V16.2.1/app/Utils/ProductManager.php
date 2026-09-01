@@ -2044,45 +2044,53 @@ class ProductManager
             $request->merge(['category_ids' => $filteredData]);
         }
 
-        $publishingHouseList = PublishingHouse::with(['publishingHouseProducts'])
-            ->whereHas('publishingHouseProducts.product', function ($query) {
-                return $query->active();
-            })
-            ->withCount(['publishingHouseProducts' => function ($query) {
+        // These two lookups are only ever consumed below when the request's
+        // publishing_house_ids/author_ids includes the literal 0 ("unknown
+        // publisher/author") bucket - skip them otherwise instead of running
+        // 4 queries (2 of them walked in PHP loops) on every listing request.
+        $productIdsForUnknownPublisher = [];
+        if ($request->has('publishing_house_ids') && in_array(0, $request['publishing_house_ids'] ?? [])) {
+            $publishingHouseList = PublishingHouse::with(['publishingHouseProducts'])
+                ->whereHas('publishingHouseProducts.product', function ($query) {
+                    return $query->active();
+                })
+                ->withCount(['publishingHouseProducts' => function ($query) {
+                    return $query->whereHas('product', function ($query) {
+                        return $query->active();
+                    });
+                }])->get();
+
+            $productIdsForPublisher = [];
+            foreach ($publishingHouseList as $publishingHouseGroup) {
+                if (!empty($publishingHouseGroup->publishingHouseProducts)) {
+                    foreach ($publishingHouseGroup->publishingHouseProducts as $publishingHouse) {
+                        $productIdsForPublisher[] = $publishingHouse->product_id;
+                    }
+                }
+            }
+
+            $productIdsForUnknownPublisher = Product::active()->where(['product_type' => 'digital'])->whereNotIn('id', $productIdsForPublisher)->pluck('id')->toArray();
+        }
+
+        $productIdsForUnknownAuthor = [];
+        if ($request->has('author_ids') && is_array($request['author_ids'] ?? null) && in_array(0, $request['author_ids'])) {
+            $authorList = Author::withCount(['digitalProductAuthor' => function ($query) {
                 return $query->whereHas('product', function ($query) {
                     return $query->active();
                 });
             }])->get();
 
-        $productIdsForPublisher = [];
-        foreach ($publishingHouseList as $publishingHouseGroup) {
-            if (!empty($publishingHouseGroup->publishingHouseProducts)) {
-                foreach ($publishingHouseGroup->publishingHouseProducts as $publishingHouse) {
-                    $productIdsForPublisher[] = $publishingHouse->product_id;
+            $productIdsForAuthor = [];
+            foreach ($authorList as $authorGroup) {
+                if (!empty($authorGroup->digitalProductAuthor)) {
+                    foreach ($authorGroup->digitalProductAuthor as $authorItem) {
+                        $productIdsForAuthor[] = $authorItem->product_id;
+                    }
                 }
             }
+
+            $productIdsForUnknownAuthor = Product::active()->where(['product_type' => 'digital'])->whereNotIn('id', $productIdsForAuthor)->pluck('id')->toArray();
         }
-
-
-        $productIdsForUnknownPublisher = Product::active()->where(['product_type' => 'digital'])->whereNotIn('id', $productIdsForPublisher)->pluck('id')->toArray();
-
-        $authorList = Author::withCount(['digitalProductAuthor' => function ($query) {
-            return $query->whereHas('product', function ($query) {
-                return $query->active();
-            });
-        }])->get();
-
-
-        $productIdsForAuthor = [];
-        foreach ($authorList as $authorGroup) {
-            if (!empty($authorGroup->digitalProductAuthor)) {
-                foreach ($authorGroup->digitalProductAuthor as $authorItem) {
-                    $productIdsForAuthor[] = $authorItem->product_id;
-                }
-            }
-        }
-
-        $productIdsForUnknownAuthor = Product::active()->where(['product_type' => 'digital'])->whereNotIn('id', $productIdsForAuthor)->pluck('id')->toArray();
 
         $productSortBy = $request->get('sort_by');
 

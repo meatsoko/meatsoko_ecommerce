@@ -14,7 +14,11 @@ return [
      |
      */
 
-    'enabled' => env('DEBUGBAR_ENABLED', null),
+    // Explicit opt-in only - previously fell back to app.debug, which meant
+    // debugbar silently re-activated (profiling overhead + exposed debug
+    // data on every response) any time APP_DEBUG=true was set, including by
+    // accident in production.
+    'enabled' => env('DEBUGBAR_ENABLED', false),
     'hide_empty_tabs' => false, // Hide tabs until they have content
     'except' => [
         'telescope*',

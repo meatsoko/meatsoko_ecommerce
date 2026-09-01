@@ -23,6 +23,7 @@ use App\Services\RefundStatusService;
 use App\Services\RefundTransactionService;
 use App\Traits\OrderEditManager;
 use App\Utils\CustomerManager;
+use Illuminate\Support\Facades\Cache;
 use App\Utils\Helpers;
 use Carbon\Carbon;
 use App\Enums\WebConfigKey;
@@ -195,11 +196,13 @@ class OrderController extends BaseController
             dataLimit: getWebConfig(name: WebConfigKey::PAGINATION_LIMIT)
         );
 
-        $sellers = $this->vendorRepo->getByStatusExcept(
-            status: 'pending',
-            relations: ['shop'],
-            paginateBy: 999999
-        );
+        $sellers = Cache::remember(CACHE_FOR_ADMIN_ORDER_SELLER_FILTER_LIST, CACHE_FOR_15_MINUTES, function () {
+            return $this->vendorRepo->getByStatusExcept(
+                status: 'pending',
+                relations: ['shop'],
+                paginateBy: 999999
+            );
+        });
 
         $customer = 'all';
         $customerId = $request['customer_id'];

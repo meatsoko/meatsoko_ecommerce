@@ -189,6 +189,48 @@ class OrderRepository implements OrderRepositoryInterface
         ];
     }
 
+    public function getOrderStatusCountsBySeller(int $sellerId, ?string $dateType = null): array
+    {
+        $statuses = ['failed', 'pending', 'returned', 'canceled', 'confirmed', 'delivered', 'processing', 'out_for_delivery'];
+
+        $query = $this->order
+            ->where(['seller_is' => 'seller', 'seller_id' => $sellerId])
+            ->when($dateType == 'today', function ($query) {
+                $query->whereDate('created_at', Carbon::today());
+            })
+            ->when($dateType == 'this_week', function ($query) {
+                $query->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+            })
+            ->when($dateType == 'this_month', function ($query) {
+                $query->whereMonth('created_at', Carbon::now()->month)
+                    ->whereYear('created_at', Carbon::now()->year);
+            })
+            ->when($dateType == 'this_year', function ($query) {
+                $query->whereYear('created_at', Carbon::now()->year);
+            })
+            ->selectRaw("COUNT(*) as all_orders");
+
+        foreach ($statuses as $status) {
+            $query->selectRaw(
+                "SUM(CASE WHEN order_status = ? THEN 1 ELSE 0 END) as `{$status}`",
+                [$status]
+            );
+        }
+
+        $result = $query->first();
+
+        return [
+            'pending' => (int)$result->pending,
+            'confirmed' => (int)$result->confirmed,
+            'processing' => (int)$result->processing,
+            'out_for_delivery' => (int)$result->out_for_delivery,
+            'delivered' => (int)$result->delivered,
+            'returned' => (int)$result->returned,
+            'failed' => (int)$result->failed,
+            'canceled' => (int)$result->canceled,
+        ];
+    }
+
     public function getListWhereIn(
         array      $orderBy = [],
         ?string    $searchValue = null,

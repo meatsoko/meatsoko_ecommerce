@@ -27,6 +27,10 @@ class ImageManager
                     $format = 'png';
                 }
                 $decoded = InterventionImageManager::gd()->read($image);
+                // Cap runaway-large vendor uploads (phone cameras routinely
+                // produce 3000px+ originals) without touching anything
+                // already at or under this size - scaleDown() only shrinks.
+                $decoded->scaleDown(width: 1600);
                 $imageWebp = $format === 'png'
                     ? $decoded->encodeByExtension($format)
                     : $decoded->encodeByExtension($format, quality: 85);
