@@ -24,7 +24,6 @@ import 'package:user_app/features/home/widgets/redesign/featured_products_widget
 import 'package:user_app/features/home/widgets/redesign/flash_deal_section.dart';
 import 'package:user_app/features/home/widgets/redesign/new_user_exclusive_section.dart';
 import 'package:user_app/features/home/widgets/redesign/top_stores_widget.dart';
-import 'package:user_app/features/home/widgets/search_home_page_widget.dart';
 import 'package:user_app/features/product/controllers/product_controller.dart';
 import 'package:user_app/features/product/domain/models/product_model.dart';
 import 'package:user_app/features/product/enums/product_type.dart';
@@ -135,25 +134,48 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
   Widget _searchBar(BuildContext context) {
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
-      padding: const EdgeInsets.only(right: Dimensions.homePagePadding),
+      padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
       child: Row(
         children: [
           Expanded(
             child: InkWell(
+              borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
               onTap: () => RouterHelper.getSearchRoute(action: RouteAction.push),
-              child: SearchHomePageWidget(isCompact: true),
+              child: Container(
+                height: 48,
+                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
+                ),
+                child: Row(children: [
+                  Icon(Icons.search, color: Theme.of(context).hintColor, size: 22),
+                  const SizedBox(width: Dimensions.paddingSizeSmall),
+                  Expanded(
+                    child: Text(
+                      getTranslated('search_hint', context) ?? 'Search for products...',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textRegular.copyWith(color: Theme.of(context).hintColor, fontSize: Dimensions.fontSizeDefault),
+                    ),
+                  ),
+                ]),
+              ),
             ),
           ),
+          const SizedBox(width: Dimensions.paddingSizeSmall),
           InkWell(
             onTap: () => RouterHelper.getSearchRoute(action: RouteAction.push),
-            borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
+            borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
             child: Container(
-              height: 44, width: 44,
+              height: 48, width: 48,
               decoration: BoxDecoration(
-                border: Border.all(color: Theme.of(context).hintColor.withValues(alpha: 0.3)),
-                borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
               ),
-              child: Icon(Icons.tune, color: Theme.of(context).textTheme.bodyLarge?.color, size: 20),
+              child: Icon(Icons.crop_free, color: Theme.of(context).textTheme.bodyLarge?.color, size: 20),
             ),
           ),
         ],
@@ -305,10 +327,19 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                                   children: [
                                     Expanded(
                                       child: InkWell(
+                                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                                         onTap: () => RouterHelper.getAddressListScreen(action: RouteAction.push),
                                         child: Row(children: [
-                                          Icon(Icons.location_on_outlined, color: BrandColors.burgundy, size: 22),
-                                          const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+                                          Container(
+                                            height: 44, width: 44,
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context).cardColor,
+                                              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                                              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 6)],
+                                            ),
+                                            child: const Icon(Icons.location_on_outlined, color: BrandColors.burgundy, size: 22),
+                                          ),
+                                          const SizedBox(width: Dimensions.paddingSizeSmall),
                                           Expanded(
                                             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min,
                                               children: [
@@ -344,11 +375,11 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                                     const SizedBox(width: Dimensions.paddingSizeSmall),
                                     InkWell(
                                       onTap: widget.onCartTap,
-                                      customBorder: const CircleBorder(),
+                                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                                       child: Container(
-                                        height: 40, width: 40,
+                                        height: 44, width: 44,
                                         decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
+                                          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                                           color: Theme.of(context).cardColor,
                                           boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 6)],
                                         ),

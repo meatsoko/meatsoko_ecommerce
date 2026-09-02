@@ -43,14 +43,20 @@ class DiscoverNearYouWidget extends StatelessWidget {
             return const SizedBox();
           }
 
+          // Two cards fill the row width, same as the reference (no partial
+          // third card peeking in) — sized off the actual screen width
+          // rather than a fixed guess.
+          final double screenWidth = MediaQuery.of(context).size.width;
+          final double cardWidth = (screenWidth - Dimensions.homePagePadding * 2 - Dimensions.paddingSizeSmall) / 2;
+
           return SizedBox(
-            height: !ResponsiveHelper.isShortMobile(context) ? 150 : 130,
+            height: !ResponsiveHelper.isShortMobile(context) ? cardWidth * 1.05 : cardWidth * 0.95,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(left: Dimensions.homePagePadding, right: 15),
               itemCount: sellers.length,
               separatorBuilder: (_, __) => const SizedBox(width: Dimensions.paddingSizeSmall),
-              itemBuilder: (context, index) => _DiscoverCard(sellerInfo: sellers[index]),
+              itemBuilder: (context, index) => _DiscoverCard(sellerInfo: sellers[index], width: cardWidth),
             ),
           );
         },
@@ -62,12 +68,13 @@ class DiscoverNearYouWidget extends StatelessWidget {
 
 class _DiscoverCard extends StatelessWidget {
   final Seller sellerInfo;
-  const _DiscoverCard({required this.sellerInfo});
+  final double width;
+  const _DiscoverCard({required this.sellerInfo, required this.width});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+      borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
       onTap: () {
         RouterHelper.getTopSellerRoute(
           action: RouteAction.push,
@@ -87,31 +94,17 @@ class _DiscoverCard extends StatelessWidget {
         );
       },
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+        borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
         child: SizedBox(
-          width: 170,
+          width: width,
           child: Stack(fit: StackFit.expand, children: [
             CustomImageWidget(image: sellerInfo.shop?.bannerFullUrl?.path ?? sellerInfo.shop?.imageFullUrl?.path ?? '', fit: BoxFit.cover),
 
+            // Rating badge, bottom-left — matches the reference; no
+            // shop-name overlay there, and no fabricated delivery-time
+            // chip since the shop model has no such field.
             Positioned(
-              left: 0, right: 0, bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(Dimensions.paddingSizeSmall, 18, Dimensions.paddingSizeSmall, Dimensions.paddingSizeExtraSmall),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.65)],
-                  ),
-                ),
-                child: Text(sellerInfo.shop?.name ?? '',
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: textBold.copyWith(color: Colors.white, fontSize: Dimensions.fontSizeSmall),
-                ),
-              ),
-            ),
-
-            Positioned(
-              left: Dimensions.paddingSizeSmall, top: Dimensions.paddingSizeSmall,
+              left: Dimensions.paddingSizeSmall, bottom: Dimensions.paddingSizeSmall,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall, vertical: 3),
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100)),

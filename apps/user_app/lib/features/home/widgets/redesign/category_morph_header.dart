@@ -21,7 +21,7 @@ class CategoryMorphHeaderDelegate extends SliverPersistentHeaderDelegate {
   const CategoryMorphHeaderDelegate({
     required this.categories,
     required this.tabController,
-    this.gridExtent = 200,
+    this.gridExtent = 216,
     this.barExtent = 64,
   });
 
@@ -100,6 +100,11 @@ class _CategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Fit 3 tiles per row (matching the reference's 3-column grid) on the
+    // current screen width, rather than a fixed tile size.
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double tileWidth = (screenWidth - Dimensions.paddingSizeSmall * 2 - Dimensions.paddingSizeSmall * 2) / 3;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeSmall),
       child: AnimatedBuilder(
@@ -108,12 +113,12 @@ class _CategoryGrid extends StatelessWidget {
           return GridView.builder(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               // Scroll direction is horizontal here, so mainAxisExtent is
               // each tile's *width* — fixing it directly (rather than via
               // childAspectRatio) avoids re-deriving the axis math wrong.
-              mainAxisExtent: 78,
+              mainAxisExtent: tileWidth,
               mainAxisSpacing: Dimensions.paddingSizeSmall,
               crossAxisSpacing: Dimensions.paddingSizeSmall,
             ),
@@ -178,13 +183,13 @@ class _CategoryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
+      borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
+          borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
           border: isSelected ? Border.all(color: BrandColors.burgundy, width: 1.4) : null,
           boxShadow: isSelected ? null : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
         ),
@@ -192,8 +197,8 @@ class _CategoryTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(100),
-              child: CustomImageWidget(image: '$icon', height: 34, width: 34, fit: BoxFit.cover),
+              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+              child: CustomImageWidget(image: '$icon', height: 42, width: 42, fit: BoxFit.cover),
             ),
             const SizedBox(height: Dimensions.paddingSizeExtraSmall),
             Padding(
