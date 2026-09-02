@@ -827,6 +827,12 @@
                         <span class="v2-nav-btn"><span class="v2-nav-label">{{ translate('Payment_Methods') }}</span></span>
                         <div class="v2-nav-right"><button class="v2-pin-btn" type="button" data-pin="payment-methods" aria-label="Pin"></button></div>
                     </a>
+                    @if (function_exists('deliveryPartnerConfigAvailable') && deliveryPartnerConfigAvailable())
+                        <a class="v2-nav-item {{ Request::is('admin/courier/config') ? 'v2-is-active' : '' }}" data-item="delivery-partners" href="{{ route('admin.courier.config.index') }}">
+                            <span class="v2-nav-btn"><span class="v2-nav-label">{{ translate('Delivery_Partners') }}</span></span>
+                            <div class="v2-nav-right"><button class="v2-pin-btn" type="button" data-pin="delivery-partners" aria-label="Pin"></button></div>
+                        </a>
+                    @endif
                     <a class="v2-nav-item {{ (Request::is('admin/third-party/firebase-configuration/setup') || Request::is('admin/third-party/firebase-configuration/authentication')) ? 'v2-is-active' : '' }}" data-item="firebase" href="{{ route('admin.third-party.firebase-configuration.setup') }}">
                         <span class="v2-nav-btn"><span class="v2-nav-label">{{ translate('Firebase') }}</span></span>
                         <div class="v2-nav-right"><button class="v2-pin-btn" type="button" data-pin="firebase" aria-label="Pin"></button></div>

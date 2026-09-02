@@ -347,6 +347,12 @@
                 <span class="v2-nav-btn"><span class="v2-nav-label">{{ translate('shipping_methods') }}</span></span>
                 <div class="v2-nav-right"><button class="v2-pin-btn" type="button" data-pin="v-shipping" aria-label="Pin"></button></div>
             </a>
+            @if (function_exists('vendorDeliveryPartnerConfigAvailable') && vendorDeliveryPartnerConfigAvailable())
+                <a class="v2-nav-item {{ Request::is('vendor/courier/config') ? 'v2-is-active' : '' }}" data-item="v-delivery-partners" href="{{ route('vendor.courier.config.index') }}">
+                    <span class="v2-nav-btn"><span class="v2-nav-label">{{ translate('Delivery_Partners') }}</span></span>
+                    <div class="v2-nav-right"><button class="v2-pin-btn" type="button" data-pin="v-delivery-partners" aria-label="Pin"></button></div>
+                </a>
+            @endif
             <a class="v2-nav-item {{ Request::is('vendor/business-settings/withdraw*') ? 'v2-is-active' : '' }}" data-item="v-withdraws" href="{{ route('vendor.business-settings.withdraw.index') }}">
                 <span class="v2-nav-btn"><span class="v2-nav-label">{{ translate('withdraws') }}</span></span>
                 <div class="v2-nav-right"><button class="v2-pin-btn" type="button" data-pin="v-withdraws" aria-label="Pin"></button></div>
