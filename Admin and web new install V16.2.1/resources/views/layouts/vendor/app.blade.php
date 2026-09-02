@@ -21,6 +21,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ dynamicAsset(path: 'public/assets/back-end/css/vendor-v2.css') }}">
 
+    <style>
+        .app-v2 {
+            --v2-primary: {{ $web_config['panel_sidebar_color'] ?: '#C8102E' }};
+        }
+    </style>
+
     @stack('css_or_js')
 </head>
 

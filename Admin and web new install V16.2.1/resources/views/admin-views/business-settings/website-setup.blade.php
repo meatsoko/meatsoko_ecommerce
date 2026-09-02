@@ -290,7 +290,7 @@
                                         </p>
                                         <div class="bg-info bg-opacity-10 fs-12 px-12 py-10 text-dark rounded d-flex gap-2 align-items-center mt-3">
                                             <i class="fi fi-sr-lightbulb-on text-info"></i>
-                                            <span>{{ translate('primary_color_used_in_website_header,_sections_&_button._secondary_color_used_in_button_in_websites._panel_sidebar_color_only_used_in_panel_sidebar_menu_background_color_primary_light_color_are_used_in_website_cards_&_sections') }}</span>
+                                            <span>{{ translate('primary_color_used_in_website_header,_sections_&_button._secondary_color_used_in_button_in_websites._panel_sidebar_color_is_used_as_the_accent_color_for_active_menu_items_&_icons_in_the_admin_&_vendor_panel_sidebar._primary_light_color_are_used_in_website_cards_&_sections') }}</span>
                                         </div>
                                     </div>
                                     <div class="p-12 p-sm-20 bg-section rounded">
@@ -316,6 +316,18 @@
                                                         <input type="color" name="secondary" value="{{ $businessSetting['secondary_color'] }}"
                                                         class="form-control form-control_color color-code-preview">
                                                         <span class="fs-14 fw-medium text-dark color-code color-code-selection">#F58300</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-3">
+                                                <div class="form-group">
+                                                    <label class="form-label text-capitalize" for="">
+                                                        {{ translate('panel_sidebar_accent_color') }}
+                                                    </label>
+                                                    <div class="d-flex align-items-center gap-10 bg-white border rounded py-2 px-10">
+                                                        <input type="color" name="panel-sidebar" value="{{ $businessSetting['panel_sidebar'] ?: '#C8102E' }}"
+                                                        class="form-control form-control_color color-code-preview">
+                                                        <span class="fs-14 fw-medium text-dark color-code color-code-selection">{{ $businessSetting['panel_sidebar'] ?: '#C8102E' }}</span>
                                                     </div>
                                                 </div>
                                             </div>

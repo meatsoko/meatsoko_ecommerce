@@ -19,6 +19,12 @@
 
     <link rel="stylesheet" href="{{ dynamicAsset(path: 'public/assets/back-end/css/admin-v2.css') }}">
 
+    <style>
+        .app-v2 {
+            --v2-primary: {{ $web_config['panel_sidebar_color'] ?: '#C8102E' }};
+        }
+    </style>
+
     @stack('css_or_js')
 </head>
 
