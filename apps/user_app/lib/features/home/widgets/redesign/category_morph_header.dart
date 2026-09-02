@@ -183,12 +183,10 @@ class _CategoryTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
         decoration: BoxDecoration(
-          color: isSelected ? BrandColors.burgundy.withValues(alpha: 0.08) : Theme.of(context).cardColor,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
-          border: Border.all(
-            color: isSelected ? BrandColors.burgundy : Theme.of(context).hintColor.withValues(alpha: 0.12),
-            width: isSelected ? 1.4 : 1,
-          ),
+          border: isSelected ? Border.all(color: BrandColors.burgundy, width: 1.4) : null,
+          boxShadow: isSelected ? null : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -236,10 +234,8 @@ class _CategoryChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? BrandColors.burgundy.withValues(alpha: 0.08) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(100),
-          border: Border.all(
-            color: isSelected ? BrandColors.burgundy : Theme.of(context).hintColor.withValues(alpha: 0.12),
-            width: isSelected ? 1.4 : 1,
-          ),
+          border: isSelected ? Border.all(color: BrandColors.burgundy, width: 1.4) : null,
+          boxShadow: isSelected ? null : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1))],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
