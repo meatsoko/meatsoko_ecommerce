@@ -12,6 +12,7 @@ import 'package:user_app/push_notification/notification_helper.dart';
 import 'package:user_app/features/auth/controllers/auth_controller.dart';
 import 'package:user_app/theme/controllers/theme_controller.dart';
 import 'package:user_app/utill/app_constants.dart';
+import 'package:user_app/utill/brand_colors.dart';
 import 'package:user_app/utill/custom_themes.dart';
 import 'package:user_app/utill/dimensions.dart';
 import 'package:user_app/utill/images.dart';
@@ -309,7 +310,7 @@ class SplashWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: Theme.of(context).primaryColor,
+      color: BrandColors.burgundy,
       child: Column(mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,

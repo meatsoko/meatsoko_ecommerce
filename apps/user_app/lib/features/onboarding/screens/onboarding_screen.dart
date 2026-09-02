@@ -1,123 +1,183 @@
+import 'package:concentric_transition/concentric_transition.dart';
 import 'package:flutter/material.dart';
-import 'package:user_app/common/basewidget/custom_button_widget.dart';
-import 'package:user_app/features/auth/controllers/auth_controller.dart';
-import 'package:user_app/features/onboarding/controllers/onboarding_controller.dart';
-import 'package:user_app/localization/language_constrants.dart';
-import 'package:user_app/features/splash/controllers/splash_controller.dart';
-import 'package:user_app/utill/custom_themes.dart';
-import 'package:user_app/utill/dimensions.dart';
 import 'package:provider/provider.dart';
-import '../../../../helper/route_healper.dart';
+import 'package:user_app/features/auth/controllers/auth_controller.dart';
+import 'package:user_app/features/splash/controllers/splash_controller.dart';
+import 'package:user_app/helper/route_healper.dart';
+import 'package:user_app/utill/brand_colors.dart';
 
-class OnBoardingScreen extends StatelessWidget {
+class _OnboardingPageData {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color bgColor;
+  final Color textColor;
+
+  const _OnboardingPageData({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.bgColor,
+    required this.textColor,
+  });
+}
+
+const List<_OnboardingPageData> _onboardingPages = [
+  _OnboardingPageData(
+    icon: Icons.storefront_outlined,
+    title: 'Fresh Meat, Direct from Pastoralists',
+    subtitle: 'Quality-inspected beef, goat, and lamb sourced directly from local herders at fair prices.',
+    bgColor: BrandColors.burgundy,
+    textColor: Colors.white,
+  ),
+  _OnboardingPageData(
+    icon: Icons.verified_outlined,
+    title: 'Guaranteed Cold-Chain Freshness',
+    subtitle: 'Tracked temperature control from the farm to your doorstep so your meat arrives safe and fresh.',
+    bgColor: BrandColors.ochre,
+    textColor: BrandColors.burgundyDark,
+  ),
+  _OnboardingPageData(
+    icon: Icons.local_shipping_outlined,
+    title: 'Fast Delivery to Your Door',
+    subtitle: 'Select your favorite cuts, choose a delivery window, and get top-tier meats delivered hassle-free.',
+    bgColor: BrandColors.offWhite,
+    textColor: BrandColors.burgundy,
+  ),
+];
+
+class OnBoardingScreen extends StatefulWidget {
   final Color indicatorColor;
   final Color selectedIndicatorColor;
-  OnBoardingScreen({super.key, this.indicatorColor = Colors.grey, this.selectedIndicatorColor = Colors.black});
+
+  const OnBoardingScreen({super.key, this.indicatorColor = Colors.grey, this.selectedIndicatorColor = Colors.black});
+
+  @override
+  State<OnBoardingScreen> createState() => _OnBoardingScreenState();
+}
+
+class _OnBoardingScreenState extends State<OnBoardingScreen> {
   final PageController _pageController = PageController();
+  int _currentPage = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _finishOnboarding() {
+    Provider.of<SplashController>(context, listen: false).disableIntro();
+    Provider.of<AuthController>(context, listen: false).getGuestIdUrl();
+    RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
+  }
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<OnBoardingController>(context, listen: false).getOnBoardingList();
-
-
-    double height = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool onLastPage = _currentPage == _onboardingPages.length - 1;
 
     return Scaffold(
-      body: Consumer<OnBoardingController>(
-        builder: (context, onBoardingList, child) {
-          return Stack(clipBehavior: Clip.none, children: [
-
-              Consumer<OnBoardingController>(
-                builder: (context, onBoardingList, child) => ListView(children: [
-                    SizedBox(height: height*0.7,
-                      child: PageView.builder(
-                        itemCount: onBoardingList.onBoardingList.length,
-                        controller: _pageController,
-                        itemBuilder: (context, index) {
-                          return Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-                            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.end, children: [
-                                Image.asset(onBoardingList.onBoardingList[index].imageUrl,),
-                                Padding(padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
-                                  child: Text(onBoardingList.onBoardingList[index].title ?? '',
-                                      style: titilliumBold.copyWith(fontSize: 18), textAlign: TextAlign.center),),
-                                Text(onBoardingList.onBoardingList[index].description ?? '',
-                                    textAlign: TextAlign.center, style: titilliumRegular.copyWith(
-                                  fontSize: Dimensions.fontSizeDefault)),
-                                const SizedBox(height: Dimensions.paddingSizeDefault),
-                              ],
-                            ),
-                          );
-                        },
-                        onPageChanged: (index) {
-                          if(index != onBoardingList.onBoardingList.length){
-                            onBoardingList.changeSelectIndex(index);
-                          }else{
-                            Provider.of<SplashController>(context, listen: false).disableIntro();
-                            Provider.of<AuthController>(context, listen: false).getGuestIdUrl();
-                            RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
-                          }
-                        })),
-
-
-                  onBoardingList.selectedIndex == onBoardingList.onBoardingList.length - 1?
-                  Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-                    child: Center(child: SizedBox(width: 100,child: CustomButton(
-                      textColor: Theme.of(context).primaryColor,
-                        radius: 5,backgroundColor: Theme.of(context).primaryColor.withValues(alpha:.1),
-                        buttonText: getTranslated("explore", context),
-                    onTap: (){
-                      Provider.of<SplashController>(context, listen: false).disableIntro();
-                      Provider.of<AuthController>(context, listen: false).getGuestIdUrl();
-                      RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
-                    },))))
-                      :
-                    Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeExtraLarge),
-                      child: Stack(children: [
-                        if(onBoardingList.onBoardingList.isNotEmpty)
-                        Center(child: SizedBox(height: 50, width: 50,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor.withValues(alpha:.6)),
-                              value: (onBoardingList.selectedIndex + 1) / onBoardingList.onBoardingList.length,
-                              backgroundColor: Theme.of(context).primaryColor.withValues(alpha:.125)))),
-
-                    Align(alignment: Alignment.center,
-                      child: GestureDetector(
-                        onTap: () {
-                          if (onBoardingList.selectedIndex == onBoardingList.onBoardingList.length - 1) {
-                            Provider.of<SplashController>(context, listen: false).disableIntro();
-                            Provider.of<AuthController>(context, listen: false).getGuestIdUrl();
-                            RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
-                          } else {
-                            _pageController.nextPage(duration: const Duration(milliseconds: 500), curve: Curves.easeIn);
-                          }
-                        },
-                        child: Container(height: 40, width: 40,
-                          margin: const EdgeInsets.only(top: 5),
-                          decoration: const BoxDecoration(shape: BoxShape.circle,),
-                          child: Icon(onBoardingList.selectedIndex == onBoardingList.onBoardingList.length - 1 ? Icons.check : Icons.navigate_next,
-                            color: Theme.of(context).primaryColor, size: 30)))),
-                  ]),
-                )
-              ],
+      body: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          ConcentricPageView(
+            pageController: _pageController,
+            colors: _onboardingPages.map((p) => p.bgColor).toList(),
+            radius: screenWidth * 0.1,
+            itemCount: _onboardingPages.length,
+            onChange: (index) => setState(() => _currentPage = index),
+            onFinish: _finishOnboarding,
+            nextButtonBuilder: (context) => Padding(
+              padding: const EdgeInsets.only(left: 3),
+              child: Icon(
+                Icons.navigate_next,
+                size: screenWidth * 0.08,
+                color: Colors.black87,
+              ),
             ),
+            itemBuilder: (index) {
+              final page = _onboardingPages[index % _onboardingPages.length];
+              return SafeArea(child: _OnboardingPage(page: page));
+            },
           ),
 
-              if(onBoardingList.selectedIndex != onBoardingList.onBoardingList.length - 1)
-              Positioned(child: Align(alignment: Alignment.topRight, child: InkWell(
-                onTap: (){
-                  Provider.of<SplashController>(context, listen: false).disableIntro();
-                  Provider.of<AuthController>(context, listen: false).getGuestIdUrl();
-                  RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil);
-                },
-                child: Padding(padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
-                  child: Text('${getTranslated('skip', context)}',
-                      style: textMedium.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).primaryColor))))))
-            ],
-          );
-        }
+          if (!onLastPage)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  child: TextButton(
+                    onPressed: _finishOnboarding,
+                    child: Text(
+                      'Skip',
+                      style: TextStyle(
+                        color: _onboardingPages[_currentPage].textColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
+}
 
+class _OnboardingPage extends StatelessWidget {
+  final _OnboardingPageData page;
+
+  const _OnboardingPage({required this.page});
+
+  @override
+  Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24.0),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: page.textColor,
+            ),
+            child: Icon(
+              page.icon,
+              size: screenHeight * 0.09,
+              color: page.bgColor,
+            ),
+          ),
+          SizedBox(height: screenHeight * 0.04),
+          Text(
+            page.title,
+            style: TextStyle(
+              color: page.textColor,
+              fontSize: screenHeight * 0.032,
+              fontWeight: FontWeight.bold,
+              height: 1.2,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: screenHeight * 0.015),
+          Text(
+            page.subtitle,
+            style: TextStyle(
+              color: page.textColor.withValues(alpha: 0.85),
+              fontSize: screenHeight * 0.018,
+              fontWeight: FontWeight.w400,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
 }

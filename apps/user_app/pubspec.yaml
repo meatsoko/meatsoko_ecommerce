@@ -92,6 +92,7 @@ dependencies:
   app_links: ^7.1.1
   flutter_image_compress: ^2.4.0
   textfield_tags: ^2.0.2
+  concentric_transition: ^1.0.3
 
 dev_dependencies:
   flutter_lints: ^6.0.0
