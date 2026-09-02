@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:user_app/common/basewidget/custom_asset_image_widget.dart';
+import 'package:user_app/common/basewidget/custom_image_widget.dart';
 import 'package:user_app/common/basewidget/custom_textfield_widget.dart';
 import 'package:user_app/features/splash/controllers/splash_controller.dart';
 import 'package:user_app/localization/language_constrants.dart';
@@ -232,7 +233,7 @@ class ImagePreview extends StatelessWidget {
           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
           child: file != null
               ? Image.file(File(file!.path), width: double.infinity, height: 150, fit: BoxFit.cover)
-              : Image.network(existingImageUrl!, width: double.infinity, height: 150, fit: BoxFit.cover),
+              : CustomImageWidget(image: existingImageUrl!, width: double.infinity, height: 150, fit: BoxFit.cover),
         ),
         Positioned(
           top: 8, right: 8,

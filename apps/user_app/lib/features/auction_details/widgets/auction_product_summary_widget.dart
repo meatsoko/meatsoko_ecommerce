@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:user_app/common/basewidget/custom_asset_image_widget.dart';
+import 'package:user_app/common/basewidget/custom_image_widget.dart';
 import 'package:user_app/helper/price_converter.dart';
 import 'package:user_app/localization/language_constrants.dart';
 import 'package:user_app/utill/custom_themes.dart';
 import 'package:user_app/utill/dimensions.dart';
-import 'package:user_app/utill/images.dart';
 
 class AuctionProductSummaryWidget extends StatelessWidget {
   final String imageUrl;
@@ -60,10 +59,9 @@ class AuctionProductSummaryWidget extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      child: Image.network(
-                        imageUrl,
+                      child: CustomImageWidget(
+                        image: imageUrl,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => CustomAssetImageWidget(Images.placeholder)
                       ),
                     ),
                   ),

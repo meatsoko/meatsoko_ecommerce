@@ -3,6 +3,7 @@ import 'package:user_app/features/splash/domain/models/config_model.dart';
 import 'package:user_app/utill/custom_themes.dart';
 import 'package:user_app/utill/dimensions.dart';
 import 'package:user_app/utill/images.dart';
+import 'package:user_app/common/basewidget/custom_image_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:user_app/features/splash/controllers/splash_controller.dart';
 
@@ -78,12 +79,11 @@ class PromiseItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageWidget = entry.networkImageUrl != null &&
         entry.networkImageUrl!.isNotEmpty
-        ? Image.network(
-      entry.networkImageUrl!,
+        ? CustomImageWidget(
+      image: entry.networkImageUrl!,
       width: iconSize,
       height: iconSize,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => _placeholder(),
     ) : _placeholder();
 
     return Column(
