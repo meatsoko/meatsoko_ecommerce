@@ -14,6 +14,7 @@ import 'package:user_app/features/banner/controllers/banner_controller.dart';
 import 'package:user_app/features/category/controllers/category_controller.dart';
 import 'package:user_app/features/clearance_sale/widgets/clearance_sale_list_widget.dart';
 import 'package:user_app/features/deal/controllers/flash_deal_controller.dart';
+import 'package:user_app/features/home/widgets/redesign/category_morph_header.dart';
 import 'package:user_app/features/home/widgets/redesign/home_category_content.dart';
 import 'package:user_app/features/home/widgets/redesign/auction_product_section_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/banner_slider_widget.dart';
@@ -34,6 +35,7 @@ import 'package:user_app/helper/route_healper.dart';
 import 'package:user_app/localization/language_constrants.dart';
 import 'package:user_app/main.dart';
 import 'package:user_app/utill/custom_themes.dart';
+import 'package:user_app/utill/brand_colors.dart';
 import 'package:user_app/utill/dimensions.dart';
 import 'package:user_app/utill/images.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -64,7 +66,7 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
   final GlobalKey _buttonsTabBarKey = GlobalKey();
   final GlobalKey _nestedKey = GlobalKey();
   bool _buttonsTabPinned = false;
-  static const double _categoryTabBarHeight = 48;
+  static const double _categoryTabBarHeight = 64;
   static const double _searchBarHeight = 75;
 
   late final AnimationController _tabBarRevealAnim;
@@ -244,7 +246,7 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
           final double revealT = onExploreTab ? _tabBarRevealAnim.value : 1.0;
 
           return Container(
-            color: Color.lerp(Theme.of(context).cardColor, Theme.of(context).primaryColor, revealT),
+            color: Color.lerp(Theme.of(context).cardColor, BrandColors.burgundy, revealT),
             child: SafeArea(
               bottom: false,
               child: Scaffold(
@@ -266,7 +268,7 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                           elevation: 0,
                           centerTitle: false,
                           automaticallyImplyLeading: false,
-                          backgroundColor: Theme.of(context).primaryColor,
+                          backgroundColor: BrandColors.burgundy,
                           expandedHeight: 65,
                           flexibleSpace: _CustomizableSpaceBarWidget(
                             builder: (ctx, scrollingRate, child) => Opacity(
@@ -328,49 +330,16 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
 
                         SliverOverlapAbsorber(
                           handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                          sliver: SliverAppBar(
-                            elevation: 0,
-                            backgroundColor: Theme.of(context).primaryColor,
-                            automaticallyImplyLeading: false,
-                            pinned: true,
-                            floating: true,
-                            expandedHeight: 0,
-                            surfaceTintColor: Theme.of(context).primaryColor,
-                            foregroundColor: Theme.of(context).primaryColor,
-                            forceElevated: innerBoxIsScrolled,
-                            bottom: PreferredSize(
-                              preferredSize: Size.fromHeight(_categoryTabBarHeight * revealT),
-                              child: ClipRect(
-                                child: Align(
-                                  alignment: Alignment.topCenter,
-                                  heightFactor: revealT,
-                                  child: Opacity(
-                                    opacity: revealT,
-                                    child: (_tabController != null && _tabController!.length == expectedLength)
-                                        ? TabBar(
-                                      controller: _tabController,
-                                      isScrollable: true,
-                                      tabAlignment: TabAlignment.start,
-                                      dividerColor: Colors.transparent,
-                                      indicatorColor: Theme.of(context).colorScheme.secondary,
-                                      labelStyle: titilliumSemiBold.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: Dimensions.fontSizeSmall),
-                                      unselectedLabelStyle: titilliumRegular.copyWith(
-                                          color: Colors.white,
-                                          fontSize: Dimensions.fontSizeSmall),
-                                      tabs: [
-                                        Tab(text: getTranslated('explore', context)!),
-                                        ...categories.map((c) => Tab(text: getTranslated(c.name, context) ?? c.name ?? ''),
-                                        ),
-                                      ],
-                                    ) : const SizedBox(height: _categoryTabBarHeight),
+                          sliver: (_tabController != null && _tabController!.length == expectedLength)
+                              ? SliverPersistentHeader(
+                                  pinned: true,
+                                  delegate: CategoryMorphHeaderDelegate(
+                                    categories: categories,
+                                    tabController: _tabController!,
+                                    barExtent: _categoryTabBarHeight,
                                   ),
-                                ),
-                              ),
-                            ),
-                          ),
+                                )
+                              : SliverToBoxAdapter(child: SizedBox(height: _categoryTabBarHeight)),
                         ),
 
                         SliverPersistentHeader(
