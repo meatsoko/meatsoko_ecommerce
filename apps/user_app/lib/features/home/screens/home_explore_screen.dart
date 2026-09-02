@@ -438,18 +438,27 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                           ),
                         ),
 
+                        // Deliberately NOT wrapped in SliverOverlapAbsorber: that
+                        // wrapper expects a SliverAppBar-shaped child (the
+                        // canonical NestedScrollView pattern) — wrapping a plain
+                        // SliverPersistentHeader in it produced a
+                        // "layoutExtent exceeds paintExtent" crash. A bare pinned
+                        // SliverPersistentHeader (same as the search bar below)
+                        // doesn't need the absorber.
+                        (_tabController != null && _tabController!.length == expectedLength)
+                            ? SliverPersistentHeader(
+                                pinned: true,
+                                delegate: CategoryMorphHeaderDelegate(
+                                  categories: categories,
+                                  tabController: _tabController!,
+                                  barExtent: _categoryTabBarHeight,
+                                ),
+                              )
+                            : SliverToBoxAdapter(child: SizedBox(height: _categoryTabBarHeight)),
+
                         SliverOverlapAbsorber(
                           handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                          sliver: (_tabController != null && _tabController!.length == expectedLength)
-                              ? SliverPersistentHeader(
-                                  pinned: true,
-                                  delegate: CategoryMorphHeaderDelegate(
-                                    categories: categories,
-                                    tabController: _tabController!,
-                                    barExtent: _categoryTabBarHeight,
-                                  ),
-                                )
-                              : SliverToBoxAdapter(child: SizedBox(height: _categoryTabBarHeight)),
+                          sliver: const SliverToBoxAdapter(child: SizedBox.shrink()),
                         ),
 
                         if (onExploreTab) ...[
