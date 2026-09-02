@@ -771,8 +771,6 @@ class ProductController extends Controller
             'category_id' => 'required',
             'product_type' => 'required',
             'unit' => 'required_if:product_type,==,physical',
-            'images' => 'required',
-            'thumbnail' => 'required',
             'discount_type' => 'required|in:percent,flat',
             'lang' => 'required',
             'unit_price' => 'required|min:1',
@@ -785,8 +783,6 @@ class ProductController extends Controller
             'unit.required_if' => translate('Unit is required!'),
             'category_id.required' => translate('category is required!'),
             'shipping_cost.required_if' => translate('Shipping Cost is required!'),
-            'images.required' => translate('Product images is required!'),
-            'image.required' => translate('Product thumbnail is required!'),
             'code.required' => translate('Code is required!'),
             'minimum_order_qty.required' => translate('The minimum order quantity is required!'),
             'minimum_order_qty.min' => translate('The minimum order quantity must be positive!'),
@@ -870,7 +866,7 @@ class ProductController extends Controller
         $requestName = json_decode($request['name'], true);
         $requestDescription = json_decode($request['description'], true);
         $requestColors = json_decode($request['colors'], true);
-        $requestImages = json_decode($request['images'], true);
+        $requestImages = json_decode($request['images'] ?? '[]', true) ?? [];
         $requestColorImages = json_decode($request['color_image'], true);
         $requestTags = json_decode($request['tags'], true);
         $requestChoiceArray = json_decode($request['choice'], true);

@@ -125,13 +125,6 @@ class ProductUpdateRequest extends FormRequest
                 }
 
                 $product = $this->productRepo->getFirstWhere(params: ['id' => $this->route('id')], relations: ['digitalVariation']);
-                $productImages = json_decode($product['images']);
-
-                if (!($this->has('colors_active') && $this->has('colors') && count($this['colors']) > 0) && !$this->file('images') && empty($productImages)) {
-                    $validator->errors()->add(
-                        'images', translate('product_images_is_required') . '!'
-                    );
-                }
 
                 if ($this['product_type'] == 'physical' && $this['unit_price'] <= $this->getDiscountAmount(price: $this['unit_price'], discount: $this['discount'], discountType: $this['discount_type'])) {
                     $validator->errors()->add(
@@ -143,60 +136,6 @@ class ProductUpdateRequest extends FormRequest
                     $validator->errors()->add(
                         'name', translate('name_field_is_required') . '!'
                     );
-                }
-
-                if ($this->has('colors_active') && $this->has('colors') && count($this['colors']) > 0) {
-                    $databaseColorImages = $product['color_image'] ? json_decode($product['color_image'], true) : [];
-
-                    $databaseColorImages =collect($databaseColorImages)
-                        ->filter(fn($item) => !is_null($item['color']))
-                        ->unique('color')
-                        ->values()->toArray();
-
-                    if (!$databaseColorImages) {
-                        foreach ($productImages as $image) {
-                            $databaseColorImages[] = ['color' => null, 'image_name' => $image];
-                        }
-                    }
-                    $databaseColorImagesFinal = [];
-                    if ($databaseColorImages) {
-                        foreach ($databaseColorImages as $colorImage) {
-                            if ($colorImage['color']) {
-                                $databaseColorImagesFinal[] = $colorImage['color'];
-                            }
-                        }
-                    }
-                    $inputColors = [];
-                    foreach ($this['colors'] as $color) {
-                        $inputColors[] = str_replace('#', '', $color);
-                    }
-                    $differentColor = array_diff($databaseColorImagesFinal, $inputColors);
-                    $colorImageRequired = [];
-                    if ($databaseColorImages) {
-                        foreach ($databaseColorImages as $colorImage) {
-                            if ($colorImage['color'] != null && !in_array($colorImage['color'], $differentColor)) {
-                                $colorImageRequired[] = [
-                                    'color' => $colorImage['color'],
-                                    'image_name' => $colorImage['image_name'],
-                                ];
-                            }
-                        }
-                    }
-
-                    foreach ($inputColors as $color) {
-                        if (!in_array($color, $databaseColorImagesFinal)) {
-                            $colorImageIndex = 'color_image_' . $color;
-                            if ($this->file($colorImageIndex)) {
-                                $colorImageRequired[] = ['color' => $color, 'image_name' => rand(11111, 99999)];
-                            }
-                        }
-                    }
-
-                    if (count($colorImageRequired) != count($this['colors'])) {
-                        $validator->errors()->add(
-                            'images', translate('Color_images_is_required')
-                        );
-                    }
                 }
 
                 if ($this['product_type'] == 'physical' && ($this->has('colors') || ($this->has('choice_attributes') && count($this['choice_attributes']) > 0))) {

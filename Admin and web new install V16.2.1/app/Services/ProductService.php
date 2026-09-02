@@ -745,7 +745,11 @@ class ProductService
 
         $products = [];
         $productsTax = [];
+        $rowErrors = [];
+        $rowNumber = 1;
         foreach ($collections as $collection) {
+            $rowNumber++;
+            $missingField = null;
             foreach ($collection as $key => $value) {
                 if ($key != "" && !in_array($key, $columnKey)) {
                     return [
@@ -756,14 +760,17 @@ class ProductService
                 }
 
                 if ($key != "" && $value === "" && !in_array($key, $skip)) {
-                    return [
-                        'status' => false,
-                        'message' => translate('Please fill ' . $key . ' fields'),
-                        'products' => []
-                    ];
+                    $missingField = $key;
                 }
             }
-            $thumbnail = explode('/', $collection['thumbnail']);
+
+            if ($missingField) {
+                $rowErrors[] = translate('Row') . ' ' . $rowNumber . ': ' . translate('Please fill ' . $missingField . ' fields');
+                continue;
+            }
+
+            $thumbnailValue = $collection['thumbnail'] ?? '';
+            $thumbnail = $thumbnailValue !== '' ? explode('/', $thumbnailValue) : [];
 
             $productCode = self::getUniqueProductSKUCode();
 
@@ -790,8 +797,8 @@ class ProductService
                 'details' => $collection['details'],
                 'video_provider' => 'youtube',
                 'video_url' => $collection['youtube_video_url'],
-                'images' => json_encode(['def.png']),
-                'thumbnail' => $thumbnail[1] ?? $thumbnail[0],
+                'images' => json_encode([]),
+                'thumbnail' => !empty($thumbnail) ? ($thumbnail[1] ?? $thumbnail[0]) : null,
                 'status' => $addedBy == 'admin' && $collection['status'] == 1 ? 1 : 0,
                 'request_status' => $addedBy == 'admin' ? 1 : (getWebConfig(name: 'new_product_approval') == 1 ? 0 : 1),
                 'colors' => json_encode([]),
@@ -806,9 +813,22 @@ class ProductService
             ];
         }
 
+        if (count($products) <= 0) {
+            return [
+                'status' => false,
+                'message' => !empty($rowErrors) ? implode(' | ', $rowErrors) : translate('you_need_to_upload_with_proper_data'),
+                'products' => []
+            ];
+        }
+
+        $message = count($products) . ' - ' . translate('products_imported_successfully');
+        if (!empty($rowErrors)) {
+            $message .= '. ' . count($rowErrors) . ' ' . translate('rows_skipped_due_to_errors') . ': ' . implode(' | ', $rowErrors);
+        }
+
         return [
             'status' => true,
-            'message' => count($products) . ' - ' . translate('products_imported_successfully'),
+            'message' => $message,
             'products' => $products,
             'productsTax' => $productsTax,
         ];

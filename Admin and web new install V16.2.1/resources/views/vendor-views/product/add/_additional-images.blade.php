@@ -15,8 +15,6 @@
                 <div class="multi_image_picker d-flex gap-4 p-3"
                     data-ratio="1/1"
                     data-field-name="images[]"
-                    data-required="true"
-                    data-required-msg="{{ translate('additional_image_is_required') }}"
                      data-max-filesize="{{getFileUploadMaxSize()}}"
                      data-allowed-formats="{{ getFileUploadFormats(skip: '.svg,.gif') }}"
                      data-validation-error-msg="{{ translate('File_size_is_too_large_Maximum_').' '.getFileUploadMaxSize().' '.'MB' }}"

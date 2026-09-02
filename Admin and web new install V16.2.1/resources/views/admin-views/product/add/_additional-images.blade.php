@@ -13,8 +13,6 @@
                      data-ratio="1/1"
                      data-max-filesize="{{getFileUploadMaxSize()}}"
                      data-field-name="images[]"
-                     data-required="true"
-                     data-required-msg="{{ translate('additional_image_is_required') }}"
                      data-allowed-formats="{{ getFileUploadFormats(skip: '.svg,.gif') }}"
                      data-validation-error-msg="{{ translate('File_size_is_too_large_Maximum_').' '.getFileUploadMaxSize().' '.'MB' }}"
                 >

@@ -47,17 +47,12 @@ class ProductAddRequest extends Request
             'video_url' => 'nullable|url',
         ];
 
-        if (!isset($this['existing_thumbnail'])) {
-            $rules['image'] = 'required';
-        }
-
         return $rules;
     }
 
     public function messages(): array
     {
         return [
-            'image' . '.' . 'required' => translate('product_thumbnail_is_required!'),
             'category_id' . '.' . 'required' => translate('category_is_required!'),
             'unit' . '.' . 'required_if' => translate('unit_is_required!'),
             'code.max' => translate('please_ensure_your_code_does_not_exceed_20_characters'),
@@ -113,12 +108,6 @@ class ProductAddRequest extends Request
                     );
                 }
 
-                if (!($this->has('colors_active') && $this->has('colors') && count($this['colors']) > 0) && !$this->file('images') && !$this->has('existing_images')) {
-                    $validator->errors()->add(
-                        'images', translate('product_images_is_required') . '!'
-                    );
-                }
-
                 if ($this['product_type'] == 'physical' && $this['unit_price'] <= $this->getDiscountAmount(price: $this['unit_price'] ?? 0, discount: $this['discount'], discountType: $this['discount_type'])) {
                     $validator->errors()->add(
                         'unit_price', translate('discount_can_not_be_more_or_equal_to_the_price') . '!'
@@ -129,25 +118,6 @@ class ProductAddRequest extends Request
                     $validator->errors()->add(
                         'name', translate('name_field_is_required') . '!'
                     );
-                }
-
-                $productImagesCount = 0;
-                if ($this->has('colors_active') && $this->has('colors') && count($this['colors']) > 0) {
-                    foreach ($this['colors'] as $color) {
-                        $color_ = str_replace('#', '', $color);
-                        $image = 'color_image_' . $color_;
-                        if ($this->file($image)) {
-                            $productImagesCount++;
-                        } else if ($this->has($image)) {
-                            $productImagesCount++;
-                        }
-
-                    }
-                    if ($productImagesCount != count($this['colors'])) {
-                        $validator->errors()->add(
-                            'images', translate('color_images_is_required') . '!'
-                        );
-                    }
                 }
 
                 if ($this['product_type'] == 'physical' && ($this->has('colors') || ($this->has('choice_attributes') && count($this['choice_attributes']) > 0))) {

@@ -130,8 +130,6 @@ class ProductController extends Controller
             'digital_product_type'  => 'required_if:product_type,==,digital',
             'digital_file_ready'    => 'required_if:digital_product_type,==,ready_product',
             'unit'                  => 'required_if:product_type,==,physical',
-            'images'                => 'required',
-            'thumbnail'             => 'required',
             'discount_type'         => 'required|in:percent,flat',
             'tax'                   => 'required|min:0',
             'lang'                  => 'required',
@@ -148,8 +146,6 @@ class ProductController extends Controller
             'digital_file_ready.required_if'    => translate('Ready product upload is required!'),
             'digital_product_type.required_if'  => translate('Digital product type is required!'),
             'shipping_cost.required_if'         => translate('Shipping Cost is required!'),
-            'images.required'                   => translate('Product images is required!'),
-            'image.required'                    => translate('Product thumbnail is required!'),
             'code.required'                     => translate('Code is required!'),
             'minimum_order_qty.required'        => translate('The minimum order quantity is required!'),
             'minimum_order_qty.min'             => translate('The minimum order quantity must be positive!'),
@@ -216,7 +212,7 @@ class ProductController extends Controller
         $product->minimum_order_qty     = $request->minimum_order_qty;
         $product->details               = $request->description[array_search(Helpers::default_lang(), $request->lang)];
 
-        $product->images                = json_encode($request->images);
+        $product->images                = json_encode($request->images ?? []);
         $product->thumbnail             = $request->thumbnail;
         $product->digital_file_ready    = $request->digital_file_ready;
 
