@@ -6,7 +6,6 @@ import 'package:user_app/common/basewidget/no_internet_screen_widget.dart';
 import 'package:user_app/common/basewidget/product_card_shimmer_widget.dart';
 import 'package:user_app/common/basewidget/product_card_widget.dart';
 import 'package:user_app/common/basewidget/todays_deal_section_widget.dart';
-import 'package:user_app/features/address/controllers/address_controller.dart';
 import 'package:user_app/features/auction_home/controllers/auction_home_controller.dart';
 import 'package:user_app/features/auction_home/domain/auction_enum.dart';
 import 'package:user_app/features/auth/controllers/auth_controller.dart';
@@ -35,7 +34,6 @@ import 'package:user_app/helper/responsive_helper.dart';
 import 'package:user_app/helper/route_healper.dart';
 import 'package:user_app/localization/language_constrants.dart';
 import 'package:user_app/main.dart';
-import 'package:user_app/utill/app_constants.dart';
 import 'package:user_app/utill/custom_themes.dart';
 import 'package:user_app/utill/brand_colors.dart';
 import 'package:user_app/utill/dimensions.dart';
@@ -330,56 +328,8 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                               bottom: false,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding, vertical: Dimensions.paddingSizeSmall),
-                                child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                child: Row(mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    Expanded(
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                                        onTap: () => RouterHelper.getAddressListScreen(action: RouteAction.push),
-                                        child: Row(children: [
-                                          Container(
-                                            height: 44, width: 44,
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context).cardColor,
-                                              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                                              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 6)],
-                                            ),
-                                            child: const Icon(Icons.location_on_outlined, color: BrandColors.burgundy, size: 22),
-                                          ),
-                                          const SizedBox(width: Dimensions.paddingSizeSmall),
-                                          Expanded(
-                                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  getTranslated('delivering_to', context) ?? 'Delivering to',
-                                                  style: titilliumRegular.copyWith(
-                                                    color: Theme.of(context).hintColor,
-                                                    fontSize: Dimensions.fontSizeExtraSmall,
-                                                  ),
-                                                ),
-                                                Consumer<AddressController>(
-                                                  builder: (context, addressController, _) {
-                                                    final address = addressController.addressList?.isNotEmpty == true
-                                                        ? addressController.addressList!.first.address
-                                                        : null;
-                                                    return Text(
-                                                      address ?? getTranslated('add_delivery_address', context) ?? AppConstants.appName,
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
-                                                      style: titilliumBold.copyWith(
-                                                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                                                        fontSize: Dimensions.fontSizeDefault,
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ]),
-                                      ),
-                                    ),
-                                    const SizedBox(width: Dimensions.paddingSizeSmall),
                                     InkWell(
                                       onTap: widget.onCartTap,
                                       borderRadius: BorderRadius.circular(Dimensions.radiusDefault),

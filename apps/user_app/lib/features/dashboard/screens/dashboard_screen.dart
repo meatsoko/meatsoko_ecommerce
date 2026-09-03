@@ -11,7 +11,6 @@ import 'package:user_app/features/auction_category/controllers/auction_category_
 import 'package:user_app/features/auction_category/screens/auction_category_screen.dart';
 import 'package:user_app/features/auction_home/controllers/auction_home_controller.dart';
 import 'package:user_app/features/auction_home/screens/auction_home_screen.dart';
-import 'package:user_app/features/address/controllers/address_controller.dart';
 import 'package:user_app/features/auth/controllers/auth_controller.dart';
 import 'package:user_app/features/banner/controllers/banner_controller.dart';
 import 'package:user_app/features/cart/controllers/cart_controller.dart';
@@ -97,7 +96,6 @@ class DashBoardScreenState extends State<DashBoardScreen> {
       Provider.of<ChatController>(context, listen: false).getChatList(1, reload: false, userType: 1);
       Provider.of<RestockController>(context, listen: false).getRestockProductList(1, getAll: true);
       Provider.of<WalletController>(context, listen: false).getTransactionList(1, isUpdate: false);
-      Provider.of<AddressController>(context, listen: false).getAddressList();
     }
 
     final SplashController splashController = Provider.of<SplashController>(context, listen: false);
