@@ -120,19 +120,40 @@ class _CategoryGrid extends StatelessWidget {
   const _CategoryGrid({required this.categories, required this.tabController});
 
   /// Tapping any special-category tile (including "More") navigates to the
-  /// Categories page. When the tile matches a real backend category by
-  /// name, its id/name are passed on the route so Categories can highlight
-  /// it on open (not yet consumed there — see getCategoryScreenRoute).
+  /// Categories page. When the tile matches a real backend category *or
+  /// subcategory* by name, its id/name are passed on the route so
+  /// Categories can highlight it on open. Cuts like "Goat"/"Mutton"/"Offal"
+  /// live as subcategory names under a top-level "Meat" category on the
+  /// real site (confirmed via xdocs/review.md's crawled breadcrumb "Meat ->
+  /// Mutton & Goat Meat -> Full Whole Goat Carcass") — matching only
+  /// top-level names, as an earlier version did, meant these could never
+  /// match anything.
+  ({int id, String? name})? _matchCategory(String matchTerm) {
+    for (final category in categories) {
+      if ((category.name ?? '').toLowerCase().contains(matchTerm)) {
+        return (id: category.id!, name: category.name);
+      }
+      for (final sub in category.subCategories ?? const []) {
+        if ((sub.name ?? '').toLowerCase().contains(matchTerm)) {
+          return (id: sub.id!, name: sub.name);
+        }
+        for (final subSub in sub.subSubCategories ?? const []) {
+          if ((subSub.name ?? '').toLowerCase().contains(matchTerm)) {
+            return (id: subSub.id!, name: subSub.name);
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   void _handleTap(_FixedCategoryTile tile) {
     if (tile.matchTerm == null) {
       RouterHelper.getCategoryScreenRoute(action: RouteAction.push);
       return;
     }
-    final int index = categories.indexWhere(
-      (c) => (c.name ?? '').toLowerCase().contains(tile.matchTerm!),
-    );
-    if (index != -1) {
-      final matched = categories[index];
+    final matched = _matchCategory(tile.matchTerm!);
+    if (matched != null) {
       RouterHelper.getCategoryScreenRoute(
         action: RouteAction.push,
         categoryId: matched.id,

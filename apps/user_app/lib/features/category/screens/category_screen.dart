@@ -82,9 +82,30 @@ class _CategoryScreenState extends State<CategoryScreen> with SingleTickerProvid
     super.dispose();
   }
 
+  // Real cuts like "Goat"/"Mutton"/"Offal" live as *subcategory* names under
+  // a top-level "Meat" category here (confirmed against the live site — see
+  // xdocs/review.md's crawled breadcrumb "Meat -> Mutton & Goat Meat ->
+  // Full Whole Goat Carcass") — matching only top-level names, as the first
+  // version of this did, meant these tiles could never match anything and
+  // were permanently dead. Search top-level, then subcategories, then
+  // sub-subcategories, and use whichever level actually matched.
   int? _matchedCategoryId(_SpecialCategoryTile tile, List<CategoryModel> categories) {
-    final index = categories.indexWhere((c) => (c.name ?? '').toLowerCase().contains(tile.matchTerm));
-    return index == -1 ? null : categories[index].id;
+    for (final category in categories) {
+      if ((category.name ?? '').toLowerCase().contains(tile.matchTerm)) {
+        return category.id;
+      }
+      for (final sub in category.subCategories ?? const []) {
+        if ((sub.name ?? '').toLowerCase().contains(tile.matchTerm)) {
+          return sub.id;
+        }
+        for (final subSub in sub.subSubCategories ?? const []) {
+          if ((subSub.name ?? '').toLowerCase().contains(tile.matchTerm)) {
+            return subSub.id;
+          }
+        }
+      }
+    }
+    return null;
   }
 
   void _toggleTile(int matchedId) {

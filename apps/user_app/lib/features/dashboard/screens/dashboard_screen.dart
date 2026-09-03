@@ -506,7 +506,7 @@ class ElevatedCard extends StatelessWidget {
                   children: [
                     NavItem(
                         icon: Images.navHomeIcon,
-                        label: getTranslated('ecom', context) ?? 'eCom',
+                        label: getTranslated('ecom', context) ?? 'Home',
                         index: 0,
                         selectedIndex: selectedIndex,
                         onTap: onItemTapped),
