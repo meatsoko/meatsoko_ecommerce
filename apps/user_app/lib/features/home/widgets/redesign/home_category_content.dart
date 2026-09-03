@@ -100,8 +100,6 @@ class _CategoryContentBodyState extends State<_CategoryContentBody> with Automat
             controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
-
               if (!isLoading)
                 SliverPersistentHeader(
                   pinned: true,

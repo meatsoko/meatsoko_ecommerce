@@ -132,7 +132,14 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
   }
 
   Widget _searchBar(BuildContext context) {
+    // Fixed height matching _SliverSearchBarDelegate.maxExtent/minExtent (72)
+    // exactly — RenderSliverPinnedPersistentHeader derives its paintExtent
+    // from this child's *actual measured height*, not from the delegate's
+    // declared extent, so a mismatch here throws a SliverGeometry
+    // ("layoutExtent exceeds paintExtent") layout error.
     return Container(
+      height: 72,
+      alignment: Alignment.center,
       color: Theme.of(context).scaffoldBackgroundColor,
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
       child: Row(
@@ -456,11 +463,6 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                               )
                             : SliverToBoxAdapter(child: SizedBox(height: _categoryTabBarHeight)),
 
-                        SliverOverlapAbsorber(
-                          handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                          sliver: const SliverToBoxAdapter(child: SizedBox.shrink()),
-                        ),
-
                         if (onExploreTab) ...[
                           SliverToBoxAdapter(
                             child: ColoredBox(
@@ -535,8 +537,13 @@ class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
     required this.visible,
   });
 
+  // Forcing the height here (rather than trusting `child` to size itself to
+  // exactly maxExtent) is what actually matters for sliver geometry validity
+  // — RenderSliverPersistentHeader measures this widget's real size, not the
+  // declared maxExtent/minExtent below.
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) => visible ? child : const SizedBox.shrink();
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) =>
+      visible ? SizedBox(height: maxExtent, child: child) : const SizedBox.shrink();
 
   @override
   double get maxExtent => visible ? 72 : 0;
@@ -563,8 +570,12 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    // height must match maxExtent/minExtent exactly — RenderSliverPersistentHeader
+    // derives paintExtent from this widget's actual measured size, not from the
+    // delegate's declared extent (see _SliverSearchBarDelegate for the same fix).
     return Container(
       key: containerKey,
+      height: height,
       color: Theme.of(context).scaffoldBackgroundColor,
       alignment: Alignment.topLeft,
       padding: EdgeInsets.only(top: stuckToSearch ? 4 : 12),
