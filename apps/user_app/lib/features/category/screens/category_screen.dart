@@ -2,19 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:user_app/common/basewidget/buttons_tab_bar.dart';
 import 'package:user_app/common/basewidget/custom_app_bar_widget.dart';
 import 'package:user_app/common/basewidget/custom_asset_image_widget.dart';
 import 'package:user_app/common/basewidget/no_internet_screen_widget.dart';
 import 'package:user_app/common/basewidget/paginated_list_view_widget.dart';
 import 'package:user_app/common/basewidget/product_card_shimmer_widget.dart';
 import 'package:user_app/common/basewidget/product_card_widget.dart';
+import 'package:user_app/common/basewidget/todays_deal_section_widget.dart';
 import 'package:user_app/features/cart/controllers/cart_controller.dart';
 import 'package:user_app/features/category/controllers/category_controller.dart';
 import 'package:user_app/features/category/domain/models/category_model.dart';
+import 'package:user_app/features/clearance_sale/widgets/clearance_sale_list_widget.dart';
+import 'package:user_app/features/home/widgets/redesign/banner_slider_widget.dart';
+import 'package:user_app/features/home/widgets/redesign/new_user_exclusive_section.dart';
+import 'package:user_app/features/home/widgets/redesign/top_stores_widget.dart';
 import 'package:user_app/features/product/controllers/product_controller.dart';
 import 'package:user_app/features/product/domain/models/product_model.dart';
 import 'package:user_app/features/product/enums/product_type.dart';
+import 'package:user_app/features/splash/controllers/splash_controller.dart';
 import 'package:user_app/helper/product_type_extension.dart';
 import 'package:user_app/helper/responsive_helper.dart';
 import 'package:user_app/helper/route_healper.dart';
@@ -42,6 +47,13 @@ const List<_SpecialCategoryTile> _specialCategoryTiles = [
   _SpecialCategoryTile(label: 'Whole Animal', asset: 'assets/image/category_whole_animal.png', matchTerm: 'whole'),
 ];
 
+const List<ProductType> _productTypes = [
+  ProductType.newArrival,
+  ProductType.topProduct,
+  ProductType.bestSelling,
+  ProductType.discountedProduct,
+];
+
 class CategoryScreen extends StatefulWidget {
   final bool isBacButtonExist;
   final int? initialCategoryId;
@@ -58,27 +70,23 @@ class CategoryScreen extends StatefulWidget {
   State<CategoryScreen> createState() => _CategoryScreenState();
 }
 
-class _CategoryScreenState extends State<CategoryScreen> with SingleTickerProviderStateMixin {
+class _CategoryScreenState extends State<CategoryScreen> {
   int? _selectedCategoryId;
-
-  late final TabController _productTypeTabController;
-  static const List<ProductType> _productTypes = [
-    ProductType.newArrival,
-    ProductType.topProduct,
-    ProductType.bestSelling,
-    ProductType.discountedProduct,
-  ];
+  ProductType _selectedProductType = ProductType.newArrival;
+  final ScrollController _scrollController = ScrollController();
+  late final bool _singleVendor;
 
   @override
   void initState() {
     super.initState();
-    _productTypeTabController = TabController(length: _productTypes.length, vsync: this);
     _selectedCategoryId = widget.initialCategoryId;
+    final splash = Provider.of<SplashController>(context, listen: false);
+    _singleVendor = splash.configModel?.businessMode == 'single';
   }
 
   @override
   void dispose() {
-    _productTypeTabController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -125,19 +133,30 @@ class _CategoryScreenState extends State<CategoryScreen> with SingleTickerProvid
         builder: (context, categoryProvider, _) {
           final categories = categoryProvider.categoryList;
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: Dimensions.paddingSizeSmall),
-              _buildSearchBar(context),
-              const SizedBox(height: Dimensions.paddingSizeDefault),
-              _buildCategoryStrip(context, categories),
-              const SizedBox(height: Dimensions.paddingSizeSmall),
-              Expanded(
-                child: _selectedCategoryId != null
-                    ? _CategoryProductGrid(key: ValueKey(_selectedCategoryId), categoryId: _selectedCategoryId!)
-                    : _ProductTypeGrid(controller: _productTypeTabController, productTypes: _productTypes),
-              ),
+          return CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              const SliverToBoxAdapter(child: SizedBox(height: Dimensions.paddingSizeSmall)),
+              SliverToBoxAdapter(child: _buildSearchBar(context)),
+              const SliverToBoxAdapter(child: SizedBox(height: Dimensions.paddingSizeDefault)),
+              SliverToBoxAdapter(child: _buildCategoryStrip(context, categories)),
+              const SliverToBoxAdapter(child: SizedBox(height: Dimensions.paddingSizeSmall)),
+
+              if (_selectedCategoryId != null)
+                _CategorySliverGrid(categoryId: _selectedCategoryId!, scrollController: _scrollController)
+              else ...[
+                // Everything that used to live below Featured Products on
+                // Home, moved here — this is the default "browse everything"
+                // state (no special-category tile selected).
+                const SliverToBoxAdapter(child: ClearanceListWidget()),
+                const SliverToBoxAdapter(child: TodaysDealSectionWidget()),
+                const SliverToBoxAdapter(child: NewUserExclusiveSection()),
+                if (!_singleVendor) const SliverToBoxAdapter(child: TopStoresWidget()),
+                const SliverToBoxAdapter(child: BannersSliderWidget(useFooterBanners: true)),
+                SliverToBoxAdapter(child: _buildProductTypeFilterBar(context)),
+                const SliverToBoxAdapter(child: SizedBox(height: Dimensions.paddingSizeSmall)),
+                _ProductTypeSliverGrid(productType: _selectedProductType),
+              ],
             ],
           );
         },
@@ -213,6 +232,42 @@ class _CategoryScreenState extends State<CategoryScreen> with SingleTickerProvid
             asset: tile.asset,
             isSelected: isSelected,
             onTap: matchedId == null ? null : () => _toggleTile(matchedId),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildProductTypeFilterBar(BuildContext context) {
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
+        itemCount: _productTypes.length,
+        separatorBuilder: (_, __) => const SizedBox(width: Dimensions.paddingSizeSmall),
+        itemBuilder: (context, index) {
+          final type = _productTypes[index];
+          final isSelected = type == _selectedProductType;
+          return InkWell(
+            borderRadius: BorderRadius.circular(100),
+            onTap: () => setState(() => _selectedProductType = type),
+            child: Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+              decoration: BoxDecoration(
+                color: isSelected ? BrandColors.burgundy : Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(100),
+                border: isSelected ? null : Border.all(color: Theme.of(context).hintColor.withValues(alpha: 0.2)),
+              ),
+              child: Text(
+                type.displayName(context),
+                style: textBold.copyWith(
+                  fontSize: Dimensions.fontSizeSmall,
+                  color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
+            ),
           );
         },
       ),
@@ -304,49 +359,20 @@ class _CategoryTile extends StatelessWidget {
   }
 }
 
-/// Default "browse everything" view — the filter mechanism moved over from
-/// Home (New Arrival / Top / Best Selling / Discounted), shown whenever no
-/// special-category tile is selected.
-class _ProductTypeGrid extends StatelessWidget {
-  final TabController controller;
-  final List<ProductType> productTypes;
-
-  const _ProductTypeGrid({required this.controller, required this.productTypes});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
-          child: ButtonsTabBar(
-            controller: controller,
-            tabs: productTypes.map((type) => type.displayName(context)).toList(),
-          ),
-        ),
-        const SizedBox(height: Dimensions.paddingSizeSmall),
-        Expanded(
-          child: TabBarView(
-            controller: controller,
-            children: productTypes.map((type) => _ProductTypeListItem(productType: type)).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ProductTypeListItem extends StatefulWidget {
+/// Default "browse everything" grid — the filter mechanism moved over from
+/// Home (New Arrival / Top / Best Selling / Discounted), rendered as a
+/// sliver so it can live alongside the other moved sections in the same
+/// CustomScrollView instead of needing its own nested scrollable.
+class _ProductTypeSliverGrid extends StatefulWidget {
   final ProductType productType;
 
-  const _ProductTypeListItem({required this.productType});
+  const _ProductTypeSliverGrid({required this.productType});
 
   @override
-  State<_ProductTypeListItem> createState() => _ProductTypeListItemState();
+  State<_ProductTypeSliverGrid> createState() => _ProductTypeSliverGridState();
 }
 
-class _ProductTypeListItemState extends State<_ProductTypeListItem> {
+class _ProductTypeSliverGridState extends State<_ProductTypeSliverGrid> {
   @override
   void initState() {
     super.initState();
@@ -356,56 +382,69 @@ class _ProductTypeListItemState extends State<_ProductTypeListItem> {
   }
 
   @override
+  void didUpdateWidget(covariant _ProductTypeSliverGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.productType != widget.productType) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Provider.of<ProductController>(context, listen: false).getProductsForTypeDebounced(widget.productType);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Selector<ProductController, ProductModel?>(
-      selector: (_, controller) => controller.productModelForType(widget.productType),
-      builder: (context, selectedProductModel, _) {
-        final products = selectedProductModel?.products;
+    return SliverToBoxAdapter(
+      child: Selector<ProductController, ProductModel?>(
+        selector: (_, controller) => controller.productModelForType(widget.productType),
+        builder: (context, selectedProductModel, _) {
+          final products = selectedProductModel?.products;
 
-        if (products == null) {
-          return const _ProductGridShimmer();
-        }
+          if (products == null) {
+            return const _ProductGridShimmer();
+          }
 
-        if (products.isEmpty) {
-          return NoInternetOrDataScreenWidget(isNoInternet: false, message: getTranslated('no_product_found', context) ?? '');
-        }
+          if (products.isEmpty) {
+            return NoInternetOrDataScreenWidget(isNoInternet: false, message: getTranslated('no_product_found', context) ?? '');
+          }
 
-        return Padding(
-          padding: const EdgeInsets.all(11),
-          child: MasonryGridView.count(
-            cacheExtent: 600,
-            key: PageStorageKey(widget.productType),
-            crossAxisCount: ResponsiveHelper.isTab(context) ? 3 : 2,
-            itemCount: products.length,
-            itemBuilder: (context, index) => RepaintBoundary(
-              child: Container(
+          return Padding(
+            padding: const EdgeInsets.all(11),
+            child: MasonryGridView.count(
+              cacheExtent: 600,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              key: PageStorageKey(widget.productType),
+              crossAxisCount: ResponsiveHelper.isTab(context) ? 3 : 2,
+              itemCount: products.length,
+              itemBuilder: (context, index) => Container(
                 margin: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
                 child: ProductCardWidget(key: ValueKey(products[index].id), product: products[index]),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
 
 /// Shown once a special-category tile is selected — that category's real,
 /// paginated product grid (same ProductController.getCategoryProducts data
-/// path HomeCategoryContent uses, just without its own nested search bar
-/// since this page already has one above).
-class _CategoryProductGrid extends StatefulWidget {
+/// path HomeCategoryContent uses). scrollController is the *same* one bound
+/// to this screen's outer CustomScrollView, which is what lets
+/// PaginatedListView's "reached the bottom" detection work — it only
+/// listens on a given controller, it doesn't provide its own scrollable.
+class _CategorySliverGrid extends StatefulWidget {
   final int categoryId;
+  final ScrollController scrollController;
 
-  const _CategoryProductGrid({super.key, required this.categoryId});
+  const _CategorySliverGrid({super.key, required this.categoryId, required this.scrollController});
 
   @override
-  State<_CategoryProductGrid> createState() => _CategoryProductGridState();
+  State<_CategorySliverGrid> createState() => _CategorySliverGridState();
 }
 
-class _CategoryProductGridState extends State<_CategoryProductGrid> {
-  final ScrollController _scrollController = ScrollController();
-
+class _CategorySliverGridState extends State<_CategorySliverGrid> {
   @override
   void initState() {
     super.initState();
@@ -415,59 +454,42 @@ class _CategoryProductGridState extends State<_CategoryProductGrid> {
   }
 
   @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Consumer<ProductController>(
-      builder: (context, productController, _) {
-        final model = productController.categoryProductsFor(widget.categoryId);
-        final bool isLoading = model == null;
-        final products = model?.products ?? [];
+    return SliverToBoxAdapter(
+      child: Consumer<ProductController>(
+        builder: (context, productController, _) {
+          final model = productController.categoryProductsFor(widget.categoryId);
+          final bool isLoading = model == null;
+          final products = model?.products ?? [];
 
-        if (isLoading) {
-          return const _ProductGridShimmer();
-        }
+          if (isLoading) {
+            return const _ProductGridShimmer();
+          }
 
-        if (products.isEmpty) {
-          return NoInternetOrDataScreenWidget(isNoInternet: false, message: getTranslated('no_products_found', context));
-        }
+          if (products.isEmpty) {
+            return NoInternetOrDataScreenWidget(isNoInternet: false, message: getTranslated('no_products_found', context));
+          }
 
-        return RefreshIndicator(
-          onRefresh: () async {
-            productController.clearCategoryProductFor(widget.categoryId);
-            await productController.getCategoryProducts(widget.categoryId, 1);
-          },
-          // PaginatedListView doesn't provide its own scroll container — it
-          // only listens on the given scrollController to know when to
-          // paginate — so the shrinkWrap+NeverScrollableScrollPhysics grid
-          // below needs a real scrollable ancestor to actually scroll.
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            child: PaginatedListView(
-              scrollController: _scrollController,
-              totalSize: model.totalSize,
-              offset: model.offset,
-              onPaginate: (offset) => productController.getCategoryProducts(widget.categoryId, offset ?? 1),
-              itemView: MasonryGridView.count(
-                cacheExtent: 600,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                crossAxisCount: ResponsiveHelper.isTab(context) ? 3 : 2,
-                itemCount: products.length,
-                itemBuilder: (context, index) => Container(
-                  margin: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                  child: ProductCardWidget(product: products[index]),
-                ),
+          return PaginatedListView(
+            scrollController: widget.scrollController,
+            totalSize: model.totalSize,
+            offset: model.offset,
+            onPaginate: (offset) => productController.getCategoryProducts(widget.categoryId, offset ?? 1),
+            itemView: MasonryGridView.count(
+              cacheExtent: 600,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
+              crossAxisCount: ResponsiveHelper.isTab(context) ? 3 : 2,
+              itemCount: products.length,
+              itemBuilder: (context, index) => Container(
+                margin: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
+                child: ProductCardWidget(product: products[index]),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
@@ -489,6 +511,7 @@ class _ProductGridShimmer extends StatelessWidget {
       highlightColor: Colors.grey[300]!,
       enabled: true,
       child: MasonryGridView.count(
+        shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: crossAxisCount,
         itemCount: _imageHeights.length,
