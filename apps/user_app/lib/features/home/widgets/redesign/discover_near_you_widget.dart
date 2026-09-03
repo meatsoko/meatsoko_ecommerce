@@ -1,3 +1,4 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:user_app/common/basewidget/custom_image_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/home_title_widget.dart';
@@ -43,20 +44,30 @@ class DiscoverNearYouWidget extends StatelessWidget {
             return const SizedBox();
           }
 
-          // Two cards fill the row width, same as the reference (no partial
-          // third card peeking in) — sized off the actual screen width
-          // rather than a fixed guess.
           final double screenWidth = MediaQuery.of(context).size.width;
           final double cardWidth = (screenWidth - Dimensions.homePagePadding * 2 - Dimensions.paddingSizeSmall) / 2;
+          final double cardHeight = !ResponsiveHelper.isShortMobile(context) ? cardWidth * 1.05 : cardWidth * 0.95;
 
-          return SizedBox(
-            height: !ResponsiveHelper.isShortMobile(context) ? cardWidth * 1.05 : cardWidth * 0.95,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(left: Dimensions.homePagePadding, right: 15),
+          // A real carousel (auto-playing, animated slide transitions) —
+          // matches the banner slider elsewhere on Home — rather than a
+          // plain scroll list that just sits still when there's only one
+          // seller to show.
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
+            child: CarouselSlider.builder(
               itemCount: sellers.length,
-              separatorBuilder: (_, __) => const SizedBox(width: Dimensions.paddingSizeSmall),
-              itemBuilder: (context, index) => _DiscoverCard(sellerInfo: sellers[index], width: cardWidth),
+              options: CarouselOptions(
+                height: cardHeight,
+                viewportFraction: cardWidth / screenWidth,
+                enableInfiniteScroll: sellers.length > 1,
+                autoPlay: sellers.length > 1,
+                enlargeCenterPage: false,
+                padEnds: false,
+              ),
+              itemBuilder: (context, index, realIndex) => Padding(
+                padding: const EdgeInsets.only(right: Dimensions.paddingSizeSmall),
+                child: _DiscoverCard(sellerInfo: sellers[index]),
+              ),
             ),
           );
         },
@@ -68,8 +79,7 @@ class DiscoverNearYouWidget extends StatelessWidget {
 
 class _DiscoverCard extends StatelessWidget {
   final Seller sellerInfo;
-  final double width;
-  const _DiscoverCard({required this.sellerInfo, required this.width});
+  const _DiscoverCard({required this.sellerInfo});
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +106,7 @@ class _DiscoverCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
         child: SizedBox(
-          width: width,
+          width: double.infinity,
           child: Stack(fit: StackFit.expand, children: [
             CustomImageWidget(image: sellerInfo.shop?.bannerFullUrl?.path ?? sellerInfo.shop?.imageFullUrl?.path ?? '', fit: BoxFit.cover),
 
