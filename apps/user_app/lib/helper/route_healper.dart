@@ -1389,7 +1389,13 @@ class RouterHelper {
           );
         },
       ),
-      GoRoute(path: categoryScreen, builder: (context, state) => const CategoryScreen()),
+      GoRoute(path: categoryScreen, builder: (context, state) {
+        final qp = state.uri.queryParameters;
+        return CategoryScreen(
+          initialCategoryId: int.tryParse(qp['categoryId'] ?? ''),
+          initialCategoryName: qp['categoryName'] != null ? Uri.decodeComponent(qp['categoryName']!) : null,
+        );
+      }),
       GoRoute(
         path: chatScreen,
         builder: (context, state) {
