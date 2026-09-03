@@ -120,12 +120,6 @@ class DashBoardScreenState extends State<DashBoardScreen> {
 
     final Widget homeScreen = HomeExploreScreen(
       resetToExploreListenable: _homeResetNotifier,
-      onAuctionSeeAll: () {
-        setState(() {
-          _currentMode = AppMode.auction;
-          _selectedIndex = 4;
-        });
-      },
     );
 
     _mainScreens = [

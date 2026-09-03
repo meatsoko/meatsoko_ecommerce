@@ -1,46 +1,27 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:user_app/common/basewidget/buttons_tab_bar.dart';
 import 'package:user_app/common/basewidget/custom_image_widget.dart';
 import 'package:user_app/common/basewidget/category_content_screen_shimmer.dart';
-import 'package:user_app/common/basewidget/no_internet_screen_widget.dart';
-import 'package:user_app/common/basewidget/product_card_shimmer_widget.dart';
-import 'package:user_app/common/basewidget/product_card_widget.dart';
-import 'package:user_app/common/basewidget/todays_deal_section_widget.dart';
 import 'package:user_app/features/auth/controllers/auth_controller.dart';
 import 'package:user_app/features/category/controllers/category_controller.dart';
-import 'package:user_app/features/clearance_sale/widgets/clearance_sale_list_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/category_morph_header.dart';
 import 'package:user_app/features/home/widgets/redesign/discover_near_you_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/home_category_content.dart';
-import 'package:user_app/features/home/widgets/redesign/auction_product_section_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/banner_slider_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/featured_products_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/flash_deal_section.dart';
-import 'package:user_app/features/home/widgets/redesign/new_user_exclusive_section.dart';
-import 'package:user_app/features/home/widgets/redesign/top_stores_widget.dart';
-import 'package:user_app/features/product/controllers/product_controller.dart';
-import 'package:user_app/features/product/domain/models/product_model.dart';
-import 'package:user_app/features/product/enums/product_type.dart';
 import 'package:user_app/features/profile/controllers/profile_contrroller.dart';
-import 'package:user_app/features/splash/controllers/splash_controller.dart';
-import 'package:user_app/helper/product_type_extension.dart';
-import 'package:user_app/helper/responsive_helper.dart';
 import 'package:user_app/helper/route_healper.dart';
 import 'package:user_app/localization/language_constrants.dart';
-import 'package:user_app/main.dart';
 import 'package:user_app/utill/custom_themes.dart';
 import 'package:user_app/utill/brand_colors.dart';
 import 'package:user_app/utill/dimensions.dart';
 import 'package:user_app/utill/images.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
 
 class HomeExploreScreen extends StatefulWidget {
-  final VoidCallback? onAuctionSeeAll;
   final ValueListenable<int>? resetToExploreListenable;
-  const HomeExploreScreen({super.key, this.onAuctionSeeAll, this.resetToExploreListenable});
+  const HomeExploreScreen({super.key, this.resetToExploreListenable});
 
   @override
   State<HomeExploreScreen> createState() => _HomeExploreScreenState();
@@ -52,73 +33,20 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
   bool _switchingToCategory = false;
 
   TabController? _tabController;
-  TabController? _productTabController;
-  late final bool _isAuctionEnabled;
-  late final bool _singleVendor;
 
-  final GlobalKey _buttonsTabBarKey = GlobalKey();
   final GlobalKey _nestedKey = GlobalKey();
-  bool _buttonsTabPinned = false;
   static const double _categoryTabBarHeight = 64;
-  static const double _searchBarHeight = 75;
-
-  late final AnimationController _tabBarRevealAnim;
-
-  final List<ProductType> _productTypes = const [
-    ProductType.newArrival,
-    ProductType.topProduct,
-    ProductType.bestSelling,
-    ProductType.discountedProduct,
-  ];
 
   @override
   void initState() {
     super.initState();
-    final splash = Provider.of<SplashController>(Get.context!, listen: false);
-    _isAuctionEnabled = splash.configModel?.isAuctionFeatureEnabled ?? false;
-    _singleVendor = splash.configModel?.businessMode == 'single';
-    _tabBarRevealAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-      value: 1.0,
-    )..addListener(() => setState(() {}));
     _initTabs();
-    _scrollController.addListener(_onScroll);
     widget.resetToExploreListenable?.addListener(_resetToExplore);
   }
 
   void _resetToExplore() {
     if (_tabController != null && _tabController!.index != 0) {
       _tabController!.animateTo(0);
-    }
-  }
-
-  void _onScroll() {
-    final bool onExploreTab = _tabController == null || _tabController!.index == 0;
-    if (!onExploreTab) return;
-
-    final ctx = _buttonsTabBarKey.currentContext;
-    if (ctx == null) return;
-
-    final box = ctx.findRenderObject() as RenderBox?;
-    final nestedBox = _nestedKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize || nestedBox == null) return;
-
-    final double topY = box.localToGlobal(Offset.zero).dy;
-    final double originY = nestedBox.localToGlobal(Offset.zero).dy;
-    final double rel = topY - originY;
-
-    const double enterLine = _categoryTabBarHeight + _searchBarHeight;
-    const double exitLine = enterLine + 0;
-
-    final bool next = _buttonsTabPinned ? (rel < exitLine) : (rel <= enterLine);
-    if (next != _buttonsTabPinned) {
-      _buttonsTabPinned = next;
-      if (next) {
-        _tabBarRevealAnim.animateTo(0.0, curve: Curves.easeOut);
-      } else {
-        _tabBarRevealAnim.animateTo(1.0, curve: Curves.easeIn);
-      }
     }
   }
 
@@ -202,10 +130,6 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
           final incomingKey = _scrollKeyForTab(_tabController!.index);
 
           _tabScrollOffsets[previousKey] = _scrollController.offset;
-          // Reset so the category TabBar shows its real 48px bottom before the
-          // incoming category tab's overlap injector reads the absorber.
-          _buttonsTabPinned = false;
-          _tabBarRevealAnim.value = 1.0;
           _scrollController.jumpTo(_tabScrollOffsets[incomingKey] ?? 0.0);
         }
         final bool nowOnExplore = _tabController!.index == 0;
@@ -220,18 +144,14 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
       });
     }
 
-    _productTabController ??= TabController(length: _productTypes.length, vsync: this);
     setState(() {});
   }
 
   @override
   void dispose() {
     widget.resetToExploreListenable?.removeListener(_resetToExplore);
-    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _tabBarRevealAnim.dispose();
     _tabController?.dispose();
-    _productTabController?.dispose();
     super.dispose();
   }
 
@@ -255,15 +175,13 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
           }
 
           final bool onExploreTab = _tabController == null || _tabController!.index == 0;
-          final double revealT = onExploreTab ? _tabBarRevealAnim.value : 1.0;
 
           return Container(
-            color: Color.lerp(Theme.of(context).cardColor, BrandColors.burgundy, revealT),
+            color: Theme.of(context).scaffoldBackgroundColor,
             child: SafeArea(
               bottom: false,
               child: Scaffold(
-                body: (_tabController == null ||
-                    _productTabController == null)
+                body: _tabController == null
                     ? const Center(child: CircularProgressIndicator())
                     : NestedScrollView(
                     key: _nestedKey,
@@ -396,40 +314,16 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                                   const FlashDealSection(),
                                   const BannersSliderWidget(),
                                   const FeaturedProductsWidget(),
-                                  ClearanceListWidget(),
-                                  TodaysDealSectionWidget(),
-                                  if (_isAuctionEnabled)
-                                    AuctionProductSectionWidget(onSeeAll: widget.onAuctionSeeAll),
-                                  const NewUserExclusiveSection(),
-                                  if (!_singleVendor) const TopStoresWidget(),
-                                  const BannersSliderWidget(useFooterBanners: true),
                                 ],
                               ),
                             ),
                           ),
-
-                          SliverPersistentHeader(
-                            pinned: true,
-                            delegate: _SliverTabBarDelegate(
-                              height: 46,
-                              stuckToSearch: true,
-                              containerKey: _buttonsTabBarKey,
-                              child: ButtonsTabBar(
-                                isSticky: true,
-                                controller: _productTabController!,
-                                tabs: _productTypes.map((type) => type.displayName(context)).toList(),
-                              ),
-                            ),
-                          ),
-
                         ],
                       ];
                     },
 
-                    body: onExploreTab ? TabBarView(
-                      controller: _productTabController,
-                      children: _productTypes.map((type) => _ListItemWidget(productType: type)).toList(),
-                    ) : _switchingToCategory ? const CategoryContentScreenShimmer() : TabBarView(
+                    body: onExploreTab ? const SizedBox.shrink()
+                    : _switchingToCategory ? const CategoryContentScreenShimmer() : TabBarView(
                       controller: _tabController,
                       children: [
                         const SizedBox(),
@@ -476,46 +370,6 @@ class _SliverSearchBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(_SliverSearchBarDelegate oldDelegate) => oldDelegate.child != child || oldDelegate.visible != visible;
 }
 
-class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-  final double height;
-  final bool stuckToSearch;
-  final Key? containerKey;
-
-  const _SliverTabBarDelegate({
-    required this.child,
-    this.height = 52,
-    this.stuckToSearch = false,
-    this.containerKey,
-  });
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    // height must match maxExtent/minExtent exactly — RenderSliverPersistentHeader
-    // derives paintExtent from this widget's actual measured size, not from the
-    // delegate's declared extent (see _SliverSearchBarDelegate for the same fix).
-    return Container(
-      key: containerKey,
-      height: height,
-      color: Theme.of(context).scaffoldBackgroundColor,
-      alignment: Alignment.topLeft,
-      padding: EdgeInsets.only(top: stuckToSearch ? 4 : 12),
-      child: child,
-    );
-  }
-
-  @override
-  double get maxExtent => height;
-
-  @override
-  double get minExtent => height;
-
-  @override
-  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) =>
-      oldDelegate.child != child || oldDelegate.height != height ||
-          oldDelegate.stuckToSearch != stuckToSearch || oldDelegate.containerKey != containerKey;
-}
-
 class _CustomizableSpaceBarWidget extends StatelessWidget {
   final Widget Function(BuildContext context, double scrollingRate, Widget? child) builder;
   final Widget? child;
@@ -531,93 +385,6 @@ class _CustomizableSpaceBarWidget extends StatelessWidget {
         final scrollingRate = (1.0 - (settings.currentExtent - settings.minExtent) / deltaExtent).clamp(0.0, 1.0);
         return builder(context, scrollingRate, child);
       },
-    );
-  }
-}
-
-class _ListItemWidget extends StatefulWidget {
-  final ProductType productType;
-
-  const _ListItemWidget({required this.productType});
-
-  @override
-  State<_ListItemWidget> createState() => _ListItemWidgetState();
-}
-
-class _ListItemWidgetState extends State<_ListItemWidget> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ProductController>(context, listen: false).getProductsForTypeDebounced(widget.productType);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Selector<ProductController, ProductModel?>(
-      selector: (_, controller) => controller.productModelForType(widget.productType),
-      builder: (context, selectedProductModel, _) {
-        final products = selectedProductModel?.products;
-
-        if (products == null) {
-          return const _ListItemShimmer();
-        }
-
-        if (products.isEmpty) {
-          return NoInternetOrDataScreenWidget(isNoInternet: false, message: getTranslated('no_product_found', context) ?? '');
-        }
-
-        return Padding(
-          padding: const EdgeInsets.all(11),
-          child: MasonryGridView.count(
-            cacheExtent: 600,
-            key: PageStorageKey(widget.productType),
-            crossAxisCount: ResponsiveHelper.isTab(context) ? 3 : 2,
-            itemCount: products.length,
-            itemBuilder: (context, index) => RepaintBoundary(
-              child: Container(
-                margin: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                child: ProductCardWidget(key: ValueKey(products[index].id), product: products[index]),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ListItemShimmer extends StatelessWidget {
-  const _ListItemShimmer();
-
-  // Mimic masonry stagger — alternating heights per column
-  static const List<double> _imageHeights = [
-    150, 120, 160, 110, 140, 130,
-    125, 155, 115, 145, 135, 120,
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final int crossAxisCount = ResponsiveHelper.isTab(context) ? 3 : 2;
-
-    return Shimmer.fromColors(
-      baseColor: Theme.of(context).cardColor,
-      highlightColor: Colors.grey[300]!,
-      enabled: true,
-      child: MasonryGridView.count(
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: crossAxisCount,
-        itemCount: _imageHeights.length,
-        itemBuilder: (context, index) {
-          final double imageHeight = _imageHeights[index];
-
-          return Container(
-            margin: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-            child: ProductCardShimmerWidget(imageHeight: imageHeight),
-          );
-        },
-      ),
     );
   }
 }
