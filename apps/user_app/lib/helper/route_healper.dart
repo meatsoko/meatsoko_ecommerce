@@ -717,8 +717,16 @@ class RouterHelper {
     return _navigateRoute('$htmlViewScreen$query', route: action);
   }
 
-  static String getCategoryScreenRoute({RouteAction action = RouteAction.push}) {
-    return _navigateRoute(categoryScreen, route: action);
+  // categoryId/categoryName are carried on the route so a tap on a Home
+  // "special category" tile can tell the Categories page which one to
+  // highlight on open. Not yet consumed by CategoryScreen — that's a
+  // separate, deliberately deferred change; this only makes sure Home sends
+  // the data correctly.
+  static String getCategoryScreenRoute({RouteAction action = RouteAction.push, int? categoryId, String? categoryName}) {
+    final query = categoryId != null
+        ? '?categoryId=$categoryId${categoryName != null ? '&categoryName=${Uri.encodeComponent(categoryName)}' : ''}'
+        : '';
+    return _navigateRoute('$categoryScreen$query', route: action);
   }
 
   static String getSupportTicketRoute({RouteAction? action}) {

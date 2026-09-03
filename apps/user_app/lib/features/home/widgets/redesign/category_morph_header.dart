@@ -119,10 +119,10 @@ class _CategoryGrid extends StatelessWidget {
 
   const _CategoryGrid({required this.categories, required this.tabController});
 
-  /// Matches a fixed tile to a real backend category by name (so tapping it
-  /// still opens real, live products) and falls back to a plain search when
-  /// no such category exists yet. "More" (matchTerm == null) always opens
-  /// the full category browser instead.
+  /// Tapping any special-category tile (including "More") navigates to the
+  /// Categories page. When the tile matches a real backend category by
+  /// name, its id/name are passed on the route so Categories can highlight
+  /// it on open (not yet consumed there — see getCategoryScreenRoute).
   void _handleTap(_FixedCategoryTile tile) {
     if (tile.matchTerm == null) {
       RouterHelper.getCategoryScreenRoute(action: RouteAction.push);
@@ -132,9 +132,14 @@ class _CategoryGrid extends StatelessWidget {
       (c) => (c.name ?? '').toLowerCase().contains(tile.matchTerm!),
     );
     if (index != -1) {
-      tabController.animateTo(index + 1);
+      final matched = categories[index];
+      RouterHelper.getCategoryScreenRoute(
+        action: RouteAction.push,
+        categoryId: matched.id,
+        categoryName: matched.name,
+      );
     } else {
-      RouterHelper.getSearchRoute(action: RouteAction.push);
+      RouterHelper.getCategoryScreenRoute(action: RouteAction.push);
     }
   }
 

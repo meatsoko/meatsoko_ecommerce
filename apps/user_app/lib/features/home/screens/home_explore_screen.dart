@@ -7,13 +7,9 @@ import 'package:user_app/common/basewidget/no_internet_screen_widget.dart';
 import 'package:user_app/common/basewidget/product_card_shimmer_widget.dart';
 import 'package:user_app/common/basewidget/product_card_widget.dart';
 import 'package:user_app/common/basewidget/todays_deal_section_widget.dart';
-import 'package:user_app/features/auction_home/controllers/auction_home_controller.dart';
-import 'package:user_app/features/auction_home/domain/auction_enum.dart';
 import 'package:user_app/features/auth/controllers/auth_controller.dart';
-import 'package:user_app/features/banner/controllers/banner_controller.dart';
 import 'package:user_app/features/category/controllers/category_controller.dart';
 import 'package:user_app/features/clearance_sale/widgets/clearance_sale_list_widget.dart';
-import 'package:user_app/features/deal/controllers/flash_deal_controller.dart';
 import 'package:user_app/features/home/widgets/redesign/category_morph_header.dart';
 import 'package:user_app/features/home/widgets/redesign/discover_near_you_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/home_category_content.dart';
@@ -27,7 +23,6 @@ import 'package:user_app/features/product/controllers/product_controller.dart';
 import 'package:user_app/features/product/domain/models/product_model.dart';
 import 'package:user_app/features/product/enums/product_type.dart';
 import 'package:user_app/features/profile/controllers/profile_contrroller.dart';
-import 'package:user_app/features/shop/controllers/shop_controller.dart';
 import 'package:user_app/features/splash/controllers/splash_controller.dart';
 import 'package:user_app/helper/product_type_extension.dart';
 import 'package:user_app/helper/responsive_helper.dart';
@@ -55,8 +50,6 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
   final ScrollController _scrollController = ScrollController();
   final Map<int, double> _tabScrollOffsets = {};
   bool _switchingToCategory = false;
-
-  static const double _refreshEdgeOffset = 113;
 
   TabController? _tabController;
   TabController? _productTabController;
@@ -145,7 +138,7 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
           Expanded(
             child: InkWell(
               borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-              onTap: () => RouterHelper.getSearchRoute(action: RouteAction.push),
+              onTap: () => RouterHelper.getCategoryScreenRoute(action: RouteAction.push),
               child: Container(
                 height: 48,
                 padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
@@ -180,7 +173,7 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                 borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
               ),
-              child: Icon(Icons.crop_free, color: Theme.of(context).textTheme.bodyLarge?.color, size: 20),
+              child: Icon(Icons.qr_code_scanner, color: Theme.of(context).textTheme.bodyLarge?.color, size: 20),
             ),
           ),
         ],
@@ -192,36 +185,6 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
     if (tabIndex == 0) return -1;
     final categories = Provider.of<CategoryController>(context, listen: false).categoryList;
     return categories[tabIndex - 1].id ?? -1;
-  }
-
-  Future<void> _refreshData() async {
-    final productController   = Provider.of<ProductController>(context, listen: false);
-    final categoryController  = Provider.of<CategoryController>(context, listen: false);
-    final profileController   = Provider.of<ProfileController>(context, listen: false);
-    final authController      = Provider.of<AuthController>(context, listen: false);
-    final flashDealController = Provider.of<FlashDealController>(context, listen: false);
-    final bannerController    = Provider.of<BannerController>(context, listen: false);
-    final shopController      = Provider.of<ShopController>(context, listen: false);
-    final auctionController   = _isAuctionEnabled ? Provider.of<AuctionHomeController>(context, listen: false) : null;
-    final isLoggedIn = authController.isLoggedIn();
-
-    _tabScrollOffsets.clear();
-    _buttonsTabPinned = false;
-    _tabBarRevealAnim.value = 1.0;
-    productController.clearCategoryProductCache();
-    await profileController.getUserInfo(context, isLoggedIn: isLoggedIn);
-    await categoryController.getCategoryList(true);
-    await flashDealController.getFlashDealList(false, false);
-    await bannerController.getBannerList();
-    await productController.getFeaturedProductModel(1);
-    await productController.getRecommendedProduct();
-    await productController.getJustForYouProduct(1);
-    await productController.getClearanceAllProductList(1);
-    await shopController.getTopSellerList(offset: 1);
-    if (auctionController != null) {
-      await auctionController.getAuctionHomeSection(AuctionEnum.all);
-    }
-    _initTabs();
   }
 
   void _initTabs() {
@@ -299,15 +262,10 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
             child: SafeArea(
               bottom: false,
               child: Scaffold(
-                body: RefreshIndicator(
-                  edgeOffset: _refreshEdgeOffset,
-                  triggerMode: RefreshIndicatorTriggerMode.onEdge,
-                  notificationPredicate: (notification) => notification is OverscrollNotification || notification.depth != 2,
-                  onRefresh: () async => _refreshData(),
-                  child: (_tabController == null ||
-                      _productTabController == null)
-                      ? const Center(child: CircularProgressIndicator())
-                      : NestedScrollView(
+                body: (_tabController == null ||
+                    _productTabController == null)
+                    ? const Center(child: CircularProgressIndicator())
+                    : NestedScrollView(
                     key: _nestedKey,
                     controller: _scrollController,
                     headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -390,9 +348,9 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                                   height: 1.2,
                                 ),
                                 children: [
-                                  TextSpan(text: '${getTranslated('home_headline_line_one', context) ?? 'Fresh cuts,'}\n'),
+                                  TextSpan(text: '${getTranslated('Fresh Cuts', context) ?? 'Fresh cuts,'}\n'),
                                   TextSpan(
-                                    text: getTranslated('home_headline_line_two', context) ?? 'delivered fast.',
+                                    text: getTranslated('delivered in minutes', context) ?? 'delivered fast.',
                                     style: const TextStyle(color: BrandColors.burgundy),
                                   ),
                                 ],
@@ -482,7 +440,6 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
 
 
                   ),
-                ),
               ),
             ),
           );
