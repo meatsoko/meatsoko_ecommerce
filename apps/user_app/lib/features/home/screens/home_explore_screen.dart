@@ -363,7 +363,7 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                                         GestureDetector(
                                           onTap: () => isLoggedIn
                                               ? RouterHelper.getMoreScreenRoute(action: RouteAction.push)
-                                              : RouterHelper.getAuthScreenRoute(action: RouteAction.push),
+                                              : RouterHelper.getLoginRoute(action: RouteAction.push),
                                           child: ClipOval(
                                             child: CustomImageWidget(
                                                 image: profileController.userInfoModel?.imageFullUrl?.path ?? '',
