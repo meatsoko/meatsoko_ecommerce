@@ -126,12 +126,6 @@ class DashBoardScreenState extends State<DashBoardScreen> {
           _selectedIndex = 4;
         });
       },
-      onCartTap: () {
-        setState(() {
-          _currentMode = AppMode.main;
-          _selectedIndex = 2;
-        });
-      },
     );
 
     _mainScreens = [

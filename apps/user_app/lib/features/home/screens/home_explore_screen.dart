@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:user_app/common/basewidget/buttons_tab_bar.dart';
+import 'package:user_app/common/basewidget/custom_image_widget.dart';
 import 'package:user_app/common/basewidget/category_content_screen_shimmer.dart';
 import 'package:user_app/common/basewidget/no_internet_screen_widget.dart';
 import 'package:user_app/common/basewidget/product_card_shimmer_widget.dart';
@@ -10,7 +11,6 @@ import 'package:user_app/features/auction_home/controllers/auction_home_controll
 import 'package:user_app/features/auction_home/domain/auction_enum.dart';
 import 'package:user_app/features/auth/controllers/auth_controller.dart';
 import 'package:user_app/features/banner/controllers/banner_controller.dart';
-import 'package:user_app/features/cart/controllers/cart_controller.dart';
 import 'package:user_app/features/category/controllers/category_controller.dart';
 import 'package:user_app/features/clearance_sale/widgets/clearance_sale_list_widget.dart';
 import 'package:user_app/features/deal/controllers/flash_deal_controller.dart';
@@ -37,15 +37,15 @@ import 'package:user_app/main.dart';
 import 'package:user_app/utill/custom_themes.dart';
 import 'package:user_app/utill/brand_colors.dart';
 import 'package:user_app/utill/dimensions.dart';
+import 'package:user_app/utill/images.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 
 class HomeExploreScreen extends StatefulWidget {
   final VoidCallback? onAuctionSeeAll;
-  final VoidCallback? onCartTap;
   final ValueListenable<int>? resetToExploreListenable;
-  const HomeExploreScreen({super.key, this.onAuctionSeeAll, this.onCartTap, this.resetToExploreListenable});
+  const HomeExploreScreen({super.key, this.onAuctionSeeAll, this.resetToExploreListenable});
 
   @override
   State<HomeExploreScreen> createState() => _HomeExploreScreenState();
@@ -317,48 +317,60 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                           elevation: 0,
                           centerTitle: false,
                           automaticallyImplyLeading: false,
-                          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                          expandedHeight: 60,
+                          backgroundColor: BrandColors.burgundy,
+                          expandedHeight: 65,
                           flexibleSpace: _CustomizableSpaceBarWidget(
                             builder: (ctx, scrollingRate, child) => Opacity(
                               opacity: (1 - scrollingRate).clamp(0.0, 1.0),
                               child: child,
                             ),
                             child: SafeArea(
-                              bottom: false,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding, vertical: Dimensions.paddingSizeSmall),
-                                child: Row(mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    InkWell(
-                                      onTap: widget.onCartTap,
-                                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                                      child: Container(
-                                        height: 44, width: 44,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                                          color: Theme.of(context).cardColor,
-                                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 6)],
-                                        ),
-                                        child: Stack(clipBehavior: Clip.none, children: [
-                                          Center(child: Icon(Icons.shopping_cart_outlined, color: Theme.of(context).textTheme.bodyLarge?.color, size: 20)),
-                                          Consumer<CartController>(
-                                            builder: (context, cart, _) => cart.cartList.isNotEmpty
-                                                ? Positioned(
-                                                    right: -2, top: -2,
-                                                    child: CircleAvatar(
-                                                      radius: 8,
-                                                      backgroundColor: BrandColors.burgundy,
-                                                      child: Text('${cart.cartList.length}',
-                                                          style: textBold.copyWith(color: Colors.white, fontSize: 9)),
-                                                    ),
-                                                  )
-                                                : const SizedBox.shrink(),
+                                child: Consumer<ProfileController>(
+                                  builder: (context, profileController, _) {
+                                    final bool isLoggedIn = Provider.of<AuthController>(context, listen: false).isLoggedIn();
+                                    final String firstLine = isLoggedIn
+                                        ? getTranslated('hello_welcome', context)!
+                                        : getTranslated('hello', context)!;
+                                    final String secondLine = isLoggedIn
+                                        ? (profileController.userInfoModel?.fName ?? '')
+                                        : getTranslated('welcome', context)!;
+                                    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                firstLine,
+                                                style: titilliumRegular.copyWith(
+                                                  color: Colors.white,
+                                                  fontSize: Dimensions.fontSizeDefault,
+                                                ),
+                                              ),
+                                              const SizedBox(height: Dimensions.paddingSizeExtraExtraSmall),
+                                              Text(secondLine,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: titilliumBold.copyWith(
+                                                  color: Colors.white,
+                                                  fontSize: Dimensions.fontSizeLarge,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ]),
-                                      ),
-                                    ),
-                                  ],
+                                        ),
+                                        GestureDetector(
+                                          onTap: () => RouterHelper.getMoreScreenRoute(action: RouteAction.push),
+                                          child: ClipOval(
+                                            child: CustomImageWidget(
+                                                image: profileController.userInfoModel?.imageFullUrl?.path ?? '',
+                                                width: 40, height: 40, placeholder: Images.guestProfile),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ),
                               ),
                             ),
