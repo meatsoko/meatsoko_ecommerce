@@ -331,7 +331,7 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                                   builder: (context, profileController, _) {
                                     final bool isLoggedIn = Provider.of<AuthController>(context, listen: false).isLoggedIn();
                                     final String firstLine = isLoggedIn
-                                        ? getTranslated('hello_welcome', context)!
+                                        ? getTranslated('welcome', context)!
                                         : getTranslated('hello', context)!;
                                     final String secondLine = isLoggedIn
                                         ? (profileController.userInfoModel?.fName ?? '')
@@ -361,7 +361,9 @@ class _HomeExploreScreenState extends State<HomeExploreScreen> with TickerProvid
                                           ),
                                         ),
                                         GestureDetector(
-                                          onTap: () => RouterHelper.getMoreScreenRoute(action: RouteAction.push),
+                                          onTap: () => isLoggedIn
+                                              ? RouterHelper.getMoreScreenRoute(action: RouteAction.push)
+                                              : RouterHelper.getAuthScreenRoute(action: RouteAction.push),
                                           child: ClipOval(
                                             child: CustomImageWidget(
                                                 image: profileController.userInfoModel?.imageFullUrl?.path ?? '',
