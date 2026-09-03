@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-Color _primaryColor = const Color(0xFF1455AC);
+Color _primaryColor = const Color(0xFF7A1C1C); // BrandColors.burgundy
 Color _secondaryColor = const Color(0xFFF58300);
 
 
@@ -29,9 +29,9 @@ ThemeData light({Color? primaryColor, Color? secondaryColor})=> ThemeData(
     primary: _primaryColor,  // Primary Color
     secondary: _secondaryColor,  // Secondary Color
     tertiary: const Color(0xFFFFBB38), // Warning Color
-    tertiaryContainer: const Color(0xFFADC9F3),
+    tertiaryContainer: const Color(0xFFE6C7C7),
     onTertiaryContainer: const Color(0xFF04BB7B), // Success Color
-    onPrimary: const Color(0xFF7FBBFF),
+    onPrimary: const Color(0xFFD98A8A),
     surface: const Color(0xFFF4F8FF),
     onSecondary: secondaryColor ?? const Color(0xFFF88030),
     error: const Color(0xFFFF4040), // Danger Color

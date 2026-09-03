@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-Color _primaryColor = const Color(0xFF1455AC);
+Color _primaryColor = const Color(0xFF7A1C1C); // BrandColors.burgundy
 Color _secondaryColor = const Color(0xFFF58300);
 
 ThemeData dark = ThemeData(
@@ -24,9 +24,9 @@ ThemeData dark = ThemeData(
     primary: _primaryColor,  // Primary Color
     secondary: _secondaryColor,  // Secondary Color
     tertiary: const Color(0xFFFFBB38), // Warning Color
-    tertiaryContainer: const Color(0xFF6C7A8E),
+    tertiaryContainer: const Color(0xFF8E6C74),
     surface: const Color(0xFF2D2D2D),
-    onPrimary: const Color(0xFFB7D7FE),
+    onPrimary: const Color(0xFFE8B4B4),
     onTertiaryContainer: const Color(0xFF04BB7B), // Success Color
     primaryContainer: const Color(0xFF208458),
     onSecondaryContainer: const Color(0x912A2A2A),
