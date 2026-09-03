@@ -110,6 +110,7 @@ flutter:
     disable-swift-package-manager: true
 
   assets:
+    - assets/image/
     - assets/images/
     - assets/language/
     - assets/svg/

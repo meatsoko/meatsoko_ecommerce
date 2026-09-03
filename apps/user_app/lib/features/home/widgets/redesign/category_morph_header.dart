@@ -1,10 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:user_app/common/basewidget/custom_asset_image_widget.dart';
 import 'package:user_app/common/basewidget/custom_image_widget.dart';
 import 'package:user_app/features/category/domain/models/category_model.dart';
+import 'package:user_app/helper/route_healper.dart';
 import 'package:user_app/localization/language_constrants.dart';
 import 'package:user_app/utill/brand_colors.dart';
 import 'package:user_app/utill/custom_themes.dart';
 import 'package:user_app/utill/dimensions.dart';
+
+/// The grid's 6 tiles are a fixed, curated set (not the live backend
+/// category list) — matchTerm is used to jump to the real category tab if
+/// one with a matching name exists; null means "More" (opens the full
+/// category browser instead of a tab).
+class _FixedCategoryTile {
+  final String label;
+  final String asset;
+  final String? matchTerm;
+
+  const _FixedCategoryTile({required this.label, required this.asset, this.matchTerm});
+}
+
+const List<_FixedCategoryTile> _homeCategoryTiles = [
+  _FixedCategoryTile(label: 'Goat Meat', asset: 'assets/image/category_goat_meat.png', matchTerm: 'goat'),
+  _FixedCategoryTile(label: 'Mutton', asset: 'assets/image/category_mutton.png', matchTerm: 'mutton'),
+  _FixedCategoryTile(label: 'Offal', asset: 'assets/image/category_offal.png', matchTerm: 'offal'),
+  _FixedCategoryTile(label: 'Bones & Soup', asset: 'assets/image/category_bones_soup.png', matchTerm: 'bone'),
+  _FixedCategoryTile(label: 'Whole Animal', asset: 'assets/image/category_whole_animal.png', matchTerm: 'whole'),
+  _FixedCategoryTile(label: 'More', asset: 'assets/image/category_more.svg', matchTerm: null),
+];
 
 /// Sliver header showing the real product categories as a 2-row grid on
 /// first paint, then smoothly crossfading into a compact single-row sticky
@@ -21,7 +44,7 @@ class CategoryMorphHeaderDelegate extends SliverPersistentHeaderDelegate {
   const CategoryMorphHeaderDelegate({
     required this.categories,
     required this.tabController,
-    this.gridExtent = 216,
+    this.gridExtent = 268,
     this.barExtent = 64,
   });
 
@@ -61,7 +84,6 @@ class CategoryMorphHeaderDelegate extends SliverPersistentHeaderDelegate {
                   child: _CategoryGrid(
                     categories: categories,
                     tabController: tabController,
-                    onTap: _selectCategory,
                   ),
                 ),
               ),
@@ -94,9 +116,35 @@ class CategoryMorphHeaderDelegate extends SliverPersistentHeaderDelegate {
 class _CategoryGrid extends StatelessWidget {
   final List<CategoryModel> categories;
   final TabController tabController;
-  final ValueChanged<int> onTap;
 
-  const _CategoryGrid({required this.categories, required this.tabController, required this.onTap});
+  const _CategoryGrid({required this.categories, required this.tabController});
+
+  /// Matches a fixed tile to a real backend category by name (so tapping it
+  /// still opens real, live products) and falls back to a plain search when
+  /// no such category exists yet. "More" (matchTerm == null) always opens
+  /// the full category browser instead.
+  void _handleTap(_FixedCategoryTile tile) {
+    if (tile.matchTerm == null) {
+      RouterHelper.getCategoryScreenRoute(action: RouteAction.push);
+      return;
+    }
+    final int index = categories.indexWhere(
+      (c) => (c.name ?? '').toLowerCase().contains(tile.matchTerm!),
+    );
+    if (index != -1) {
+      tabController.animateTo(index + 1);
+    } else {
+      RouterHelper.getSearchRoute(action: RouteAction.push);
+    }
+  }
+
+  int? _matchedTabIndex(_FixedCategoryTile tile) {
+    if (tile.matchTerm == null) return null;
+    final int index = categories.indexWhere(
+      (c) => (c.name ?? '').toLowerCase().contains(tile.matchTerm!),
+    );
+    return index == -1 ? null : index + 1;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +160,7 @@ class _CategoryGrid extends StatelessWidget {
         builder: (context, _) {
           return GridView.builder(
             scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               // Scroll direction is horizontal here, so mainAxisExtent is
@@ -122,14 +170,16 @@ class _CategoryGrid extends StatelessWidget {
               mainAxisSpacing: Dimensions.paddingSizeSmall,
               crossAxisSpacing: Dimensions.paddingSizeSmall,
             ),
-            itemCount: categories.length,
+            itemCount: _homeCategoryTiles.length,
             itemBuilder: (context, index) {
-              final bool isSelected = tabController.index == index + 1;
+              final tile = _homeCategoryTiles[index];
+              final int? matchedTab = _matchedTabIndex(tile);
+              final bool isSelected = matchedTab != null && tabController.index == matchedTab;
               return _CategoryTile(
-                title: categories[index].name,
-                icon: categories[index].imageFullUrl?.path,
+                title: tile.label,
+                asset: tile.asset,
                 isSelected: isSelected,
-                onTap: () => onTap(index),
+                onTap: () => _handleTap(tile),
               );
             },
           );
@@ -174,11 +224,11 @@ class _CategoryBar extends StatelessWidget {
 
 class _CategoryTile extends StatelessWidget {
   final String? title;
-  final String? icon;
+  final String asset;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _CategoryTile({required this.title, required this.icon, required this.isSelected, required this.onTap});
+  const _CategoryTile({required this.title, required this.asset, required this.isSelected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -198,14 +248,14 @@ class _CategoryTile extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-              child: CustomImageWidget(image: '$icon', height: 42, width: 42, fit: BoxFit.cover),
+              child: CustomAssetImageWidget(asset, height: 64, width: 64, fit: BoxFit.cover),
             ),
             const SizedBox(height: Dimensions.paddingSizeExtraSmall),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
               child: Text(
                 getTranslated(title, context) ?? title ?? '',
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: textBold.copyWith(
