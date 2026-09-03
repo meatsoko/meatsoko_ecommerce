@@ -40,7 +40,11 @@ class DiscoverNearYouWidget extends StatelessWidget {
             return const _DiscoverShimmer();
           }
 
-          if (sellers.isEmpty) {
+          // A single seller can't actually carousel — it just sits as one
+          // static, non-animating card, which is the stray "image" this
+          // guards against. Only show the section when there's genuinely
+          // something to slide between.
+          if (sellers.length < 2) {
             return const SizedBox();
           }
 
@@ -49,9 +53,9 @@ class DiscoverNearYouWidget extends StatelessWidget {
           final double cardHeight = !ResponsiveHelper.isShortMobile(context) ? cardWidth * 1.05 : cardWidth * 0.95;
 
           // A real carousel (auto-playing, animated slide transitions) —
-          // matches the banner slider elsewhere on Home — rather than a
-          // plain scroll list that just sits still when there's only one
-          // seller to show.
+          // matches the banner slider elsewhere on Home. sellers.length >= 2
+          // here (guarded above), so infinite scroll/autoplay always have
+          // something to animate between.
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
             child: CarouselSlider.builder(
@@ -59,8 +63,8 @@ class DiscoverNearYouWidget extends StatelessWidget {
               options: CarouselOptions(
                 height: cardHeight,
                 viewportFraction: cardWidth / screenWidth,
-                enableInfiniteScroll: sellers.length > 1,
-                autoPlay: sellers.length > 1,
+                enableInfiniteScroll: true,
+                autoPlay: true,
                 enlargeCenterPage: false,
                 padEnds: false,
               ),

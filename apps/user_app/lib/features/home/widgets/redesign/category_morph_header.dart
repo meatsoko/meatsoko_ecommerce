@@ -44,7 +44,7 @@ class CategoryMorphHeaderDelegate extends SliverPersistentHeaderDelegate {
   const CategoryMorphHeaderDelegate({
     required this.categories,
     required this.tabController,
-    this.gridExtent = 268,
+    this.gridExtent = 312,
     this.barExtent = 64,
   });
 
@@ -248,7 +248,7 @@ class _CategoryTile extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-              child: CustomAssetImageWidget(asset, height: 64, width: 64, fit: BoxFit.cover),
+              child: CustomAssetImageWidget(asset, height: 76, width: 76, fit: BoxFit.cover),
             ),
             const SizedBox(height: Dimensions.paddingSizeExtraSmall),
             Padding(
