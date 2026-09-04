@@ -36,8 +36,6 @@ class _HomeExploreScreenState extends State<HomeExploreScreen>
   TabController? _tabController;
 
   final GlobalKey _nestedKey = GlobalKey();
-  final GlobalKey _discoverOverlayKey = GlobalKey();
-  final GlobalKey _carouselStartKey = GlobalKey();
   static const double _categoryTabBarHeight = 64;
 
   @override
@@ -364,11 +362,25 @@ class _HomeExploreScreenState extends State<HomeExploreScreen>
 
               SliverToBoxAdapter(
                 child: ColoredBox(
-                  key: _carouselStartKey,
                   color: Theme.of(context).scaffoldBackgroundColor,
                   child: Column(
                     children: [
-                      const DiscoverNearYouBody(),
+                      // Always in its normal spot (never hidden/duplicated)
+                      // — it just grows taller while the magnify overlay
+                      // above is active, via heightBoost tied to the same
+                      // scroll-linked t, and settles back to its normal
+                      // size once that ends.
+                      AnimatedBuilder(
+                        animation: _scrollController,
+                        builder: (context, _) {
+                          final double offset = _scrollController.hasClients
+                              ? _scrollController.offset
+                              : 0.0;
+                          final double t =
+                              _DiscoverMagnifyOverlay.progressFor(offset);
+                          return DiscoverNearYouBody(heightBoost: t * 180);
+                        },
+                      ),
                       const FlashDealSection(),
                       const BannersSliderWidget(),
                       const FeaturedProductsWidget(),
@@ -402,10 +414,7 @@ class _HomeExploreScreenState extends State<HomeExploreScreen>
                       left: 0,
                       right: 0,
                       child: _DiscoverMagnifyOverlay(
-                        key: _discoverOverlayKey,
-                        scrollController: _scrollController,
-                        carouselStartKey: _carouselStartKey,
-                      ),
+                          scrollController: _scrollController),
                     ),
                   ],
                 )
@@ -555,29 +564,27 @@ class _TwoLineDiscoverText extends StatelessWidget {
 /// with a magnified peak in between).
 ///
 /// This is a decorative overlay, layered on top of the scroll view rather
-/// than living inside the sliver list, specifically so it can grow larger
-/// than any single sliver's own space without hitting sliver-clipping or
-/// geometry-mismatch issues. It only renders (t > 0) during the scroll
-/// window where the category grid is fading away underneath it — outside
-/// that window it's entirely absent, so it never covers the headline,
-/// search bar, or the small pinned heading above.
+/// than living inside the sliver list. It only renders (t > 0) during the
+/// scroll window where the category grid is fading away underneath it —
+/// outside that window it's entirely absent, so it never covers the
+/// headline, search bar, or the small pinned heading above.
+///
+/// Deliberately simple: this used to also try to measure the real
+/// carousel's on-screen position (via RenderBox lookups) and grow an
+/// embedded copy of it to exactly fill the gap down to that point. That
+/// added a lot of fragile machinery for a result that was hard to verify
+/// without live testing and never looked right — the real carousel now
+/// just grows in its own normal spot instead (see the AnimatedBuilder
+/// around DiscoverNearYouBody above), and this overlay only needs to be
+/// tall enough for its own text plus a fixed, small margin below it.
 ///
 /// The three offsets below are estimates (this app's exact header heights
 /// weren't measured live) for *when* this activates — if the peak feels
 /// early/late once you see it scrolling, these are the numbers to adjust.
-/// *How tall* it grows is not a guess, though: it's measured against
-/// [carouselStartKey]'s actual on-screen position every frame, so it can
-/// never grow tall enough to cover the carousel, no matter how far off
-/// those three offsets end up being.
 class _DiscoverMagnifyOverlay extends StatelessWidget {
   final ScrollController scrollController;
-  final GlobalKey carouselStartKey;
 
-  const _DiscoverMagnifyOverlay({
-    super.key,
-    required this.scrollController,
-    required this.carouselStartKey,
-  });
+  const _DiscoverMagnifyOverlay({required this.scrollController});
 
   static const double _fadeInStart = 220; // grid starts fading here
   static const double _peakOffset =
@@ -586,46 +593,19 @@ class _DiscoverMagnifyOverlay extends StatelessWidget {
 
   static const double _smallFontSize = 14;
   static const double _magnifiedFontSize = 44;
-  // Upper bound only — the actual height used each frame is whatever's
-  // measured as available above the carousel, capped at this.
-  static const double _maxCoverHeight = 380;
+  // How much space is left below the text — the only thing this overlay's
+  // height is based on now.
+  static const double _bottomMargin = 20;
 
   static bool isActive(double offset) =>
       offset > _fadeInStart && offset < _fadeOutEnd;
 
-  static double _progressFor(double offset) {
+  static double progressFor(double offset) {
     if (offset <= _fadeInStart || offset >= _fadeOutEnd) return 0.0;
     final double t = offset <= _peakOffset
         ? (offset - _fadeInStart) / (_peakOffset - _fadeInStart)
         : (_fadeOutEnd - offset) / (_fadeOutEnd - _peakOffset);
     return t.clamp(0.0, 1.0);
-  }
-
-  // Trimmed off the bottom of the measured available height, on top of the
-  // exact carousel-boundary measurement — a small safety margin so a
-  // one-frame-stale measurement (see below) can never leave this box
-  // overlapping the carousel by a sliver.
-  static const double _bottomSafetyMargin = 16;
-
-  /// How much vertical space is actually free between this overlay's own
-  /// top edge and the carousel's current on-screen top edge, in global
-  /// coordinates — using the previous frame's layout (there isn't a
-  /// current one yet mid-build), which is accurate enough since both move
-  /// together smoothly frame to frame.
-  double _availableHeight(BuildContext context) {
-    final RenderBox? ownBox = context.findRenderObject() as RenderBox?;
-    final RenderBox? carouselBox =
-        carouselStartKey.currentContext?.findRenderObject() as RenderBox?;
-    if (ownBox == null ||
-        !ownBox.attached ||
-        carouselBox == null ||
-        !carouselBox.attached) {
-      return _maxCoverHeight;
-    }
-    final double ownTop = ownBox.localToGlobal(Offset.zero).dy;
-    final double carouselTop = carouselBox.localToGlobal(Offset.zero).dy;
-    return (carouselTop - ownTop - _bottomSafetyMargin)
-        .clamp(0.0, _maxCoverHeight);
   }
 
   @override
@@ -635,26 +615,19 @@ class _DiscoverMagnifyOverlay extends StatelessWidget {
       builder: (context, child) {
         final double offset =
             scrollController.hasClients ? scrollController.offset : 0.0;
-        final double t = _progressFor(offset);
+        final double t = progressFor(offset);
 
         if (t <= 0.0) return const SizedBox.shrink();
 
         final double fontSize =
             _smallFontSize + (t * (_magnifiedFontSize - _smallFontSize));
+        final double textHeight = fontSize * 1.05 * 2; // two lines
+        final double height =
+            Dimensions.paddingSizeLarge + textHeight + _bottomMargin;
 
-        // The background covers all the available space the instant the
-        // effect starts (rather than growing in step with the text) so
-        // there's never a gap around the edges revealing whatever's fading
-        // underneath — only the text itself animates smoothly. "Available"
-        // is capped by the carousel's real position, never guessed.
-        // Anchored top-left with a fixed top inset, not centered — that
-        // way trimming height off the *bottom* (the safety margin above,
-        // or the carousel simply being closer at some scroll positions)
-        // never shifts where the text itself sits; only how much empty
-        // background space is left below it changes.
         return IgnorePointer(
           child: Container(
-            height: _availableHeight(context),
+            height: height,
             width: double.infinity,
             color: Theme.of(context).scaffoldBackgroundColor,
             padding: const EdgeInsets.only(

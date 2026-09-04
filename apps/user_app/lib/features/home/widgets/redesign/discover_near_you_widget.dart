@@ -20,7 +20,14 @@ import 'package:shimmer/shimmer.dart';
 /// separately (a pinned sliver that hides while a scroll-linked magnified
 /// overlay takes over), so there's no separate static title widget here.
 class DiscoverNearYouBody extends StatelessWidget {
-  const DiscoverNearYouBody({super.key});
+  // Extra height added on top of the normal computed card height — Home
+  // drives this with a scroll-linked value (0 at rest) so the carousel
+  // grows a bit taller while the magnify overlay above it is active, and
+  // settles back to its normal size once that ends. It stays in its usual
+  // spot in the layout throughout; only its size changes.
+  final double heightBoost;
+
+  const DiscoverNearYouBody({super.key, this.heightBoost = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +37,7 @@ class DiscoverNearYouBody extends StatelessWidget {
           final sellers = shopController.topSellerModel?.sellers;
 
           if (sellers == null) {
-            return const _DiscoverShimmer();
+            return _DiscoverShimmer(heightBoost: heightBoost);
           }
 
           // A single seller can't actually carousel — it just sits as one
@@ -47,9 +54,10 @@ class DiscoverNearYouBody extends StatelessWidget {
                   Dimensions.paddingSizeSmall) /
               2;
           // ~10% taller than a plain square-ish card (was 1.05 / 0.95).
-          final double cardHeight = !ResponsiveHelper.isShortMobile(context)
-              ? cardWidth * 1.155
-              : cardWidth * 1.045;
+          final double cardHeight = (!ResponsiveHelper.isShortMobile(context)
+                  ? cardWidth * 1.155
+                  : cardWidth * 1.045) +
+              heightBoost;
 
           // A real carousel (auto-playing, animated slide transitions) —
           // matches the banner slider elsewhere on Home. sellers.length >= 2
@@ -151,14 +159,17 @@ class _DiscoverCard extends StatelessWidget {
 }
 
 class _DiscoverShimmer extends StatelessWidget {
-  const _DiscoverShimmer();
+  final double heightBoost;
+
+  const _DiscoverShimmer({this.heightBoost = 0});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       // Matches the ~10% taller carousel cards, so there's no layout jump
       // once real data swaps this placeholder out.
-      height: !ResponsiveHelper.isShortMobile(context) ? 165 : 143,
+      height:
+          (!ResponsiveHelper.isShortMobile(context) ? 165 : 143) + heightBoost,
       child: Shimmer.fromColors(
         baseColor: Theme.of(context).cardColor,
         highlightColor: Colors.grey[300]!,
