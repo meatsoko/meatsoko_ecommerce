@@ -17,16 +17,33 @@ class _FixedCategoryTile {
   final String asset;
   final String? matchTerm;
 
-  const _FixedCategoryTile({required this.label, required this.asset, this.matchTerm});
+  const _FixedCategoryTile(
+      {required this.label, required this.asset, this.matchTerm});
 }
 
 const List<_FixedCategoryTile> _homeCategoryTiles = [
-  _FixedCategoryTile(label: 'Goat Meat', asset: 'assets/image/category_goat_meat.png', matchTerm: 'goat'),
-  _FixedCategoryTile(label: 'Mutton', asset: 'assets/image/category_mutton.png', matchTerm: 'mutton'),
-  _FixedCategoryTile(label: 'Offal', asset: 'assets/image/category_offal.png', matchTerm: 'offal'),
-  _FixedCategoryTile(label: 'Bones & Soup', asset: 'assets/image/category_bones_soup.png', matchTerm: 'bone'),
-  _FixedCategoryTile(label: 'Whole Animal', asset: 'assets/image/category_whole_animal.png', matchTerm: 'whole'),
-  _FixedCategoryTile(label: 'More', asset: 'assets/image/category_more.svg', matchTerm: null),
+  _FixedCategoryTile(
+      label: 'Goat Meat',
+      asset: 'assets/image/category_goat_meat.png',
+      matchTerm: 'goat'),
+  _FixedCategoryTile(
+      label: 'Mutton',
+      asset: 'assets/image/category_mutton.png',
+      matchTerm: 'mutton'),
+  _FixedCategoryTile(
+      label: 'Offal',
+      asset: 'assets/image/category_offal.png',
+      matchTerm: 'offal'),
+  _FixedCategoryTile(
+      label: 'Bones & Soup',
+      asset: 'assets/image/category_bones_soup.png',
+      matchTerm: 'bone'),
+  _FixedCategoryTile(
+      label: 'Whole Animal',
+      asset: 'assets/image/category_whole_animal.png',
+      matchTerm: 'whole'),
+  _FixedCategoryTile(
+      label: 'More', asset: 'assets/image/category_more.svg', matchTerm: null),
 ];
 
 /// Sliver header showing the real product categories as a 2-row grid on
@@ -60,7 +77,8 @@ class CategoryMorphHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     final double range = maxExtent - minExtent;
     final double clampedShrink = shrinkOffset.clamp(0.0, range);
     final double height = maxExtent - clampedShrink;
@@ -177,10 +195,15 @@ class _CategoryGrid extends StatelessWidget {
     // Fit 3 tiles per row (matching the reference's 3-column grid) on the
     // current screen width, rather than a fixed tile size.
     final double screenWidth = MediaQuery.of(context).size.width;
-    final double tileWidth = (screenWidth - Dimensions.paddingSizeSmall * 2 - Dimensions.paddingSizeSmall * 2) / 3;
+    final double tileWidth = (screenWidth -
+            Dimensions.paddingSizeSmall * 2 -
+            Dimensions.paddingSizeSmall * 2) /
+        3;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeSmall),
+      padding: const EdgeInsets.symmetric(
+          horizontal: Dimensions.paddingSizeSmall,
+          vertical: Dimensions.paddingSizeSmall),
       child: AnimatedBuilder(
         animation: tabController,
         builder: (context, _) {
@@ -200,7 +223,8 @@ class _CategoryGrid extends StatelessWidget {
             itemBuilder: (context, index) {
               final tile = _homeCategoryTiles[index];
               final int? matchedTab = _matchedTabIndex(tile);
-              final bool isSelected = matchedTab != null && tabController.index == matchedTab;
+              final bool isSelected =
+                  matchedTab != null && tabController.index == matchedTab;
               return _CategoryTile(
                 title: tile.label,
                 asset: tile.asset,
@@ -220,7 +244,10 @@ class _CategoryBar extends StatelessWidget {
   final TabController tabController;
   final ValueChanged<int> onTap;
 
-  const _CategoryBar({required this.categories, required this.tabController, required this.onTap});
+  const _CategoryBar(
+      {required this.categories,
+      required this.tabController,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -230,9 +257,12 @@ class _CategoryBar extends StatelessWidget {
         return ListView.separated(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
+          padding: const EdgeInsets.symmetric(
+              horizontal: Dimensions.paddingSizeDefault,
+              vertical: Dimensions.paddingSizeSmall),
           itemCount: categories.length,
-          separatorBuilder: (context, index) => const SizedBox(width: Dimensions.paddingSizeSmall),
+          separatorBuilder: (context, index) =>
+              const SizedBox(width: Dimensions.paddingSizeSmall),
           itemBuilder: (context, index) {
             final bool isSelected = tabController.index == index + 1;
             return _CategoryChip(
@@ -254,7 +284,11 @@ class _CategoryTile extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _CategoryTile({required this.title, required this.asset, required this.isSelected, required this.onTap});
+  const _CategoryTile(
+      {required this.title,
+      required this.asset,
+      required this.isSelected,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -262,35 +296,59 @@ class _CategoryTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
+        padding:
+            const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-          border: isSelected ? Border.all(color: BrandColors.burgundy, width: 1.4) : null,
-          boxShadow: isSelected ? null : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
+          border: isSelected
+              ? Border.all(color: BrandColors.burgundy, width: 1.4)
+              : null,
+          boxShadow: isSelected
+              ? null
+              : [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2))
+                ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-              child: CustomAssetImageWidget(asset, height: 76, width: 76, fit: BoxFit.cover),
-            ),
-            const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-              child: Text(
-                getTranslated(title, context) ?? title ?? '',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: textBold.copyWith(
-                  fontSize: Dimensions.fontSizeExtraSmall,
-                  color: isSelected ? BrandColors.burgundy : Theme.of(context).textTheme.bodyLarge?.color,
+        // FittedBox guards against overflow: the grid's cross-axis (row)
+        // height shrinks continuously as this header morphs into the
+        // compact bar (and, now that the header isn't pinned, continues
+        // shrinking further as it scrolls away entirely) — well below what
+        // the fixed 76px image + text naturally need. Scaling the whole
+        // tile down to fit is simpler and safer than trying to keep it
+        // exactly in step with that shrinking extent.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                child: CustomAssetImageWidget(asset,
+                    height: 76, width: 76, fit: BoxFit.cover),
+              ),
+              const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: Dimensions.paddingSizeExtraSmall),
+                child: Text(
+                  getTranslated(title, context) ?? title ?? '',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: textBold.copyWith(
+                    fontSize: Dimensions.fontSizeExtraSmall,
+                    color: isSelected
+                        ? BrandColors.burgundy
+                        : Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -303,7 +361,11 @@ class _CategoryChip extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _CategoryChip({required this.title, required this.icon, required this.isSelected, required this.onTap});
+  const _CategoryChip(
+      {required this.title,
+      required this.icon,
+      required this.isSelected,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -311,31 +373,53 @@ class _CategoryChip extends StatelessWidget {
       borderRadius: BorderRadius.circular(100),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeExtraSmall),
+        padding: const EdgeInsets.symmetric(
+            horizontal: Dimensions.paddingSizeSmall,
+            vertical: Dimensions.paddingSizeExtraSmall),
         decoration: BoxDecoration(
-          color: isSelected ? BrandColors.burgundy.withValues(alpha: 0.08) : Theme.of(context).cardColor,
+          color: isSelected
+              ? BrandColors.burgundy.withValues(alpha: 0.08)
+              : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(100),
-          border: isSelected ? Border.all(color: BrandColors.burgundy, width: 1.4) : null,
-          boxShadow: isSelected ? null : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1))],
+          border: isSelected
+              ? Border.all(color: BrandColors.burgundy, width: 1.4)
+              : null,
+          boxShadow: isSelected
+              ? null
+              : [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1))
+                ],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(100),
-              child: CustomImageWidget(image: '$icon', height: 22, width: 22, fit: BoxFit.cover),
-            ),
-            const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-            Text(
-              getTranslated(title, context) ?? title ?? '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: textBold.copyWith(
-                fontSize: Dimensions.fontSizeSmall,
-                color: isSelected ? BrandColors.burgundy : Theme.of(context).textTheme.bodyLarge?.color,
+        // Same overflow guard as the grid tile: this chip's available
+        // cross-axis height can drop below its natural (icon + text) height
+        // while this header is mid-scroll, now that it isn't pinned.
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(100),
+                child: CustomImageWidget(
+                    image: '$icon', height: 22, width: 22, fit: BoxFit.cover),
               ),
-            ),
-          ],
+              const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+              Text(
+                getTranslated(title, context) ?? title ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: textBold.copyWith(
+                  fontSize: Dimensions.fontSizeSmall,
+                  color: isSelected
+                      ? BrandColors.burgundy
+                      : Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

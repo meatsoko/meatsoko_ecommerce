@@ -1,12 +1,10 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:user_app/common/basewidget/custom_image_widget.dart';
-import 'package:user_app/features/home/widgets/redesign/home_title_widget.dart';
 import 'package:user_app/features/shop/controllers/shop_controller.dart';
 import 'package:user_app/features/shop/domain/models/seller_model.dart';
 import 'package:user_app/helper/responsive_helper.dart';
 import 'package:user_app/helper/route_healper.dart';
-import 'package:user_app/localization/language_constrants.dart';
 import 'package:user_app/utill/brand_colors.dart';
 import 'package:user_app/utill/custom_themes.dart';
 import 'package:user_app/utill/dimensions.dart';
@@ -17,21 +15,16 @@ import 'package:shimmer/shimmer.dart';
 /// [TopStoresWidget] (same ShopController data), styled after the reference
 /// reskin: full-bleed shop banner with a floating rating badge, rather than
 /// the fuller shop-info card used elsewhere.
-class DiscoverNearYouWidget extends StatelessWidget {
-  const DiscoverNearYouWidget({super.key});
+///
+/// Just the carousel body — Home renders its own animated title header
+/// separately (a pinned sliver that hides while a scroll-linked magnified
+/// overlay takes over), so there's no separate static title widget here.
+class DiscoverNearYouBody extends StatelessWidget {
+  const DiscoverNearYouBody({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
-        child: HomeTitleWidget(
-          title: getTranslated('discover_near_you', context) ?? 'Discover Near You',
-          onViewAllTap: () => RouterHelper.getAllTopSellerRoute(action: RouteAction.push, title: 'top_seller'),
-        ),
-      ),
-      const SizedBox(height: Dimensions.paddingSizeSmall),
-
       Consumer<ShopController>(
         builder: (context, shopController, _) {
           final sellers = shopController.topSellerModel?.sellers;
@@ -49,15 +42,22 @@ class DiscoverNearYouWidget extends StatelessWidget {
           }
 
           final double screenWidth = MediaQuery.of(context).size.width;
-          final double cardWidth = (screenWidth - Dimensions.homePagePadding * 2 - Dimensions.paddingSizeSmall) / 2;
-          final double cardHeight = !ResponsiveHelper.isShortMobile(context) ? cardWidth * 1.05 : cardWidth * 0.95;
+          final double cardWidth = (screenWidth -
+                  Dimensions.homePagePadding * 2 -
+                  Dimensions.paddingSizeSmall) /
+              2;
+          // ~10% taller than a plain square-ish card (was 1.05 / 0.95).
+          final double cardHeight = !ResponsiveHelper.isShortMobile(context)
+              ? cardWidth * 1.155
+              : cardWidth * 1.045;
 
           // A real carousel (auto-playing, animated slide transitions) —
           // matches the banner slider elsewhere on Home. sellers.length >= 2
           // here (guarded above), so infinite scroll/autoplay always have
           // something to animate between.
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
+            padding: const EdgeInsets.symmetric(
+                horizontal: Dimensions.homePagePadding),
             child: CarouselSlider.builder(
               itemCount: sellers.length,
               options: CarouselOptions(
@@ -69,7 +69,8 @@ class DiscoverNearYouWidget extends StatelessWidget {
                 padEnds: false,
               ),
               itemBuilder: (context, index, realIndex) => Padding(
-                padding: const EdgeInsets.only(right: Dimensions.paddingSizeSmall),
+                padding:
+                    const EdgeInsets.only(right: Dimensions.paddingSizeSmall),
                 child: _DiscoverCard(sellerInfo: sellers[index]),
               ),
             ),
@@ -112,21 +113,32 @@ class _DiscoverCard extends StatelessWidget {
         child: SizedBox(
           width: double.infinity,
           child: Stack(fit: StackFit.expand, children: [
-            CustomImageWidget(image: sellerInfo.shop?.bannerFullUrl?.path ?? sellerInfo.shop?.imageFullUrl?.path ?? '', fit: BoxFit.cover),
+            CustomImageWidget(
+                image: sellerInfo.shop?.bannerFullUrl?.path ??
+                    sellerInfo.shop?.imageFullUrl?.path ??
+                    '',
+                fit: BoxFit.cover),
 
             // Rating badge, bottom-left — matches the reference; no
             // shop-name overlay there, and no fabricated delivery-time
             // chip since the shop model has no such field.
             Positioned(
-              left: Dimensions.paddingSizeSmall, bottom: Dimensions.paddingSizeSmall,
+              left: Dimensions.paddingSizeSmall,
+              bottom: Dimensions.paddingSizeSmall,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall, vertical: 3),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100)),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: Dimensions.paddingSizeSmall, vertical: 3),
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(100)),
                 child: Row(mainAxisSize: MainAxisSize.min, children: [
                   const Icon(Icons.star, size: 12, color: BrandColors.ochre),
                   const SizedBox(width: 3),
-                  Text(sellerInfo.averageRating?.toStringAsFixed(1) ?? '-',
-                    style: textBold.copyWith(color: BrandColors.burgundyDark, fontSize: Dimensions.fontSizeExtraSmall),
+                  Text(
+                    sellerInfo.averageRating?.toStringAsFixed(1) ?? '-',
+                    style: textBold.copyWith(
+                        color: BrandColors.burgundyDark,
+                        fontSize: Dimensions.fontSizeExtraSmall),
                   ),
                 ]),
               ),
@@ -144,7 +156,9 @@ class _DiscoverShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: !ResponsiveHelper.isShortMobile(context) ? 150 : 130,
+      // Matches the ~10% taller carousel cards, so there's no layout jump
+      // once real data swaps this placeholder out.
+      height: !ResponsiveHelper.isShortMobile(context) ? 165 : 143,
       child: Shimmer.fromColors(
         baseColor: Theme.of(context).cardColor,
         highlightColor: Colors.grey[300]!,
@@ -152,9 +166,11 @@ class _DiscoverShimmer extends StatelessWidget {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(left: Dimensions.homePagePadding, right: 15),
+          padding: const EdgeInsets.only(
+              left: Dimensions.homePagePadding, right: 15),
           itemCount: 4,
-          separatorBuilder: (_, __) => const SizedBox(width: Dimensions.paddingSizeSmall),
+          separatorBuilder: (_, __) =>
+              const SizedBox(width: Dimensions.paddingSizeSmall),
           itemBuilder: (_, __) => ClipRRect(
             borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
             child: Container(width: 170, color: Theme.of(context).cardColor),
