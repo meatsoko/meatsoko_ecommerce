@@ -46,11 +46,22 @@ class CartScreenState extends State<CartScreen> {
   bool singleVendor = false;
 
   Future<void> _loadData() async {
-    await Provider.of<CartController>(Get.context!, listen: false).getCartData(Get.context!);
-     Provider.of<CartController>(Get.context!, listen: false).setCartData();
-      if( Provider.of<SplashController>(Get.context!,listen: false).configModel!.shippingMethod != 'sellerwise_shipping') {
-        Provider.of<ShippingController>(Get.context!, listen: false).getAdminShippingMethodList(Get.context!);
-      }
+    final cartController = Provider.of<CartController>(Get.context!, listen: false);
+    // Skip a redundant refetch if the shared CartController already has
+    // items cached — add/update/remove actions already refresh this list
+    // internally (see CartController.addToCartAPI etc.), so a *new*
+    // CartScreen instance (e.g. pushed right after Add to Cart) mounting
+    // on top of already-current data doesn't need to hit the network
+    // again just because this particular widget instance is new. A
+    // genuinely empty cart (first load, or nothing left after removals)
+    // still fetches normally.
+    if (cartController.cartList.isEmpty) {
+      await cartController.getCartData(Get.context!);
+    }
+    cartController.setCartData();
+    if( Provider.of<SplashController>(Get.context!,listen: false).configModel!.shippingMethod != 'sellerwise_shipping') {
+      Provider.of<ShippingController>(Get.context!, listen: false).getAdminShippingMethodList(Get.context!);
+    }
   }
 
   Color _currentColor = Theme.of(Get.context!).cardColor; // Initial color
@@ -222,7 +233,13 @@ class CartScreenState extends State<CartScreen> {
 
               return Scaffold(
                 backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                bottomNavigationBar: (!cart.cartLoading && cartList.isNotEmpty) ?
+                // Was `!cart.cartLoading && cartList.isNotEmpty` — that hid
+                // the checkout bar during *any* refresh, including a silent
+                // background one with cached items still on screen (see the
+                // body's shimmer condition below), which made it flicker
+                // away and back for no reason. Cached items being present
+                // is what actually matters here.
+                bottomNavigationBar: cartList.isNotEmpty ?
                 Consumer<SplashController>(
                   builder: (context, configProvider,_) {
                     final double bottomInset = MediaQuery.of(context).padding.bottom;
@@ -458,7 +475,16 @@ class CartScreenState extends State<CartScreen> {
 
                 appBar: CustomAppBar(title: getTranslated('my_cart', context), isBackButtonExist: widget.showBackButton),
                 body: Column(children: [
-                  cart.cartLoading ? const Expanded(child: CartPageShimmerWidget()) : sellerList.isNotEmpty ?
+                  // Only show the full-page shimmer on a true first load
+                  // (no cached items yet). `CartScreen` is re-constructed
+                  // fresh every time it's pushed (e.g. right after Add to
+                  // Cart, whose own request already refreshed the shared
+                  // CartController), so `initState`'s reload was blanking
+                  // an already-up-to-date cart back to a shimmer on every
+                  // single visit. Keeping the cached list on screen during
+                  // that redundant refresh removes the flash without
+                  // skipping the refresh itself.
+                  (cart.cartLoading && cartList.isEmpty) ? const Expanded(child: CartPageShimmerWidget()) : sellerList.isNotEmpty ?
                   Expanded(child:
                     Column(
                       children: [

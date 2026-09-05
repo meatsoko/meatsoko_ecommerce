@@ -8,6 +8,7 @@ import 'package:user_app/helper/shop_helper.dart';
 import 'package:user_app/localization/language_constrants.dart';
 import 'package:user_app/features/auth/controllers/auth_controller.dart';
 import 'package:user_app/features/shop/controllers/shop_controller.dart';
+import 'package:user_app/utill/brand_colors.dart';
 import 'package:user_app/utill/custom_themes.dart';
 import 'package:user_app/utill/dimensions.dart';
 import 'package:user_app/common/basewidget/custom_image_widget.dart';
@@ -54,11 +55,11 @@ class _ShopInfoWidgetState extends State<ShopInfoWidget> {
         );
 
         return Container(
-          margin: const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
+          margin: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding, vertical: Dimensions.paddingSizeSmall),
           padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(Dimensions.paddingSizeTwelve),
+            borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
           ),
 
           child: Column(
@@ -282,5 +283,121 @@ class VerticalDividerWidget extends StatelessWidget {
       width: 1,
       color: Theme.of(context).hintColor.withValues(alpha: 0.2),
     );
+  }
+}
+
+/// Lightweight vendor mini-card (reference design) — name + address +
+/// a "Visit Store" pill, no stats bar or chat button. Fetches the same
+/// data `ShopInfoWidget` does (`ShopController.getSellerInfoProductDetails`)
+/// but renders far less of it; a deliberately smaller sibling, not a
+/// replacement — `ShopInfoWidget` above is kept, disabled, for reference.
+class VendorMiniCardWidget extends StatefulWidget {
+  final String sellerId;
+  const VendorMiniCardWidget({super.key, required this.sellerId});
+
+  @override
+  State<VendorMiniCardWidget> createState() => _VendorMiniCardWidgetState();
+}
+
+class _VendorMiniCardWidgetState extends State<VendorMiniCardWidget> {
+  @override
+  void initState() {
+    Provider.of<ShopController>(context, listen: false).getSellerInfoProductDetails(widget.sellerId);
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final splash = Provider.of<SplashController>(context, listen: false);
+
+    return Consumer<ShopController>(
+      builder: (context, seller, child) {
+        final sellerData = seller.sellerInfoModelProductDetails;
+        if (sellerData == null) return const SizedBox();
+
+        final sellerShop = sellerData.seller?.shop;
+        final inHouseShop = splash.configModel?.inHouseShop;
+        final bool isSeller = sellerShop != null;
+
+        final String name = isSeller ? (sellerShop.name ?? '') : (inHouseShop?.name ?? '');
+        final String? address = isSeller ? sellerShop.address : inHouseShop?.address;
+
+        // Cream container groups name/address/Visit-Store as one visual
+        // item — only the "Visit Store" pill inside is tappable, there's
+        // no tap handler on this outer container itself.
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding, vertical: Dimensions.paddingSizeSmall),
+          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
+          decoration: BoxDecoration(
+            color: BrandColors.cream,
+            borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+          ),
+          child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: titilliumSemiBold.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).textTheme.bodyLarge?.color),
+                ),
+                if (address != null && address.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(address, maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: textRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).hintColor),
+                  ),
+                ],
+              ]),
+            ),
+            const SizedBox(width: Dimensions.paddingSizeSmall),
+
+            InkWell(
+              borderRadius: BorderRadius.circular(Dimensions.radiusHundred),
+              onTap: () => _openShop(context, sellerData, splash),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  borderRadius: BorderRadius.circular(Dimensions.radiusHundred),
+                ),
+                child: Text(getTranslated('visit_store', context) ?? 'Visit Store',
+                  style: titilliumSemiBold.copyWith(fontSize: Dimensions.fontSizeDefault, color: Colors.white),
+                ),
+              ),
+            ),
+          ]),
+        );
+      },
+    );
+  }
+
+  // Same routing as ShopInfoWidget._openShop above.
+  void _openShop(BuildContext context, sellerData, SplashController splash) {
+    if (sellerData.seller != null) {
+      RouterHelper.getTopSellerRoute(
+        action: RouteAction.push,
+        slug: sellerData.seller?.shop?.slug,
+        sellerId: sellerData.seller?.id,
+        temporaryClose: sellerData.seller?.shop?.temporaryClose ?? false,
+        vacationStatus: sellerData.seller?.shop?.vacationStatus ?? false,
+        vacationEndDate: sellerData.seller?.shop?.vacationEndDate,
+        vacationStartDate: sellerData.seller?.shop?.vacationStartDate,
+        vacationDurationType: sellerData.seller?.shop?.vacationDurationType,
+        name: sellerData.seller?.shop?.name,
+        banner: sellerData.seller?.shop?.bannerFullUrl?.path,
+        image: sellerData.seller?.shop?.imageFullUrl?.path,
+      );
+    } else {
+      RouterHelper.getTopSellerRoute(
+        action: RouteAction.push,
+        slug: splash.configModel?.inHouseShop?.slug,
+        sellerId: 0,
+        temporaryClose: splash.configModel?.inhouseTemporaryClose?.status ?? false,
+        vacationStatus: splash.configModel?.inhouseVacationAdd?.status,
+        vacationEndDate: splash.configModel?.inhouseVacationAdd?.vacationEndDate,
+        vacationStartDate: splash.configModel?.inhouseVacationAdd?.vacationStartDate,
+        vacationDurationType: splash.configModel?.inhouseVacationAdd?.vacationDurationType,
+        name: splash.configModel?.inHouseShop?.name,
+        banner: splash.configModel?.inHouseShop?.bannerFullUrl?.path,
+        image: splash.configModel?.inHouseShop?.imageFullUrl?.path,
+      );
+    }
   }
 }

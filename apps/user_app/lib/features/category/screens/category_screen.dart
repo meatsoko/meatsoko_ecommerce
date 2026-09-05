@@ -8,7 +8,7 @@ import 'package:user_app/common/basewidget/no_internet_screen_widget.dart';
 import 'package:user_app/common/basewidget/paginated_list_view_widget.dart';
 import 'package:user_app/common/basewidget/product_card_shimmer_widget.dart';
 import 'package:user_app/common/basewidget/product_card_widget.dart';
-import 'package:user_app/common/basewidget/todays_deal_section_widget.dart';
+// import 'package:user_app/common/basewidget/todays_deal_section_widget.dart';
 import 'package:user_app/features/cart/controllers/cart_controller.dart';
 import 'package:user_app/features/category/controllers/category_controller.dart';
 import 'package:user_app/features/category/domain/models/category_model.dart';
@@ -36,15 +36,31 @@ class _SpecialCategoryTile {
   final String asset;
   final String matchTerm;
 
-  const _SpecialCategoryTile({required this.label, required this.asset, required this.matchTerm});
+  const _SpecialCategoryTile(
+      {required this.label, required this.asset, required this.matchTerm});
 }
 
 const List<_SpecialCategoryTile> _specialCategoryTiles = [
-  _SpecialCategoryTile(label: 'Goat Meat', asset: 'assets/image/category_goat_meat.png', matchTerm: 'goat'),
-  _SpecialCategoryTile(label: 'Mutton', asset: 'assets/image/category_mutton.png', matchTerm: 'mutton'),
-  _SpecialCategoryTile(label: 'Offal', asset: 'assets/image/category_offal.png', matchTerm: 'offal'),
-  _SpecialCategoryTile(label: 'Bones & Soup', asset: 'assets/image/category_bones_soup.png', matchTerm: 'bone'),
-  _SpecialCategoryTile(label: 'Whole Animal', asset: 'assets/image/category_whole_animal.png', matchTerm: 'whole'),
+  _SpecialCategoryTile(
+      label: 'Goat Meat',
+      asset: 'assets/image/category_goat_meat.png',
+      matchTerm: 'goat'),
+  _SpecialCategoryTile(
+      label: 'Mutton',
+      asset: 'assets/image/category_mutton.png',
+      matchTerm: 'mutton'),
+  _SpecialCategoryTile(
+      label: 'Offal',
+      asset: 'assets/image/category_offal.png',
+      matchTerm: 'offal'),
+  _SpecialCategoryTile(
+      label: 'Bones & Soup',
+      asset: 'assets/image/category_bones_soup.png',
+      matchTerm: 'bone'),
+  _SpecialCategoryTile(
+      label: 'Whole Animal',
+      asset: 'assets/image/category_whole_animal.png',
+      matchTerm: 'whole'),
 ];
 
 const List<ProductType> _productTypes = [
@@ -97,7 +113,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
   // version of this did, meant these tiles could never match anything and
   // were permanently dead. Search top-level, then subcategories, then
   // sub-subcategories, and use whichever level actually matched.
-  int? _matchedCategoryId(_SpecialCategoryTile tile, List<CategoryModel> categories) {
+  int? _matchedCategoryId(
+      _SpecialCategoryTile tile, List<CategoryModel> categories) {
     for (final category in categories) {
       if ((category.name ?? '').toLowerCase().contains(tile.matchTerm)) {
         return category.id;
@@ -117,79 +134,129 @@ class _CategoryScreenState extends State<CategoryScreen> {
   }
 
   void _toggleTile(int matchedId) {
-    setState(() => _selectedCategoryId = _selectedCategoryId == matchedId ? null : matchedId);
+    setState(() => _selectedCategoryId =
+        _selectedCategoryId == matchedId ? null : matchedId);
+  }
+
+  // Label of whichever special-category tile is currently selected, so the
+  // app bar can show what you're inside instead of the generic "CATEGORY"
+  // title while a category is drilled into.
+  String? _selectedTileLabel(List<CategoryModel> categories) {
+    for (final tile in _specialCategoryTiles) {
+      if (_matchedCategoryId(tile, categories) == _selectedCategoryId) {
+        return tile.label;
+      }
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: getTranslated('CATEGORY', context),
-        isBackButtonExist: widget.isBacButtonExist,
-        centerTitle: false,
-        actions: [_CartButton(), const SizedBox(width: Dimensions.paddingSizeSmall)],
-      ),
-      body: Consumer<CategoryController>(
-        builder: (context, categoryProvider, _) {
-          final categories = categoryProvider.categoryList;
+    return Consumer<CategoryController>(
+      builder: (context, categoryProvider, _) {
+        final categories = categoryProvider.categoryList;
+        final bool inSpecificCategory = _selectedCategoryId != null;
 
-          return CustomScrollView(
+        return Scaffold(
+          appBar: CustomAppBar(
+            title: inSpecificCategory
+                ? (_selectedTileLabel(categories) ?? getTranslated('CATEGORY', context))
+                : getTranslated('CATEGORY', context),
+            // This tab normally has no back button (it's a bottom-nav root),
+            // but once a specific category is selected there needs to be an
+            // explicit way back to the default browse-everything view rather
+            // than relying on re-tapping the already-selected tile.
+            isBackButtonExist: widget.isBacButtonExist || inSpecificCategory,
+            onBackPressed: inSpecificCategory
+                ? () => setState(() => _selectedCategoryId = null)
+                : null,
+            centerTitle: false,
+            actions: [
+              _CartButton(),
+              const SizedBox(width: Dimensions.paddingSizeSmall)
+            ],
+          ),
+          body: CustomScrollView(
             controller: _scrollController,
             slivers: [
-              const SliverToBoxAdapter(child: SizedBox(height: Dimensions.paddingSizeSmall)),
+              const SliverToBoxAdapter(
+                  child: SizedBox(height: Dimensions.paddingSizeSmall)),
+              SliverToBoxAdapter(
+                  child: _buildCategoryStrip(context, categories)),
+              const SliverToBoxAdapter(
+                  child: SizedBox(height: Dimensions.paddingSizeDefault)),
               SliverToBoxAdapter(child: _buildSearchBar(context)),
-              const SliverToBoxAdapter(child: SizedBox(height: Dimensions.paddingSizeDefault)),
-              SliverToBoxAdapter(child: _buildCategoryStrip(context, categories)),
-              const SliverToBoxAdapter(child: SizedBox(height: Dimensions.paddingSizeSmall)),
-
+              const SliverToBoxAdapter(
+                  child: SizedBox(height: Dimensions.paddingSizeSmall)),
               if (_selectedCategoryId != null)
-                _CategorySliverGrid(categoryId: _selectedCategoryId!, scrollController: _scrollController)
+                _CategorySliverGrid(
+                    categoryId: _selectedCategoryId!,
+                    scrollController: _scrollController)
               else ...[
+                // Filter chips lead right after the search bar now, with
+                // everything else (merchandising sections + the filtered
+                // grid they drive) following below.
+                SliverToBoxAdapter(child: _buildProductTypeFilterBar(context)),
+                const SliverToBoxAdapter(
+                    child: SizedBox(height: Dimensions.paddingSizeSmall)),
+
                 // Everything that used to live below Featured Products on
                 // Home, moved here — this is the default "browse everything"
                 // state (no special-category tile selected).
                 const SliverToBoxAdapter(child: ClearanceListWidget()),
-                const SliverToBoxAdapter(child: TodaysDealSectionWidget()),
+                // const SliverToBoxAdapter(child: TodaysDealSectionWidget()),
                 const SliverToBoxAdapter(child: NewUserExclusiveSection()),
-                if (!_singleVendor) const SliverToBoxAdapter(child: TopStoresWidget()),
-                const SliverToBoxAdapter(child: BannersSliderWidget(useFooterBanners: true)),
-                SliverToBoxAdapter(child: _buildProductTypeFilterBar(context)),
-                const SliverToBoxAdapter(child: SizedBox(height: Dimensions.paddingSizeSmall)),
+                if (!_singleVendor)
+                  const SliverToBoxAdapter(child: TopStoresWidget()),
+                const SliverToBoxAdapter(
+                    child: BannersSliderWidget(useFooterBanners: true)),
                 _ProductTypeSliverGrid(productType: _selectedProductType),
               ],
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
+      padding:
+          const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
       child: Row(
         children: [
           Expanded(
             child: InkWell(
               borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-              onTap: () => RouterHelper.getSearchRoute(action: RouteAction.push),
+              onTap: () =>
+                  RouterHelper.getSearchRoute(action: RouteAction.push),
               child: Container(
                 height: 48,
-                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: Dimensions.paddingSizeDefault),
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2))
+                  ],
                 ),
                 child: Row(children: [
-                  Icon(Icons.search, color: Theme.of(context).hintColor, size: 22),
+                  Icon(Icons.search,
+                      color: Theme.of(context).hintColor, size: 22),
                   const SizedBox(width: Dimensions.paddingSizeSmall),
                   Expanded(
                     child: Text(
-                      getTranslated('search_hint', context) ?? 'Search for products...',
+                      getTranslated('search_hint', context) ??
+                          'Search for products...',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: textRegular.copyWith(color: Theme.of(context).hintColor, fontSize: Dimensions.fontSizeDefault),
+                      style: textRegular.copyWith(
+                          color: Theme.of(context).hintColor,
+                          fontSize: Dimensions.fontSizeDefault),
                     ),
                   ),
                 ]),
@@ -201,13 +268,21 @@ class _CategoryScreenState extends State<CategoryScreen> {
             onTap: () => RouterHelper.getSearchRoute(action: RouteAction.push),
             borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
             child: Container(
-              height: 48, width: 48,
+              height: 48,
+              width: 48,
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2))
+                ],
               ),
-              child: Icon(Icons.qr_code_scanner, color: Theme.of(context).textTheme.bodyLarge?.color, size: 20),
+              child: Icon(Icons.qr_code_scanner,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  size: 20),
             ),
           ),
         ],
@@ -215,18 +290,22 @@ class _CategoryScreenState extends State<CategoryScreen> {
     );
   }
 
-  Widget _buildCategoryStrip(BuildContext context, List<CategoryModel> categories) {
+  Widget _buildCategoryStrip(
+      BuildContext context, List<CategoryModel> categories) {
     return SizedBox(
       height: 104,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
+        padding:
+            const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
         itemCount: _specialCategoryTiles.length,
-        separatorBuilder: (_, __) => const SizedBox(width: Dimensions.paddingSizeSmall),
+        separatorBuilder: (_, __) =>
+            const SizedBox(width: Dimensions.paddingSizeSmall),
         itemBuilder: (context, index) {
           final tile = _specialCategoryTiles[index];
           final matchedId = _matchedCategoryId(tile, categories);
-          final isSelected = matchedId != null && matchedId == _selectedCategoryId;
+          final isSelected =
+              matchedId != null && matchedId == _selectedCategoryId;
           return _CategoryTile(
             title: tile.label,
             asset: tile.asset,
@@ -243,9 +322,11 @@ class _CategoryScreenState extends State<CategoryScreen> {
       height: 36,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
+        padding:
+            const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
         itemCount: _productTypes.length,
-        separatorBuilder: (_, __) => const SizedBox(width: Dimensions.paddingSizeSmall),
+        separatorBuilder: (_, __) =>
+            const SizedBox(width: Dimensions.paddingSizeSmall),
         itemBuilder: (context, index) {
           final type = _productTypes[index];
           final isSelected = type == _selectedProductType;
@@ -254,17 +335,26 @@ class _CategoryScreenState extends State<CategoryScreen> {
             onTap: () => setState(() => _selectedProductType = type),
             child: Container(
               alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: Dimensions.paddingSizeDefault),
               decoration: BoxDecoration(
-                color: isSelected ? BrandColors.burgundy : Theme.of(context).cardColor,
+                color: isSelected
+                    ? BrandColors.burgundy
+                    : Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(100),
-                border: isSelected ? null : Border.all(color: Theme.of(context).hintColor.withValues(alpha: 0.2)),
+                border: isSelected
+                    ? null
+                    : Border.all(
+                        color:
+                            Theme.of(context).hintColor.withValues(alpha: 0.2)),
               ),
               child: Text(
                 type.displayName(context),
                 style: textBold.copyWith(
                   fontSize: Dimensions.fontSizeSmall,
-                  color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color,
+                  color: isSelected
+                      ? Colors.white
+                      : Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ),
@@ -281,24 +371,32 @@ class _CartButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => RouterHelper.getDashboardRoute(action: RouteAction.pushNamedAndRemoveUntil, page: 'cart'),
+      onTap: () => RouterHelper.getDashboardRoute(
+          action: RouteAction.pushNamedAndRemoveUntil, page: 'cart'),
       borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
       child: Container(
-        height: 40, width: 40,
+        height: 40,
+        width: 40,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
           color: Theme.of(context).scaffoldBackgroundColor,
         ),
         child: Stack(clipBehavior: Clip.none, children: [
-          Center(child: Icon(Icons.shopping_cart_outlined, color: Theme.of(context).textTheme.bodyLarge?.color, size: 20)),
+          Center(
+              child: Icon(Icons.shopping_cart_outlined,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  size: 20)),
           Consumer<CartController>(
             builder: (context, cart, _) => cart.cartList.isNotEmpty
                 ? Positioned(
-                    right: -2, top: -2,
+                    right: -2,
+                    top: -2,
                     child: CircleAvatar(
                       radius: 8,
                       backgroundColor: BrandColors.burgundy,
-                      child: Text('${cart.cartList.length}', style: textBold.copyWith(color: Colors.white, fontSize: 9)),
+                      child: Text('${cart.cartList.length}',
+                          style: textBold.copyWith(
+                              color: Colors.white, fontSize: 9)),
                     ),
                   )
                 : const SizedBox.shrink(),
@@ -315,7 +413,11 @@ class _CategoryTile extends StatelessWidget {
   final bool isSelected;
   final VoidCallback? onTap;
 
-  const _CategoryTile({required this.title, required this.asset, required this.isSelected, required this.onTap});
+  const _CategoryTile(
+      {required this.title,
+      required this.asset,
+      required this.isSelected,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -324,23 +426,35 @@ class _CategoryTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 78,
-        padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
+        padding:
+            const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-          border: isSelected ? Border.all(color: BrandColors.burgundy, width: 1.4) : null,
-          boxShadow: isSelected ? null : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, 2))],
+          border: isSelected
+              ? Border.all(color: BrandColors.burgundy, width: 1.4)
+              : null,
+          boxShadow: isSelected
+              ? null
+              : [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2))
+                ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-              child: CustomAssetImageWidget(asset, height: 56, width: 56, fit: BoxFit.cover),
+              child: CustomAssetImageWidget(asset,
+                  height: 56, width: 56, fit: BoxFit.cover),
             ),
             const SizedBox(height: Dimensions.paddingSizeExtraSmall),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: Dimensions.paddingSizeExtraSmall),
               child: Text(
                 title,
                 maxLines: 2,
@@ -348,7 +462,9 @@ class _CategoryTile extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: textBold.copyWith(
                   fontSize: Dimensions.fontSizeExtraSmall,
-                  color: isSelected ? BrandColors.burgundy : Theme.of(context).textTheme.bodyLarge?.color,
+                  color: isSelected
+                      ? BrandColors.burgundy
+                      : Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
             ),
@@ -377,7 +493,8 @@ class _ProductTypeSliverGridState extends State<_ProductTypeSliverGrid> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ProductController>(context, listen: false).getProductsForTypeDebounced(widget.productType);
+      Provider.of<ProductController>(context, listen: false)
+          .getProductsForTypeDebounced(widget.productType);
     });
   }
 
@@ -386,7 +503,8 @@ class _ProductTypeSliverGridState extends State<_ProductTypeSliverGrid> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.productType != widget.productType) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Provider.of<ProductController>(context, listen: false).getProductsForTypeDebounced(widget.productType);
+        Provider.of<ProductController>(context, listen: false)
+            .getProductsForTypeDebounced(widget.productType);
       });
     }
   }
@@ -395,7 +513,8 @@ class _ProductTypeSliverGridState extends State<_ProductTypeSliverGrid> {
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
       child: Selector<ProductController, ProductModel?>(
-        selector: (_, controller) => controller.productModelForType(widget.productType),
+        selector: (_, controller) =>
+            controller.productModelForType(widget.productType),
         builder: (context, selectedProductModel, _) {
           final products = selectedProductModel?.products;
 
@@ -404,7 +523,9 @@ class _ProductTypeSliverGridState extends State<_ProductTypeSliverGrid> {
           }
 
           if (products.isEmpty) {
-            return NoInternetOrDataScreenWidget(isNoInternet: false, message: getTranslated('no_product_found', context) ?? '');
+            return NoInternetOrDataScreenWidget(
+                isNoInternet: false,
+                message: getTranslated('no_product_found', context) ?? '');
           }
 
           return Padding(
@@ -418,7 +539,9 @@ class _ProductTypeSliverGridState extends State<_ProductTypeSliverGrid> {
               itemCount: products.length,
               itemBuilder: (context, index) => Container(
                 margin: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                child: ProductCardWidget(key: ValueKey(products[index].id), product: products[index]),
+                child: ProductCardWidget(
+                    key: ValueKey(products[index].id),
+                    product: products[index]),
               ),
             ),
           );
@@ -438,7 +561,8 @@ class _CategorySliverGrid extends StatefulWidget {
   final int categoryId;
   final ScrollController scrollController;
 
-  const _CategorySliverGrid({super.key, required this.categoryId, required this.scrollController});
+  const _CategorySliverGrid(
+      {super.key, required this.categoryId, required this.scrollController});
 
   @override
   State<_CategorySliverGrid> createState() => _CategorySliverGridState();
@@ -449,7 +573,8 @@ class _CategorySliverGridState extends State<_CategorySliverGrid> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ProductController>(context, listen: false).getCategoryProductsDebounced(widget.categoryId);
+      Provider.of<ProductController>(context, listen: false)
+          .getCategoryProductsDebounced(widget.categoryId);
     });
   }
 
@@ -458,7 +583,8 @@ class _CategorySliverGridState extends State<_CategorySliverGrid> {
     return SliverToBoxAdapter(
       child: Consumer<ProductController>(
         builder: (context, productController, _) {
-          final model = productController.categoryProductsFor(widget.categoryId);
+          final model =
+              productController.categoryProductsFor(widget.categoryId);
           final bool isLoading = model == null;
           final products = model?.products ?? [];
 
@@ -467,14 +593,17 @@ class _CategorySliverGridState extends State<_CategorySliverGrid> {
           }
 
           if (products.isEmpty) {
-            return NoInternetOrDataScreenWidget(isNoInternet: false, message: getTranslated('no_products_found', context));
+            return NoInternetOrDataScreenWidget(
+                isNoInternet: false,
+                message: getTranslated('no_products_found', context));
           }
 
           return PaginatedListView(
             scrollController: widget.scrollController,
             totalSize: model.totalSize,
             offset: model.offset,
-            onPaginate: (offset) => productController.getCategoryProducts(widget.categoryId, offset ?? 1),
+            onPaginate: (offset) => productController.getCategoryProducts(
+                widget.categoryId, offset ?? 1),
             itemView: MasonryGridView.count(
               cacheExtent: 600,
               shrinkWrap: true,
@@ -498,8 +627,18 @@ class _ProductGridShimmer extends StatelessWidget {
   const _ProductGridShimmer();
 
   static const List<double> _imageHeights = [
-    150, 120, 160, 110, 140, 130,
-    125, 155, 115, 145, 135, 120,
+    150,
+    120,
+    160,
+    110,
+    140,
+    130,
+    125,
+    155,
+    115,
+    145,
+    135,
+    120,
   ];
 
   @override

@@ -53,10 +53,24 @@ class ProductDetailsController extends ChangeNotifier {
 
   Future<void> getProductDetails(BuildContext context, String productId, String slug) async {
     _isDetails = true;
+    // Clear the previous product's data before fetching a *different* one,
+    // so its content doesn't flash on screen while the new product loads —
+    // this controller is a single app-wide instance, so without this, the
+    // last-viewed product's data lingers until the new response arrives.
+    // If it's the same slug (e.g. a pull-to-refresh on the same product),
+    // keep the existing content visible while it refreshes.
+    if (_productDetailsModel?.slug != slug) {
+      _productDetailsModel = null;
+    }
+    // Notify immediately so the shimmer/loading state actually renders —
+    // previously this was only set before the first `await` with no
+    // notifyListeners() until the very end (by which point loading was
+    // already false again), so the UI never visibly reflected the loading
+    // transition at all.
+    notifyListeners();
     log("=====slug===>$slug/ $productId");
     ApiResponseModel apiResponse = await productDetailsServiceInterface.get(slug);
     if (apiResponse.response != null && apiResponse.response!.statusCode == 200) {
-      _isDetails = false;
       _productDetailsModel = ProductDetailsModel.fromJson(apiResponse.response!.data);
       if(_productDetailsModel != null){
         log("=====slug===>$slug/ $productId");
@@ -70,7 +84,6 @@ class ProductDetailsController extends ChangeNotifier {
 
       }
     } else {
-      _isDetails = false;
       showCustomSnackBarWidget(apiResponse.error.toString(), Get.context!, snackBarType: SnackBarType.error);
     }
     _isDetails = false;
