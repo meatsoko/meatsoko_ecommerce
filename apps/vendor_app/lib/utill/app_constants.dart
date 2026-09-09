@@ -10,7 +10,11 @@ class AppConstants {
   static const int imageQuality = 100;
 
 
-  static const String baseUrl = 'https://shop.meatsokogroup.com';
+  // TODO(dev-only, remove once the production Seller::reviews() registration
+  // bug is fixed): defaults to production; override per-run with
+  // `flutter run --dart-define=API_BASE_URL=http://<local-laravel-host>` to
+  // test the vendor-registration flow against a local backend instead.
+  static const String baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'https://shop.meatsokogroup.com');
 
   static const String loginUri = '/api/v3/seller/auth/login';
   static const String configUri = '/api/v1/config';
