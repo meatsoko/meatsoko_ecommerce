@@ -1,2 +1,9 @@
 __MACOSX/
 .DS_Store
+
+# Stray duplicate build-output copies of apps/user_app and apps/vendor_app
+# (accidentally committed wholesale in 91435eac "mvp preparation" - full
+# Flutter build/.dart_tool/.gradle trees, including 100MB+ native libs and
+# APKs that exceed GitHub's file-size limit and blocked pushing app_review).
+apps/User app/
+apps/Vendor app/
