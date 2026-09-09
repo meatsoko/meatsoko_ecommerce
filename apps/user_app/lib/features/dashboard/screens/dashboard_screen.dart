@@ -30,6 +30,7 @@ import 'package:user_app/features/wallet/controllers/wallet_controller.dart';
 import 'package:user_app/features/wishlist/controllers/wishlist_controller.dart';
 import 'package:user_app/helper/color_helper.dart';
 import 'package:user_app/helper/network_info.dart';
+import 'package:user_app/helper/route_healper.dart';
 import 'package:user_app/localization/language_constrants.dart';
 import 'package:user_app/features/splash/controllers/splash_controller.dart';
 import 'package:user_app/main.dart';
@@ -40,7 +41,7 @@ import 'package:user_app/utill/dimensions.dart';
 import 'package:user_app/utill/images.dart';
 import 'package:user_app/features/home/screens/aster_theme_home_screen.dart';
 import 'package:user_app/features/home/screens/fashion_theme_home_screen.dart';
-import 'package:user_app/features/order/screens/order_screen.dart';
+import 'package:user_app/features/more/screens/more_screen_view_new.dart';
 import 'package:provider/provider.dart';
 
 enum AppMode { main, auction }
@@ -126,15 +127,7 @@ class DashBoardScreenState extends State<DashBoardScreen> {
       homeScreen,
       const CategoryScreen(isBacButtonExist: false),
       const CartScreen(showBackButton: false, fromDashboard: true),
-      OrderScreen(
-        isBacButtonExist: false,
-        fromDashboard: true,
-        loginNotifier: _loginNotifier,
-        onLoginSuccess: () => setState(() {
-          _currentMode = AppMode.main;
-          _selectedIndex = 3;
-        }),
-      ),
+      const MoreScreenView(fromDashboard: true),
       const SizedBox.shrink(),
     ];
 
@@ -169,7 +162,18 @@ class DashBoardScreenState extends State<DashBoardScreen> {
       _currentMode = AppMode.auction;
       _selectedIndex = 2;
     } else if (widget.pageIndex != null && widget.pageIndex! < _mainScreens.length) {
-      _selectedIndex = widget.pageIndex!;
+      if (widget.pageIndex == 3 && !_checkIsLoggedIn()) {
+        // Profile tab requires sign-in — deep-linking here while logged out
+        // falls back to Home and redirects to sign-in instead of opening it.
+        _selectedIndex = 0;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            RouterHelper.getLoginRoute(action: RouteAction.push, fromPage: RouterHelper.dashboardScreen);
+          }
+        });
+      } else {
+        _selectedIndex = widget.pageIndex!;
+      }
     }
 
     NetworkInfo.checkConnectivity(context);
@@ -200,6 +204,13 @@ class DashBoardScreenState extends State<DashBoardScreen> {
 
   void _onItemTapped(int index) {
     refreshLoginStatus();
+
+    if (_currentMode == AppMode.main && index == 3 && !_checkIsLoggedIn()) {
+      // Profile tab requires sign-in — go straight to sign-in instead of
+      // switching to a tab the guest can't actually use.
+      RouterHelper.getLoginRoute(action: RouteAction.push, fromPage: RouterHelper.dashboardScreen);
+      return;
+    }
 
     setState(() {
       if (_currentMode == AppMode.main) {
@@ -523,8 +534,8 @@ class ElevatedCard extends StatelessWidget {
                         selectedIndex: selectedIndex,
                         onTap: onItemTapped),
                     NavItem(
-                        icon: Images.navOrderIcon,
-                        label: getTranslated('orders', context) ?? 'Orders',
+                        icon: Images.userSvg,
+                        label: getTranslated('profile', context) ?? 'Profile',
                         index: 3,
                         selectedIndex: selectedIndex,
                         onTap: onItemTapped),

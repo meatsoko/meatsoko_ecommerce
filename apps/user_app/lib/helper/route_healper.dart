@@ -1187,7 +1187,9 @@ class RouterHelper {
       GoRoute(path: dashboardScreen, builder: (context, state) {
         String? page =  state.uri.queryParameters['page'];
         return DashBoardScreen(
-          pageIndex: page == 'home' ? 0 : page == 'category' ? 1 : page == 'cart' ? 2 : page == 'orders' ? 3 : page == 'auction'  ? 4 : page == 'auction_my_bid' ? 6 : 0,
+          // Index 3 is now the Profile tab (was Orders) — 'orders' kept as an alias
+          // since order history is one tap away from Profile, so old deep links still land close.
+          pageIndex: page == 'home' ? 0 : page == 'category' ? 1 : page == 'cart' ? 2 : page == 'profile' ? 3 : page == 'orders' ? 3 : page == 'auction'  ? 4 : page == 'auction_my_bid' ? 6 : 0,
         );
       }),
       GoRoute(path: loginScreen, builder: (context, state) {

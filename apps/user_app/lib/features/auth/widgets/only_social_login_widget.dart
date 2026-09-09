@@ -63,7 +63,10 @@ class _OnlySocialLoginWidgetState extends State<OnlySocialLoginWidget> {
     final Size size = MediaQuery.of(context).size;
 
     final socialLogin = SocialMediaLoginOptions(
-      facebook: 1,
+      // Facebook login disabled: strings.xml/Info.plist still ship the placeholder
+      // App ID (YOUR_APP_ID). Was previously hardcoded to 1 regardless of server
+      // config — forced to 0 until real credentials are configured.
+      facebook: 0,
       google: 1,
       apple: 1
     );

@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:user_app/common/basewidget/custom_image_widget.dart';
 import 'package:user_app/common/basewidget/category_content_screen_shimmer.dart';
 import 'package:user_app/features/auth/controllers/auth_controller.dart';
 import 'package:user_app/features/category/controllers/category_controller.dart';
@@ -10,7 +9,10 @@ import 'package:user_app/features/home/widgets/redesign/home_category_content.da
 import 'package:user_app/features/home/widgets/redesign/banner_slider_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/featured_products_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/flash_deal_section.dart';
+import 'package:user_app/features/notification/controllers/notification_controller.dart';
+import 'package:user_app/features/notification/domain/models/notification_model.dart';
 import 'package:user_app/features/profile/controllers/profile_contrroller.dart';
+import 'package:user_app/features/splash/controllers/splash_controller.dart';
 import 'package:user_app/helper/route_healper.dart';
 import 'package:user_app/localization/language_constrants.dart';
 import 'package:user_app/utill/custom_themes.dart';
@@ -265,21 +267,69 @@ class _HomeExploreScreenState extends State<HomeExploreScreen>
                               ],
                             ),
                           ),
-                          GestureDetector(
-                            onTap: () => isLoggedIn
-                                ? RouterHelper.getMoreScreenRoute(
-                                    action: RouteAction.push)
-                                : RouterHelper.getLoginRoute(
+                          Consumer<NotificationController>(
+                            builder: (context, notificationController, _) {
+                              final bool isAuctionEnabled = Provider.of<
+                                      SplashController>(context, listen: false)
+                                  .configModel
+                                  ?.isAuctionFeatureEnabled ==
+                                  true;
+                              final int unreadCount = isLoggedIn
+                                  ? totalNewNotification(
+                                      notificationController.notificationModel,
+                                      notificationController
+                                          .auctionNotificationModel,
+                                      isAuctionEnabled: isAuctionEnabled,
+                                    )
+                                  : 0;
+                              return GestureDetector(
+                                onTap: () => RouterHelper.getNotificationRoute(
                                     action: RouteAction.push),
-                            child: ClipOval(
-                              child: CustomImageWidget(
-                                  image: profileController
-                                          .userInfoModel?.imageFullUrl?.path ??
-                                      '',
+                                child: Container(
                                   width: 40,
                                   height: 40,
-                                  placeholder: Images.guestProfile),
-                            ),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                  ),
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Image.asset(
+                                        Images.notification,
+                                        height: 22,
+                                        width: 22,
+                                        color: Colors.white,
+                                      ),
+                                      if (unreadCount > 0)
+                                        Positioned(
+                                          top: -2,
+                                          right: -2,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(
+                                                Dimensions.paddingSizeExtraSmall),
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .error,
+                                            ),
+                                            child: Text(
+                                              unreadCount > 9
+                                                  ? '9+'
+                                                  : unreadCount.toString(),
+                                              style: titilliumBold.copyWith(
+                                                  fontSize: 8,
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       );

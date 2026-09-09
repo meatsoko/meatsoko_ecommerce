@@ -22,7 +22,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class MoreScreenView extends StatefulWidget {
-  const MoreScreenView({super.key});
+  // When embedded as a persistent dashboard tab there's no pushed route to pop
+  // back to — back-button handling is owned by DashBoardScreen's own PopScope.
+  final bool fromDashboard;
+  const MoreScreenView({super.key, this.fromDashboard = false});
 
   @override
   State<MoreScreenView> createState() => _MoreScreenViewState();
@@ -124,7 +127,7 @@ class _MoreScreenViewState extends State<MoreScreenView> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) context.pop();
+        if (!didPop && !widget.fromDashboard) context.pop();
       },
       child: Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -138,14 +141,15 @@ class _MoreScreenViewState extends State<MoreScreenView> {
                 children: [
                   const SizedBox(height: Dimensions.paddingSizeLarge),
 
-                  IconButton(
-                    onPressed: () => context.pop(),
-                    icon: Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: Dimensions.iconSizeSmall,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                  if (!widget.fromDashboard)
+                    IconButton(
+                      onPressed: () => context.pop(),
+                      icon: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: Dimensions.iconSizeSmall,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
                     ),
-                  ),
 
                   Expanded(
                     child: Center(
@@ -161,11 +165,9 @@ class _MoreScreenViewState extends State<MoreScreenView> {
                             isSelected: _selectedRailIndex == index,
                             onTap: () {
                               if (index == 0 && !Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.moreScreen, onLoginSuccess: _onLoginSuccess),
+                                RouterHelper.getLoginRoute(
+                                  action: RouteAction.push,
+                                  fromPage: RouterHelper.moreScreen,
                                 );
                                 return;
                               }
@@ -216,11 +218,9 @@ class _MoreScreenViewState extends State<MoreScreenView> {
                           child: GestureDetector(
                             onTap: () {
                               if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.moreScreen, onLoginSuccess: _onLoginSuccess),
+                                RouterHelper.getLoginRoute(
+                                  action: RouteAction.push,
+                                  fromPage: RouterHelper.moreScreen,
                                 );
                               } else {
                                 context.push(RouterHelper.profileScreen1);

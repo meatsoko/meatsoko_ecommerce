@@ -41,9 +41,12 @@ class SocialLoginWidgetState extends State<SocialLoginWidget> {
     final socialLoginConfig = configModel?.customerLogin?.socialMediaLoginOptions;
     List<String> socialLoginList = [];
 
-    if(socialLoginConfig?.facebook == 1) {
-      socialLoginList.add("facebook");
-    }
+    // Facebook login disabled: strings.xml/Info.plist still ship the placeholder
+    // App ID (YOUR_APP_ID), so the button must not render until real credentials
+    // are configured. Forced off here regardless of server config.
+    // if(socialLoginConfig?.facebook == 1) {
+    //   socialLoginList.add("facebook");
+    // }
 
     if (socialLoginConfig?.google == 1) {
       socialLoginList.add("google");
@@ -65,7 +68,8 @@ class SocialLoginWidgetState extends State<SocialLoginWidget> {
                     image: Images.google,
                   ),
                 )),
-           if (socialLoginConfig?.facebook == 1)
+           // Facebook login disabled (placeholder App ID) — forced off, see note above.
+           if (false)
             Expanded(
               child: InkWell(
                 onTap: () => facebookLogin(context, widget.fromPage, widget.onLoginSuccess),
@@ -103,7 +107,8 @@ class SocialLoginWidgetState extends State<SocialLoginWidget> {
             ],
 
 
-            if(socialLoginConfig?.facebook == 1)...[
+            // Facebook login disabled (placeholder App ID) — forced off, see note above.
+            if(false)...[
 
               Expanded(child: InkWell(
                 onTap: () => facebookLogin(context, widget.fromPage, widget.onLoginSuccess),
@@ -142,7 +147,8 @@ class SocialLoginWidgetState extends State<SocialLoginWidget> {
             ),
             const SizedBox(width: Dimensions.paddingSizeLarge),
           ],
-          if (socialLoginConfig?.facebook == 1) ...[
+          // Facebook login disabled (placeholder App ID) — forced off, see note above.
+          if (false) ...[
             InkWell(
               onTap: () => facebookLogin(context, widget.fromPage, widget.onLoginSuccess),
               child: const SocialLoginButtonWidget(
