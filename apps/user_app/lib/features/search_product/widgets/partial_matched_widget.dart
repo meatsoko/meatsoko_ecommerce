@@ -15,7 +15,12 @@ import 'package:substring_highlight/substring_highlight.dart';
 class SearchSuggestion extends StatefulWidget{
   final bool fromCompare;
   final int? id;
-  const SearchSuggestion({super.key,  this.fromCompare = false, this.id});
+  // Matches the rounded, borderless, drop-shadowed pill used by the Home
+  // page's search bar (home_explore_screen.dart's _searchBar), instead of
+  // this widget's own default grey-outlined box — used on the Categories
+  // page so both pages' search bars look the same.
+  final bool filledStyle;
+  const SearchSuggestion({super.key,  this.fromCompare = false, this.id, this.filledStyle = false});
   @override
   State<SearchSuggestion> createState() => _SearchSuggestionState();
 }
@@ -25,8 +30,13 @@ class _SearchSuggestionState extends State<SearchSuggestion> {
   void initState() {
     super.initState();
 
+    // Delayed rather than immediate so the keyboard doesn't pop up mid the
+    // Hero-tag('search') transition into this screen.
     Future.delayed((const Duration(milliseconds: 500))).then((_) {
-       // FocusScope.of(Get.context!).requestFocus(Provider.of<SearchProductController>(Get.context!, listen: false).searchFocusNode);
+      if (!mounted) return;
+      FocusScope.of(context).requestFocus(
+          Provider.of<SearchProductController>(context, listen: false)
+              .searchFocusNode);
     });
   }
 
@@ -37,8 +47,8 @@ class _SearchSuggestionState extends State<SearchSuggestion> {
     return Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
       child: Consumer<SearchProductController>(
         builder: (context, searchProvider, _) {
-          return SizedBox(height: 56,
-            child: Padding(padding: const EdgeInsets.only(bottom: 8.0),
+          return SizedBox(height: widget.filledStyle ? 48 : 56,
+            child: Padding(padding: EdgeInsets.only(bottom: widget.filledStyle ? 0 : 8.0),
               child: Autocomplete(
 
                 optionsBuilder: (TextEditingValue textEditingValue) {
@@ -105,7 +115,14 @@ class _SearchSuggestionState extends State<SearchSuggestion> {
                   searchProvider.searchController = controller;
                   searchProvider.searchFocusNode = focusNode;
 
-                  return Hero(
+                  final OutlineInputBorder pillBorder = OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+                      borderSide: BorderSide.none);
+                  final OutlineInputBorder defaultBorder = OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
+                      borderSide: BorderSide(color: Colors.grey[300]!));
+
+                  final Widget field = Hero(
                     tag: 'search',
                     child: Material(child: TextFormField(
                         controller: controller,
@@ -128,17 +145,18 @@ class _SearchSuggestionState extends State<SearchSuggestion> {
                         style: textMedium.copyWith(fontSize: Dimensions.fontSizeLarge),
                         decoration: InputDecoration(
                           isDense: true,
+                          filled: widget.filledStyle,
+                          fillColor: widget.filledStyle ? Theme.of(context).cardColor : null,
+                          prefixIcon: widget.filledStyle
+                              ? Icon(Icons.search, color: Theme.of(context).hintColor, size: 22)
+                              : null,
                           contentPadding: const EdgeInsets.only(left: Dimensions.paddingSizeLarge),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                            borderSide: BorderSide(color: Colors.grey[300]!)),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                            borderSide: BorderSide(color: Colors.grey[300]!)),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                            borderSide: BorderSide(color: Colors.grey[300]!)),
-                          hintText: getTranslated('search_product', context),
+                          border: widget.filledStyle ? pillBorder : defaultBorder,
+                          focusedBorder: widget.filledStyle ? pillBorder : defaultBorder,
+                          enabledBorder: widget.filledStyle ? pillBorder : defaultBorder,
+                          hintText: widget.filledStyle
+                              ? (getTranslated('search_hint', context) ?? 'Search for products...')
+                              : getTranslated('search_product', context),
                           hintStyle: textRegular.copyWith(color: Theme.of(context).hintColor),
                          suffixIcon: SizedBox(width: controller.text.isNotEmpty? 70 : 50,
                            child: Row(children: [
@@ -175,6 +193,21 @@ class _SearchSuggestionState extends State<SearchSuggestion> {
                         ),
                       ),
                     ),
+                  );
+
+                  if (!widget.filledStyle) return field;
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2)),
+                      ],
+                    ),
+                    child: field,
                   );
                 },
               ),

@@ -544,22 +544,16 @@ class _MoreScreenViewState extends State<MoreScreenView> {
                                     label: page.title ?? '',
                                     onTap: () => RouterHelper.getHtmlViewRoute(page: page),
                                   )),
-                                if (_getPageBySlug('terms-and-conditions', splashController.defaultBusinessPages) != null)
-                                  MenuItem(
-                                    iconImage: Images.tremsConditionSvg,
-                                    label: getTranslated('terms_condition', context)!,
-                                    onTap: () => RouterHelper.getHtmlViewRoute(
-                                      page: _getPageBySlug('terms-and-conditions', splashController.defaultBusinessPages)!,
-                                    ),
-                                  ),
-                                if (_getPageBySlug('privacy-policy', splashController.defaultBusinessPages) != null)
-                                  MenuItem(
-                                    iconImage: Images.policySvg,
-                                    label: getTranslated('privacy_policy', context)!,
-                                    onTap: () => RouterHelper.getHtmlViewRoute(
-                                      page: _getPageBySlug('privacy-policy', splashController.defaultBusinessPages)!,
-                                    ),
-                                  ),
+                                MenuItem(
+                                  iconImage: Images.tremsConditionSvg,
+                                  label: getTranslated('terms_condition', context)!,
+                                  onTap: () => RouterHelper.getTermsAndConditionsRoute(),
+                                ),
+                                MenuItem(
+                                  iconImage: Images.policySvg,
+                                  label: getTranslated('privacy_policy', context)!,
+                                  onTap: () => RouterHelper.getPrivacyPolicyRoute(),
+                                ),
                                 if (_getPageBySlug('refund-policy', splashController.defaultBusinessPages) != null)
                                   MenuItem(
                                     iconImage: Images.policySvg,

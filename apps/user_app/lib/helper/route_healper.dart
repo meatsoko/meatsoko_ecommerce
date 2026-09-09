@@ -66,6 +66,8 @@ import 'package:user_app/features/search_product/screens/search_product_screen.d
 import 'package:user_app/features/setting/screens/settings_screen.dart';
 import 'package:user_app/features/notification/screens/notification_screen.dart';
 import 'package:user_app/features/more/screens/html_screen_view.dart';
+import 'package:user_app/features/more/screens/terms_and_conditions_screen.dart';
+import 'package:user_app/features/more/screens/privacy_policy_screen.dart';
 import 'package:user_app/features/order_details/screens/guest_track_order_screen.dart';
 import 'package:user_app/features/shop/domain/enums/vacation_duration_type.dart';
 import 'package:user_app/features/shop/screens/all_shop_screen.dart';
@@ -164,6 +166,8 @@ class RouterHelper {
   static const String notificationScreen = '/notification';
   static const String guestTrackOrderScreen = '/guest-track-order';
   static const String htmlViewScreen = '/html-view';
+  static const String termsAndConditionsScreen = '/terms-and-conditions';
+  static const String privacyPolicyScreen = '/privacy-policy';
   static const String supportTicketScreen = '/support-ticket';
   static const String faqScreen = '/faq';
   static const String orderScreen = '/order-screen';
@@ -717,15 +721,26 @@ class RouterHelper {
     return _navigateRoute('$htmlViewScreen$query', route: action);
   }
 
+  static String getTermsAndConditionsRoute({RouteAction? action}) {
+    return _navigateRoute(termsAndConditionsScreen, route: action);
+  }
+
+  static String getPrivacyPolicyRoute({RouteAction? action}) {
+    return _navigateRoute(privacyPolicyScreen, route: action);
+  }
+
   // categoryId/categoryName are carried on the route so a tap on a Home
   // "special category" tile can tell the Categories page which one to
   // highlight on open. Not yet consumed by CategoryScreen — that's a
   // separate, deliberately deferred change; this only makes sure Home sends
   // the data correctly.
-  static String getCategoryScreenRoute({RouteAction action = RouteAction.push, int? categoryId, String? categoryName}) {
-    final query = categoryId != null
-        ? '?categoryId=$categoryId${categoryName != null ? '&categoryName=${Uri.encodeComponent(categoryName)}' : ''}'
-        : '';
+  static String getCategoryScreenRoute({RouteAction action = RouteAction.push, int? categoryId, String? categoryName, bool focusSearch = false}) {
+    final params = <String, String>{
+      if (categoryId != null) 'categoryId': '$categoryId',
+      if (categoryId != null && categoryName != null) 'categoryName': Uri.encodeComponent(categoryName),
+      if (focusSearch) 'focusSearch': 'true',
+    };
+    final query = params.isNotEmpty ? '?${params.entries.map((e) => '${e.key}=${e.value}').join('&')}' : '';
     return _navigateRoute('$categoryScreen$query', route: action);
   }
 
@@ -1396,6 +1411,7 @@ class RouterHelper {
         return CategoryScreen(
           initialCategoryId: int.tryParse(qp['categoryId'] ?? ''),
           initialCategoryName: qp['categoryName'] != null ? Uri.decodeComponent(qp['categoryName']!) : null,
+          initialFocusSearch: qp['focusSearch'] == 'true',
         );
       }),
       GoRoute(
@@ -1612,6 +1628,16 @@ class RouterHelper {
 
           return HtmlViewScreen(page: page);
         },
+      ),
+
+      GoRoute(
+        path: termsAndConditionsScreen,
+        builder: (context, state) => const TermsAndConditionsScreen(),
+      ),
+
+      GoRoute(
+        path: privacyPolicyScreen,
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
 
       GoRoute(

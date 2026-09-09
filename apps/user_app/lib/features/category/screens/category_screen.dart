@@ -3,7 +3,6 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:user_app/common/basewidget/custom_app_bar_widget.dart';
-import 'package:user_app/common/basewidget/custom_asset_image_widget.dart';
 import 'package:user_app/common/basewidget/no_internet_screen_widget.dart';
 import 'package:user_app/common/basewidget/paginated_list_view_widget.dart';
 import 'package:user_app/common/basewidget/product_card_shimmer_widget.dart';
@@ -19,6 +18,10 @@ import 'package:user_app/features/home/widgets/redesign/top_stores_widget.dart';
 import 'package:user_app/features/product/controllers/product_controller.dart';
 import 'package:user_app/features/product/domain/models/product_model.dart';
 import 'package:user_app/features/product/enums/product_type.dart';
+import 'package:user_app/features/search_product/controllers/search_product_controller.dart';
+import 'package:user_app/features/search_product/widgets/partial_matched_widget.dart';
+import 'package:user_app/features/search_product/widgets/search_product_widget.dart';
+import 'package:user_app/common/basewidget/product_shimmer_widget.dart';
 import 'package:user_app/features/splash/controllers/splash_controller.dart';
 import 'package:user_app/helper/product_type_extension.dart';
 import 'package:user_app/helper/responsive_helper.dart';
@@ -74,12 +77,14 @@ class CategoryScreen extends StatefulWidget {
   final bool isBacButtonExist;
   final int? initialCategoryId;
   final String? initialCategoryName;
+  final bool initialFocusSearch;
 
   const CategoryScreen({
     super.key,
     this.isBacButtonExist = true,
     this.initialCategoryId,
     this.initialCategoryName,
+    this.initialFocusSearch = false,
   });
 
   @override
@@ -98,6 +103,22 @@ class _CategoryScreenState extends State<CategoryScreen> {
     _selectedCategoryId = widget.initialCategoryId;
     final splash = Provider.of<SplashController>(context, listen: false);
     _singleVendor = splash.configModel?.businessMode == 'single';
+    // Avoid showing a stale search result left over from a previous visit
+    // to this tab (SearchProductController is shared/global state).
+    Provider.of<SearchProductController>(context, listen: false)
+        .cleanSearchProduct();
+
+    if (widget.initialFocusSearch) {
+      // searchFocusNode is only assigned once SearchSuggestion's own
+      // fieldViewBuilder runs, so it isn't available yet here — wait for
+      // the first frame (by which point that widget has built).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        FocusScope.of(context).requestFocus(
+            Provider.of<SearchProductController>(context, listen: false)
+                .searchFocusNode);
+      });
+    }
   }
 
   @override
@@ -131,11 +152,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
       }
     }
     return null;
-  }
-
-  void _toggleTile(int matchedId) {
-    setState(() => _selectedCategoryId =
-        _selectedCategoryId == matchedId ? null : matchedId);
   }
 
   // Label of whichever special-category tile is currently selected, so the
@@ -176,43 +192,68 @@ class _CategoryScreenState extends State<CategoryScreen> {
               const SizedBox(width: Dimensions.paddingSizeSmall)
             ],
           ),
-          body: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              const SliverToBoxAdapter(
-                  child: SizedBox(height: Dimensions.paddingSizeSmall)),
-              SliverToBoxAdapter(
-                  child: _buildCategoryStrip(context, categories)),
-              const SliverToBoxAdapter(
-                  child: SizedBox(height: Dimensions.paddingSizeDefault)),
-              SliverToBoxAdapter(child: _buildSearchBar(context)),
-              const SliverToBoxAdapter(
-                  child: SizedBox(height: Dimensions.paddingSizeSmall)),
-              if (_selectedCategoryId != null)
-                _CategorySliverGrid(
-                    categoryId: _selectedCategoryId!,
-                    scrollController: _scrollController)
-              else ...[
-                // Filter chips lead right after the search bar now, with
-                // everything else (merchandising sections + the filtered
-                // grid they drive) following below.
-                SliverToBoxAdapter(child: _buildProductTypeFilterBar(context)),
-                const SliverToBoxAdapter(
-                    child: SizedBox(height: Dimensions.paddingSizeSmall)),
+          // Typing/suggestions happen right in the search bar below (no
+          // navigation); once a query is actually submitted, this swaps the
+          // whole body to show results in place instead of pushing the
+          // separate Search screen — "use the current tapped search bar"
+          // rather than switching to a different one.
+          body: Consumer<SearchProductController>(
+            builder: (context, searchProvider, _) {
+              final bool searching =
+                  searchProvider.isLoading || searchProvider.searchedProduct != null;
 
-                // Everything that used to live below Featured Products on
-                // Home, moved here — this is the default "browse everything"
-                // state (no special-category tile selected).
-                const SliverToBoxAdapter(child: ClearanceListWidget()),
-                // const SliverToBoxAdapter(child: TodaysDealSectionWidget()),
-                const SliverToBoxAdapter(child: NewUserExclusiveSection()),
-                if (!_singleVendor)
-                  const SliverToBoxAdapter(child: TopStoresWidget()),
-                const SliverToBoxAdapter(
-                    child: BannersSliderWidget(useFooterBanners: true)),
-                _ProductTypeSliverGrid(productType: _selectedProductType),
-              ],
-            ],
+              if (searching) {
+                return Column(children: [
+                  const SizedBox(height: Dimensions.paddingSizeSmall),
+                  _buildSearchBar(context),
+                  const SizedBox(height: Dimensions.paddingSizeSmall),
+                  Expanded(
+                    child: searchProvider.isLoading && searchProvider.searchedProduct == null
+                        ? ProductShimmer(isHomePage: false, isEnabled: searchProvider.searchedProduct == null)
+                        : ((searchProvider.searchedProduct?.products?.isNotEmpty ?? false) ||
+                                searchProvider.isSortingApplied ||
+                                searchProvider.isFilterApplied)
+                            ? const SearchProductWidget()
+                            : const NoInternetOrDataScreenWidget(isNoInternet: false),
+                  ),
+                ]);
+              }
+
+              return CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  const SliverToBoxAdapter(
+                      child: SizedBox(height: Dimensions.paddingSizeSmall)),
+                  SliverToBoxAdapter(child: _buildSearchBar(context)),
+                  const SliverToBoxAdapter(
+                      child: SizedBox(height: Dimensions.paddingSizeSmall)),
+                  if (_selectedCategoryId != null)
+                    _CategorySliverGrid(
+                        categoryId: _selectedCategoryId!,
+                        scrollController: _scrollController)
+                  else ...[
+                    // Filter chips lead right after the search bar now, with
+                    // everything else (merchandising sections + the filtered
+                    // grid they drive) following below.
+                    SliverToBoxAdapter(child: _buildProductTypeFilterBar(context)),
+                    const SliverToBoxAdapter(
+                        child: SizedBox(height: Dimensions.paddingSizeSmall)),
+
+                    // Everything that used to live below Featured Products on
+                    // Home, moved here — this is the default "browse everything"
+                    // state (no special-category tile selected).
+                    const SliverToBoxAdapter(child: ClearanceListWidget()),
+                    // const SliverToBoxAdapter(child: TodaysDealSectionWidget()),
+                    const SliverToBoxAdapter(child: NewUserExclusiveSection()),
+                    if (!_singleVendor)
+                      const SliverToBoxAdapter(child: TopStoresWidget()),
+                    const SliverToBoxAdapter(
+                        child: BannersSliderWidget(useFooterBanners: true)),
+                    _ProductTypeSliverGrid(productType: _selectedProductType),
+                  ],
+                ],
+              );
+            },
           ),
         );
       },
@@ -225,44 +266,9 @@ class _CategoryScreenState extends State<CategoryScreen> {
           const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
       child: Row(
         children: [
-          Expanded(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-              onTap: () =>
-                  RouterHelper.getSearchRoute(action: RouteAction.push),
-              child: Container(
-                height: 48,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: Dimensions.paddingSizeDefault),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2))
-                  ],
-                ),
-                child: Row(children: [
-                  Icon(Icons.search,
-                      color: Theme.of(context).hintColor, size: 22),
-                  const SizedBox(width: Dimensions.paddingSizeSmall),
-                  Expanded(
-                    child: Text(
-                      getTranslated('search_hint', context) ??
-                          'Search for products...',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textRegular.copyWith(
-                          color: Theme.of(context).hintColor,
-                          fontSize: Dimensions.fontSizeDefault),
-                    ),
-                  ),
-                ]),
-              ),
-            ),
-          ),
+          // Real, live search input in place — typing and suggestions happen
+          // right here rather than navigating to the separate Search screen.
+          const Expanded(child: SearchSuggestion(filledStyle: true)),
           const SizedBox(width: Dimensions.paddingSizeSmall),
           InkWell(
             onTap: () => RouterHelper.getSearchRoute(action: RouteAction.push),
@@ -280,39 +286,12 @@ class _CategoryScreenState extends State<CategoryScreen> {
                       offset: const Offset(0, 2))
                 ],
               ),
-              child: Icon(Icons.qr_code_scanner,
+              child: Icon(Icons.filter_list,
                   color: Theme.of(context).textTheme.bodyLarge?.color,
                   size: 20),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryStrip(
-      BuildContext context, List<CategoryModel> categories) {
-    return SizedBox(
-      height: 104,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding:
-            const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
-        itemCount: _specialCategoryTiles.length,
-        separatorBuilder: (_, __) =>
-            const SizedBox(width: Dimensions.paddingSizeSmall),
-        itemBuilder: (context, index) {
-          final tile = _specialCategoryTiles[index];
-          final matchedId = _matchedCategoryId(tile, categories);
-          final isSelected =
-              matchedId != null && matchedId == _selectedCategoryId;
-          return _CategoryTile(
-            title: tile.label,
-            asset: tile.asset,
-            isSelected: isSelected,
-            onTap: matchedId == null ? null : () => _toggleTile(matchedId),
-          );
-        },
       ),
     );
   }
@@ -371,8 +350,7 @@ class _CartButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => RouterHelper.getDashboardRoute(
-          action: RouteAction.pushNamedAndRemoveUntil, page: 'cart'),
+      onTap: () => RouterHelper.getCartScreenRoute(action: RouteAction.push),
       borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
       child: Container(
         height: 40,
@@ -402,74 +380,6 @@ class _CartButton extends StatelessWidget {
                 : const SizedBox.shrink(),
           ),
         ]),
-      ),
-    );
-  }
-}
-
-class _CategoryTile extends StatelessWidget {
-  final String title;
-  final String asset;
-  final bool isSelected;
-  final VoidCallback? onTap;
-
-  const _CategoryTile(
-      {required this.title,
-      required this.asset,
-      required this.isSelected,
-      required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-      onTap: onTap,
-      child: Container(
-        width: 78,
-        padding:
-            const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-          border: isSelected
-              ? Border.all(color: BrandColors.burgundy, width: 1.4)
-              : null,
-          boxShadow: isSelected
-              ? null
-              : [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2))
-                ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-              child: CustomAssetImageWidget(asset,
-                  height: 56, width: 56, fit: BoxFit.cover),
-            ),
-            const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: Dimensions.paddingSizeExtraSmall),
-              child: Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: textBold.copyWith(
-                  fontSize: Dimensions.fontSizeExtraSmall,
-                  color: isSelected
-                      ? BrandColors.burgundy
-                      : Theme.of(context).textTheme.bodyLarge?.color,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -51,9 +51,7 @@ class CheckoutConditionCheckBox extends StatelessWidget {
                         baseline: TextBaseline.alphabetic,
                         child: IntrinsicWidth(
                           child: InkWell(
-                            onTap: ()=> RouterHelper.getHtmlViewRoute(
-                              page: getPageBySlug('terms-and-conditions', splashController.defaultBusinessPages)!,
-                            ),
+                            onTap: ()=> RouterHelper.getTermsAndConditionsRoute(),
                             child: Text(getTranslated('terms_condition', context)!, style: textMedium.copyWith(
                               fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).primaryColor.withValues(alpha:0.8),
                               decoration: TextDecoration.underline, decorationColor: Theme.of(context).primaryColor,
@@ -62,15 +60,13 @@ class CheckoutConditionCheckBox extends StatelessWidget {
                         ),
                       ),
                       const TextSpan(text: ', '),
-                
+
                       WidgetSpan(
                         alignment: PlaceholderAlignment.baseline,
                         baseline: TextBaseline.alphabetic,
                         child: IntrinsicWidth(
                           child: InkWell(
-                            onTap: ()=> RouterHelper.getHtmlViewRoute(
-                              page: getPageBySlug('privacy-policy', splashController.defaultBusinessPages)!,
-                            ),
+                            onTap: ()=> RouterHelper.getPrivacyPolicyRoute(),
                             child: Text(getTranslated('privacy_policy', context)!, style: textMedium.copyWith(
                               fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).primaryColor.withValues(alpha:0.8),
                               decoration: TextDecoration.underline, decorationColor: Theme.of(context).primaryColor,
