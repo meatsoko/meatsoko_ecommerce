@@ -208,7 +208,10 @@ class AuthRepository implements AuthRepositoryInterface{
 
     request.fields.addAll(fields);
     if (kDebugMode) {
-      print('=====> ${request.url.path}\n${request.fields}');
+      const sensitiveFields = {'password', 'confirm_password'};
+      final redactedFields = request.fields.map((key, value) =>
+          MapEntry(key, sensitiveFields.contains(key) ? '***' : value));
+      print('=====> ${request.url.path}\n$redactedFields');
     }
 
     try {
