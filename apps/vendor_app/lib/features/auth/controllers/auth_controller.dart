@@ -283,34 +283,55 @@ class AuthController with ChangeNotifier {
   Future<ApiResponse> registration(BuildContext context,RegisterModel registerModel, XFile? tinCertificate) async {
     _isLoading = true;
     notifyListeners();
-    ApiResponse  response = await authServiceInterface.registration(_sellerProfileImage, _shopLogo, _shopBanner, secondaryBanner, registerModel, tinCertificate);
+    try {
+      ApiResponse response = await authServiceInterface.registration(_sellerProfileImage, _shopLogo, _shopBanner, secondaryBanner, registerModel, tinCertificate);
 
-    if(response.response?.statusCode == 200) {
+      if(response.response?.statusCode == 200) {
+        firstNameController.clear();
+        lastNameController.clear();
+        phoneController.clear();
+        emailController.clear();
+        passwordController.clear();
+        confirmPasswordController.clear();
+        shopNameController.clear();
+        shopAddressController.clear();
+        _sellerProfileImage = null;
+        _shopLogo = null;
+        _shopBanner = null;
+        secondaryBanner = null;
+        Provider.of<ShopController>(Get.context!, listen: false).clearShopModel();
+        showCustomSnackBarWidget(getTranslated("you_are_successfully_registered", Get.context!), Get.context!, isError: false, sanckBarType: SnackBarType.success);
+      } else {
+        log("---->log===> ${response.response?.statusCode}/${response.error}/${response.response?.statusMessage}/${response.response?.data}");
+        showCustomSnackBarWidget(_extractRegistrationErrorMessage(response) ?? "The email has already been taken", Get.context!, sanckBarType: SnackBarType.warning);
+      }
+      return response;
+    } finally {
       _isLoading = false;
-      firstNameController.clear();
-      lastNameController.clear();
-      phoneController.clear();
-      emailController.clear();
-      passwordController.clear();
-      confirmPasswordController.clear();
-      shopNameController.clear();
-      shopAddressController.clear();
-      _sellerProfileImage = null;
-      _shopLogo = null;
-      _shopBanner = null;
-      secondaryBanner = null;
-      Provider.of<ShopController>(Get.context!, listen: false).clearShopModel();
-      showCustomSnackBarWidget(getTranslated("you_are_successfully_registered", Get.context!), Get.context!, isError: false, sanckBarType: SnackBarType.success);
-    } else if (response.response?.data is String && jsonDecode(response.response?.data ?? '')["message"][0]["message"] != null) {
-      showCustomSnackBarWidget('${jsonDecode(response.response?.data ?? '')["message"][0]["message"]}', Get.context!, sanckBarType: SnackBarType.warning);
-    } else {
-      log("---->log===> ${response.response?.statusCode}/${response.error}/${response.response?.statusMessage}/${response.response?.data}");
-      _isLoading = false;
-      showCustomSnackBarWidget("The email has already been taken", Get.context!, sanckBarType: SnackBarType.warning);
+      notifyListeners();
     }
-    _isLoading = false;
-    notifyListeners();
-    return response;
+  }
+
+  String? _extractRegistrationErrorMessage(ApiResponse response) {
+    final data = response.response?.data;
+    if (data is! String) {
+      return null;
+    }
+    try {
+      final decoded = jsonDecode(data);
+      if (decoded is! Map) {
+        return null;
+      }
+      final message = decoded["message"];
+      if (message is List && message.isNotEmpty && message[0]["message"] != null) {
+        return '${message[0]["message"]}';
+      } else if (message is String && message.isNotEmpty) {
+        return message;
+      }
+    } catch (_) {
+      // Malformed/unexpected error body - fall back to the generic message.
+    }
+    return null;
   }
 
   void setCountryDialCode (String? setValue){

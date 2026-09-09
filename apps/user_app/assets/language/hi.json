@@ -1397,5 +1397,12 @@
   "trusted_by_sellers": "3,000+ विक्रेताओं का भरोसा",
   "get_it_now": "अभी प्राप्त करें!",
   "auction_addon_warning": "MeatSoko Auction, MeatSoko का एक ऐड-ऑन है। अपने लाइव सिस्टम में इसे अनलॉक करने के लिए ऐड-ऑन खरीदें।",
-  "auction_addon_bold": "ऐड-ऑन"
+  "auction_addon_bold": "ऐड-ऑन",
+  "menu": "मेनू",
+  "shopping": "शॉपिंग",
+  "orders_and_wallet": "ऑर्डर और वॉलेट",
+  "legal_and_policies": "कानूनी और नीतियां",
+  "id": "आईडी",
+  "payment": "भुगतान",
+  "my_profile": "मेरी प्रोफ़ाइल"
 }

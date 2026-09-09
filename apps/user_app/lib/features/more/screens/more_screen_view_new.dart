@@ -14,7 +14,7 @@ import 'package:user_app/features/wallet/controllers/wallet_controller.dart';
 import 'package:user_app/helper/price_converter.dart';
 import 'package:user_app/helper/route_healper.dart';
 import 'package:user_app/localization/language_constrants.dart';
-import 'package:user_app/theme/controllers/theme_controller.dart';
+import 'package:user_app/utill/brand_colors.dart';
 import 'package:user_app/utill/custom_themes.dart';
 import 'package:user_app/utill/dimensions.dart';
 import 'package:user_app/utill/images.dart';
@@ -32,24 +32,13 @@ class MoreScreenView extends StatefulWidget {
 }
 
 class _MoreScreenViewState extends State<MoreScreenView> {
-  int _selectedRailIndex = 0;
   bool _wasLoggedIn = false;
 
-  late final List<({IconData icon, Widget? badge, String route})> _railItems;
   late AuthController _authController;
 
   @override
   void initState() {
     super.initState();
-    _railItems = [
-      (icon: Icons.person_outline_rounded, badge: null, route: RouterHelper.profileScreen1),
-      (icon: Icons.location_on_outlined, badge: null, route: RouterHelper.addressScreen),
-      (icon: Icons.notifications_outlined, badge: _buildNotificationBadge(), route: RouterHelper.notificationScreen),
-      (icon: Icons.grid_view_rounded, badge: null, route: RouterHelper.categoryScreen),
-      (icon: Icons.chat_bubble_outline_rounded, badge: null, route: RouterHelper.inboxScreen),
-      (icon: Icons.headset_mic_outlined, badge: null, route: RouterHelper.contactUsScreen),
-      (icon: Icons.settings_outlined, badge: null, route: RouterHelper.settingsScreen),
-    ];
 
     _authController = Provider.of<AuthController>(context, listen: false);
     _wasLoggedIn = _authController.isLoggedIn();
@@ -131,139 +120,497 @@ class _MoreScreenViewState extends State<MoreScreenView> {
       },
       child: Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              color: Theme.of(context).hintColor.withValues(alpha: 0.10),
-              child: Column(
-                children: [
-                  const SizedBox(height: Dimensions.paddingSizeLarge),
-
-                  if (!widget.fromDashboard)
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      icon: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        size: Dimensions.iconSizeSmall,
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                      ),
-                    ),
-
-                  Expanded(
-                    child: Center(
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _railItems.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: Dimensions.paddingSizeSmall),
-                        itemBuilder: (context, index) {
-                          return RailItem(
-                            icon: _railItems[index].icon,
-                            badge: _railItems[index].badge,
-                            isSelected: _selectedRailIndex == index,
-                            onTap: () {
-                              if (index == 0 && !Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                                RouterHelper.getLoginRoute(
-                                  action: RouteAction.push,
-                                  fromPage: RouterHelper.moreScreen,
-                                );
-                                return;
-                              }
-                              setState(() => _selectedRailIndex = index);
-                              context.push(_railItems[index].route);
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeDefault),
-                    child: GestureDetector(
-                      onTap: () {
-                        if (!authController.isLoggedIn()) {
-                          RouterHelper.getLoginRoute(
-                            action: RouteAction.push,
-                            fromPage: RouterHelper.moreScreen,
-                          );
-                        } else {
-                          LogoutCustomBottomSheetWidget.show(context);
-                        }
-                      },
-                      child: Icon(
-                        Icons.logout_rounded,
-                        size: Dimensions.iconSizeDefault,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ),
-                  ),
-                ],
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        titleSpacing: widget.fromDashboard ? Dimensions.paddingSizeDefault : 0,
+        title: Text(
+          getTranslated('profile', context) ?? 'Profile',
+          style: titilliumBold.copyWith(
+            fontSize: Dimensions.fontSizeLarge,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
+        ),
+        leading: widget.fromDashboard
+            ? null
+            : IconButton(
+                onPressed: () => context.pop(),
+                icon: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: Dimensions.iconSizeSmall,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
               ),
-            ),
-
-            VerticalDivider(width: 1, thickness: 1, color: Theme.of(context).hintColor.withValues(alpha: .15)),
-
-            Expanded(
-              child: SingleChildScrollView(
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Consumer<ProfileController>(
-                      builder: (context, profileController, _) {
-                        final user = profileController.userInfoModel;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
-                          child: GestureDetector(
-                            onTap: () {
-                              if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                                RouterHelper.getLoginRoute(
-                                  action: RouteAction.push,
-                                  fromPage: RouterHelper.moreScreen,
-                                );
-                              } else {
-                                context.push(RouterHelper.profileScreen1);
-                              }
-                            },
-                            child: Row(
-                              children: [
-                                ClipOval(
-                                  child: CustomImageWidget(
-                                    image: user?.imageFullUrl?.path ?? '',
-                                    width: 36, height: 36,
-                                    placeholder: Images.guestProfile,
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Consumer<ProfileController>(
+                          builder: (context, profileController, _) {
+                            final user = profileController.userInfoModel;
+                            final fullName = '${user?.fName ?? ''} ${user?.lName ?? ''}'.trim();
+                            return GestureDetector(
+                              onTap: () {
+                                if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                                  RouterHelper.getLoginRoute(
+                                    action: RouteAction.push,
+                                    fromPage: RouterHelper.moreScreen,
+                                  );
+                                } else {
+                                  context.push(RouterHelper.profileScreen1);
+                                }
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.fromLTRB(
+                                  Dimensions.paddingSizeDefault,
+                                  Dimensions.paddingSizeDefault,
+                                  Dimensions.paddingSizeDefault,
+                                  Dimensions.paddingSizeOverLarge,
+                                ),
+                                decoration: const BoxDecoration(
+                                  color: BrandColors.burgundy,
+                                  borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(Dimensions.radiusLarge),
+                                    bottomRight: Radius.circular(Dimensions.radiusLarge),
                                   ),
                                 ),
-                                const SizedBox(width: Dimensions.paddingSizeSmall),
+                                child: Row(
+                                  children: [
+                                    ClipOval(
+                                      child: CustomImageWidget(
+                                        image: user?.imageFullUrl?.path ?? '',
+                                        width: 76, height: 76,
+                                        placeholder: Images.guestProfile,
+                                      ),
+                                    ),
+                                    const SizedBox(width: Dimensions.paddingSizeDefault),
+                                    Expanded(
+                                      child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            fullName.isEmpty ? (getTranslated('guest', context) ?? 'Guest') : fullName,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: titilliumBold.copyWith(
+                                              fontSize: Dimensions.fontSizeOverLarge,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          if (user?.phone != null && user!.phone!.isNotEmpty) ...[
+                                            const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                                            Text(
+                                              user.phone!,
+                                              style: titilliumRegular.copyWith(
+                                                fontSize: Dimensions.fontSizeSmall,
+                                                color: Colors.white.withValues(alpha: 0.85),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        // Address quick-action card disabled for now — re-enable by
+                        // uncommenting, and restore the taller spacer below it that
+                        // was sized to clear this card's height.
+                        // Positioned(
+                        //   left: Dimensions.paddingSizeDefault,
+                        //   right: Dimensions.paddingSizeDefault,
+                        //   bottom: -Dimensions.paddingSizeExtraLarge,
+                        //   child: Container(
+                        //     padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
+                        //     decoration: BoxDecoration(
+                        //       color: Theme.of(context).cardColor,
+                        //       borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+                        //       boxShadow: [
+                        //         BoxShadow(
+                        //           color: Theme.of(context).shadowColor.withValues(alpha: 0.08),
+                        //           blurRadius: 12,
+                        //           offset: const Offset(0, 4),
+                        //         ),
+                        //       ],
+                        //     ),
+                        //     child: Row(
+                        //       children: [
+                        //         Expanded(
+                        //           child: QuickActionItem(
+                        //             iconImage: Images.address,
+                        //             label: getTranslated('address', context) ?? 'Address',
+                        //             onTap: () => context.push(RouterHelper.addressScreen),
+                        //           ),
+                        //         ),
+                        //       ],
+                        //     ),
+                        //   ),
+                        // ),
+                      ],
+                    ),
+                    const SizedBox(height: Dimensions.paddingSizeOverLarge),
 
-                                Expanded(
-                                  child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('${user?.fName ?? ''} ${user?.lName ?? ''}',
-                                        style: titilliumBold.copyWith(
-                                          fontSize:
-                                          Dimensions.fontSizeDefault,
-                                          color: Theme.of(context).textTheme.bodyLarge?.color,
-                                        ),
-                                      ),
-                                      Text(
-                                        user?.phone ?? '',
-                                        style: titilliumRegular.copyWith(
-                                          fontSize: Dimensions.fontSizeSmall,
-                                          color: Theme.of(context).textTheme.bodySmall?.color,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).shadowColor.withValues(alpha: 0.06),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            MenuItem(
+                              iconImage: Images.userSvg,
+                              label: getTranslated('my_profile', context)!,
+                              onTap: () {
+                                if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                                  RouterHelper.getLoginRoute(action: RouteAction.push, fromPage: RouterHelper.moreScreen);
+                                } else {
+                                  context.push(RouterHelper.profileScreen1);
+                                }
+                              },
+                            ),
+                            const Divider(height: 1, indent: Dimensions.paddingSizeDefault, endIndent: Dimensions.paddingSizeDefault),
+                            MenuItem(
+                              iconImage: Images.notification,
+                              label: getTranslated('notification', context)!,
+                              trailing: _buildNotificationBadge(),
+                              onTap: () => context.push(RouterHelper.notificationScreen),
+                            ),
+                            const Divider(height: 1, indent: Dimensions.paddingSizeDefault, endIndent: Dimensions.paddingSizeDefault),
+                            MenuItem(
+                              iconImage: Images.settings,
+                              label: getTranslated('settings', context)!,
+                              onTap: () => context.push(RouterHelper.settingsScreen),
+                            ),
+                            const Divider(height: 1, indent: Dimensions.paddingSizeDefault, endIndent: Dimensions.paddingSizeDefault),
+                            MenuItem(
+                              iconImage: Images.walletIcon,
+                              label: getTranslated('payment', context) ?? 'Payment',
+                              trailing: Consumer2<AuthController, WalletController>(
+                                builder: (context, authController, walletController, _) {
+                                  if (!authController.isLoggedIn()) return const SizedBox.shrink();
+                                  final balance = walletController.walletTransactionModel?.totalWalletBalance ?? 0.0;
+                                  return TrailingBadge(
+                                    label: PriceConverter.convertPrice(context, balance),
+                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                                    textColor: Theme.of(context).colorScheme.primary,
+                                  );
+                                },
+                              ),
+                              onTap: () {
+                                if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                                  RouterHelper.getLoginRoute(action: RouteAction.push, fromPage: RouterHelper.moreScreen);
+                                } else {
+                                  RouterHelper.getWalletRoute(action: RouteAction.push);
+                                }
+                              },
+                            ),
+                            const Divider(height: 1, indent: Dimensions.paddingSizeDefault, endIndent: Dimensions.paddingSizeDefault),
+                            SettingsGroup(
+                              title: getTranslated('shopping', context) ?? 'Shopping',
+                              initiallyExpanded: false,
+                              children: [
+                                MenuItem(
+                                  iconImage: Images.cartSvg,
+                                  label: getTranslated('cart', context)!,
+                                  onTap: () => RouterHelper.getCartScreenRoute(action: RouteAction.push),
                                 ),
+                                MenuItem(
+                                  iconImage: Images.wishlistSvg,
+                                  label: getTranslated('wishlist', context)!,
+                                  onTap: () {
+                                    if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.auctionQueueListScreen),
+                                      );
+                                    } else {
+                                      RouterHelper.getWishListRoute(action: RouteAction.push);
+                                    }
+                                  },
+                                ),
+                                MenuItem(
+                                  iconImage: Images.offerSvg,
+                                  label: getTranslated('offers', context)!,
+                                  onTap: () => RouterHelper.getOfferProductListScreenRoute(action: RouteAction.push),
+                                ),
+                                MenuItem(
+                                  iconImage: Images.couponsIcon,
+                                  label: getTranslated('coupons', context)!,
+                                  onTap: () {
+                                    if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.moreScreen, onLoginSuccess: _onLoginSuccess),
+                                      );
+                                    } else {
+                                      RouterHelper.getCouponListScreenRoute();
+                                    }
+                                  },
+                                ),
+                                MenuItem(
+                                  iconImage: Images.compareIconSvg,
+                                  label: getTranslated('compare_products', context)!,
+                                  onTap: () {
+                                    if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.moreScreen, onLoginSuccess: _onLoginSuccess),
+                                      );
+                                    } else {
+                                      RouterHelper.getCompareProductScreenRoute();
+                                    }
+                                  },
+                                ),
+                                MenuItem(
+                                  iconImage: Images.navCategoryIcon,
+                                  label: getTranslated('category', context)!,
+                                  onTap: () => context.push(RouterHelper.categoryScreen),
+                                ),
+                                if (authController.isLoggedIn())
+                                  MenuItem(
+                                    iconImage: Images.restockRequestSvg,
+                                    label: getTranslated('restock_requests', context)!,
+                                    onTap: () => RouterHelper.getRestockListRoute(action: RouteAction.push),
+                                  ),
+                                if (splashController.configModel?.blogUrl?.isNotEmpty ?? false)
+                                  MenuItem(
+                                    iconImage: Images.blogSvg,
+                                    label: getTranslated('blog', context)!,
+                                    onTap: () => RouterHelper.getBlogScreenRoute(
+                                      action: RouteAction.push,
+                                      url: splashController.configModel?.blogUrl ?? '',
+                                    ),
+                                  ),
                               ],
                             ),
-                          ),
-                        );
-                      },
+                            const Divider(height: 1, indent: Dimensions.paddingSizeDefault, endIndent: Dimensions.paddingSizeDefault),
+                            SettingsGroup(
+                              title: getTranslated('orders_and_wallet', context) ?? 'Orders & Wallet',
+                              initiallyExpanded: false,
+                              children: [
+                                MenuItem(
+                                  iconImage: Images.navBidIcon,
+                                  label: getTranslated('order_history', context)!,
+                                  onTap: () {
+                                    if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.moreScreen, onLoginSuccess: _onLoginSuccess),
+                                      );
+                                    } else {
+                                      RouterHelper.getOrderScreenRoute(action: RouteAction.push);
+                                    }
+                                  },
+                                ),
+                                MenuItem(
+                                  iconImage: Images.newTrackOrderIcon,
+                                  label: getTranslated('track_order', context)!,
+                                  onTap: () => RouterHelper.getGuestTrackOrderRoute(action: RouteAction.push),
+                                ),
+                                MenuItem(
+                                  iconImage: Images.walletIcon,
+                                  label: getTranslated('wallet', context)!,
+                                  trailing: Consumer2<AuthController, WalletController>(
+                                    builder: (context, authController, walletController, _) {
+                                      if (!authController.isLoggedIn()) return const SizedBox.shrink();
+                                      final balance = walletController.walletTransactionModel?.totalWalletBalance ?? 0.0;
+                                      return TrailingBadge(
+                                        label: PriceConverter.convertPrice(context, balance),
+                                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                                        textColor: Theme.of(context).colorScheme.primary,
+                                      );
+                                    },
+                                  ),
+                                  onTap: () {
+                                    if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.auctionQueueListScreen),
+                                      );
+                                    } else {
+                                      RouterHelper.getWalletRoute(action: RouteAction.push);
+                                    }
+                                  },
+                                ),
+                                MenuItem(
+                                  iconImage: Images.loyaltyPointsIcon,
+                                  label: getTranslated('loyalty_points', context)!,
+                                  trailing: Consumer2<AuthController, ProfileController>(
+                                    builder: (context, authController, profileController, _) {
+                                      if (!authController.isLoggedIn()) return const SizedBox.shrink();
+                                      final points = profileController.userInfoModel?.loyaltyPoint ?? 0;
+                                      return TrailingBadge(
+                                        label: '$points ${getTranslated('points', context)!}',
+                                        color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.35),
+                                        textColor: Theme.of(context).colorScheme.tertiary,
+                                      );
+                                    },
+                                  ),
+                                  onTap: () {
+                                    if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.auctionQueueListScreen),
+                                      );
+                                    } else {
+                                      RouterHelper.getLoyaltyPointScreenRoute(action: RouteAction.push);
+                                    }
+                                  },
+                                ),
+                                if (splashController.configModel?.refEarningStatus == '1')
+                                  MenuItem(
+                                    iconImage: Images.referEarnIcon,
+                                    label: getTranslated('refer_and_earn', context)!,
+                                    onTap: () {
+                                      if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
+                                        showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          backgroundColor: Colors.transparent,
+                                          builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.moreScreen, onLoginSuccess: _onLoginSuccess),
+                                        );
+                                      } else {
+                                        RouterHelper.getReferAndEarnRoute(action: RouteAction.push);
+                                      }
+                                    },
+                                  ),
+                              ],
+                            ),
+                            const Divider(height: 1, indent: Dimensions.paddingSizeDefault, endIndent: Dimensions.paddingSizeDefault),
+                            SettingsGroup(
+                              title: getTranslated('help_and_support', context)!,
+                              initiallyExpanded: false,
+                              children: [
+                                MenuItem(
+                                  iconImage: Images.supportTicketSvg,
+                                  label: getTranslated('support_ticket', context)!,
+                                  onTap: () => RouterHelper.getSupportTicketRoute(action: RouteAction.push),
+                                ),
+                                MenuItem(
+                                  iconImage: Images.faqSvg,
+                                  label: getTranslated('faq', context)!,
+                                  onTap: () => RouterHelper.getFaqRoute(action: RouteAction.push),
+                                ),
+                                MenuItem(
+                                  iconImage: Images.messageImage,
+                                  label: getTranslated('inbox', context)!,
+                                  onTap: () => context.push(RouterHelper.inboxScreen),
+                                ),
+                                MenuItem(
+                                  iconImage: Images.contactUs,
+                                  label: getTranslated('contact_us', context)!,
+                                  onTap: () => context.push(RouterHelper.contactUsScreen),
+                                ),
+                                if (_getPageBySlug('about-us', splashController.defaultBusinessPages) != null)
+                                  MenuItem(
+                                    iconImage: Images.aboutUsSvg,
+                                    label: getTranslated('about_us', context)!,
+                                    onTap: () => RouterHelper.getHtmlViewRoute(
+                                      page: _getPageBySlug('about-us', splashController.defaultBusinessPages)!,
+                                    ),
+                                  ),
+                                if (splashController.businessPages != null && splashController.businessPages!.isNotEmpty)
+                                  ...splashController.businessPages!.map((page) => MenuItem(
+                                    iconImage: Images.loyaltyPointsIcon,
+                                    label: page.title ?? '',
+                                    onTap: () => RouterHelper.getHtmlViewRoute(page: page),
+                                  )),
+                                if (_getPageBySlug('terms-and-conditions', splashController.defaultBusinessPages) != null)
+                                  MenuItem(
+                                    iconImage: Images.tremsConditionSvg,
+                                    label: getTranslated('terms_condition', context)!,
+                                    onTap: () => RouterHelper.getHtmlViewRoute(
+                                      page: _getPageBySlug('terms-and-conditions', splashController.defaultBusinessPages)!,
+                                    ),
+                                  ),
+                                if (_getPageBySlug('privacy-policy', splashController.defaultBusinessPages) != null)
+                                  MenuItem(
+                                    iconImage: Images.policySvg,
+                                    label: getTranslated('privacy_policy', context)!,
+                                    onTap: () => RouterHelper.getHtmlViewRoute(
+                                      page: _getPageBySlug('privacy-policy', splashController.defaultBusinessPages)!,
+                                    ),
+                                  ),
+                                if (_getPageBySlug('refund-policy', splashController.defaultBusinessPages) != null)
+                                  MenuItem(
+                                    iconImage: Images.policySvg,
+                                    label: getTranslated('refund_policy', context)!,
+                                    onTap: () => RouterHelper.getHtmlViewRoute(
+                                      page: _getPageBySlug('refund-policy', splashController.defaultBusinessPages)!,
+                                    ),
+                                  ),
+                                if (_getPageBySlug('return-policy', splashController.defaultBusinessPages) != null)
+                                  MenuItem(
+                                    iconImage: Images.policySvg,
+                                    label: getTranslated('return_policy', context)!,
+                                    onTap: () => RouterHelper.getHtmlViewRoute(
+                                      page: _getPageBySlug('return-policy', splashController.defaultBusinessPages)!,
+                                    ),
+                                  ),
+                                if (_getPageBySlug('cancellation-policy', splashController.defaultBusinessPages) != null)
+                                  MenuItem(
+                                    iconImage: Images.policySvg,
+                                    label: getTranslated('cancellation_policy', context)!,
+                                    onTap: () => RouterHelper.getHtmlViewRoute(
+                                      page: _getPageBySlug('cancellation-policy', splashController.defaultBusinessPages)!,
+                                    ),
+                                  ),
+                                if (_getPageBySlug('shipping-policy', splashController.defaultBusinessPages) != null)
+                                  MenuItem(
+                                    iconImage: Images.policySvg,
+                                    label: getTranslated('shipping_policy', context)!,
+                                    onTap: () => RouterHelper.getHtmlViewRoute(
+                                      page: _getPageBySlug('shipping-policy', splashController.defaultBusinessPages)!,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const Divider(height: 1, indent: Dimensions.paddingSizeDefault, endIndent: Dimensions.paddingSizeDefault),
+                            MenuItem(
+                              iconImage: Images.logout,
+                              label: getTranslated('sign_out', context) ?? 'Sign Out',
+                              onTap: () {
+                                if (!_authController.isLoggedIn()) {
+                                  RouterHelper.getLoginRoute(action: RouteAction.push, fromPage: RouterHelper.moreScreen);
+                                } else {
+                                  LogoutCustomBottomSheetWidget.show(context);
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: Dimensions.paddingSizeSmall),
+                    const SizedBox(height: Dimensions.paddingSizeLarge),
 
                     if ((splashController.configModel?.isAuctionFeatureEnabled == true) ||
                         (Provider.of<ProfileController>(context, listen: false).userInfoModel?.showAuctionMenuForUser == true)) ...[
@@ -399,315 +746,9 @@ class _MoreScreenViewState extends State<MoreScreenView> {
                     const SizedBox(height: Dimensions.paddingSizeSmall),
                     ],
 
-                    SectionHeader(title: getTranslated('general', context)!),
-                    MenuItem(
-                      iconImage: Images.couponsIcon,
-                      label: getTranslated('coupons', context)!,
-                      onTap: () {
-                        if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.moreScreen, onLoginSuccess: _onLoginSuccess),
-                          );
-                        } else {
-                          RouterHelper.getCouponListScreenRoute();
-                        }
-                      },
-                    ),
-
-                      MenuItem(
-                        iconImage: Images.compareIconSvg,
-                        label: getTranslated('compare_products', context)!,
-                        onTap: () {
-                          if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.moreScreen, onLoginSuccess: _onLoginSuccess),
-                            );
-                          } else {
-                            RouterHelper.getCompareProductScreenRoute();
-                          }
-                        },
-                      ),
-
-                    if (splashController.configModel?.refEarningStatus == '1')
-                      MenuItem(
-                        iconImage: Images.referEarnIcon,
-                        label: getTranslated('refer_and_earn', context)!,
-                        onTap: () {
-                          if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.moreScreen, onLoginSuccess: _onLoginSuccess),
-                            );
-                          } else {
-                            RouterHelper.getReferAndEarnRoute(action: RouteAction.push);
-                          }
-                        },
-                      ),
-
-                    MenuItem(
-                      iconImage: Images.navBidIcon,
-                      label: getTranslated('order_history', context)!,
-                      onTap: () {
-                        if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.moreScreen, onLoginSuccess: _onLoginSuccess),
-                          );
-                        } else {
-                          RouterHelper.getOrderScreenRoute(action: RouteAction.push);
-                        }
-                      },
-                    ),
-                    MenuItem(
-                      iconImage: Images.newTrackOrderIcon,
-                      label: getTranslated('track_order', context)!,
-                      onTap: () => RouterHelper.getGuestTrackOrderRoute(action: RouteAction.push),
-                    ),
-
-                    MenuItem(
-                      iconImage: Images.walletIcon,
-                      label: getTranslated('wallet', context)!,
-                      trailing: Consumer2<AuthController, WalletController>(
-                        builder: (context, authController, walletController, _) {
-                          if (!authController.isLoggedIn()) return const SizedBox.shrink();
-                          final balance = walletController.walletTransactionModel?.totalWalletBalance ?? 0.0;
-                          return TrailingBadge(
-                            label: PriceConverter.convertPrice(context, balance), // PriceConverter.convertPrice(context, balance)
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-                            textColor: Theme.of(context).colorScheme.primary,
-                          );
-                        },
-                      ),
-                      onTap: () {
-                        if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.auctionQueueListScreen),
-                          );
-                        } else {
-                          RouterHelper.getWalletRoute(action: RouteAction.push);
-                        }
-                      },
-                    ),
-
-                    MenuItem(
-                      iconImage: Images.loyaltyPointsIcon,
-                      label: getTranslated('loyalty_points', context)!,
-                      trailing: Consumer2<AuthController, ProfileController>(
-                        builder: (context, authController, profileController, _) {
-                          if (!authController.isLoggedIn()) return const SizedBox.shrink();
-                          final points = profileController.userInfoModel?.loyaltyPoint ?? 0;
-                          return TrailingBadge(
-                            label: '$points ${getTranslated('points', context)!}',
-                            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.35),
-                            textColor: Theme.of(context).colorScheme.tertiary,
-                          );
-                        },
-                      ),
-                      onTap: () {
-                        if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.auctionQueueListScreen),
-                          );
-                        } else {
-                          RouterHelper.getLoyaltyPointScreenRoute(action: RouteAction.push);
-                        }
-                      },
-                    ),
-
-                    MenuItem(
-                      iconImage: Images.offerSvg,
-                      label: getTranslated('offers', context)!,
-                      onTap: () => RouterHelper.getOfferProductListScreenRoute(action: RouteAction.push),
-                    ),
-
-                    MenuItem(
-                      iconImage: Images.cartSvg,
-                      label: getTranslated('cart', context)!,
-                      onTap: () => RouterHelper.getCartScreenRoute(action: RouteAction.push),
-                    ),
-
-                    MenuItem(
-                      iconImage: Images.wishlistSvg,
-                      label: getTranslated('wishlist', context)!,
-                      onTap: () {
-                        if (!Provider.of<AuthController>(context, listen: false).isLoggedIn()) {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => NotLoggedInBottomSheetWidget(fromPage: RouterHelper.auctionQueueListScreen),
-                          );
-                        } else {
-                          RouterHelper.getWishListRoute(action: RouteAction.push);
-                        }
-                      },
-                    ),
-
-                    if (authController.isLoggedIn())
-                      MenuItem(
-                        iconImage: Images.restockRequestSvg,
-                        label: getTranslated('restock_requests', context)!,
-                        onTap: () => RouterHelper.getRestockListRoute(action: RouteAction.push),
-                      ),
-
-                    if (splashController.configModel?.blogUrl?.isNotEmpty ?? false)
-                      MenuItem(
-                        iconImage: Images.blogSvg,
-                        label: getTranslated('blog', context)!,
-                        onTap: () => RouterHelper.getBlogScreenRoute(
-                          action: RouteAction.push,
-                          url: splashController.configModel?.blogUrl ?? '',
-                        ),
-                      ),
-
-                    const SizedBox(height: Dimensions.paddingSizeSmall),
-                    SectionHeader(title: getTranslated('help_and_support', context)!),
-
-                    MenuItem(
-                      iconImage: Images.supportTicketSvg,
-                      label: getTranslated('support_ticket', context)!,
-                      onTap: () => RouterHelper.getSupportTicketRoute(action: RouteAction.push),
-                    ),
-
-                    if (splashController.defaultBusinessPages != null && splashController.defaultBusinessPages!.isNotEmpty) ...[
-                      if (_getPageBySlug('terms-and-conditions', splashController.defaultBusinessPages) != null)
-                        MenuItem(
-                          iconImage: Images.tremsConditionSvg,
-                          label: getTranslated('terms_condition', context)!,
-                          onTap: () => RouterHelper.getHtmlViewRoute(
-                            page: _getPageBySlug('terms-and-conditions', splashController.defaultBusinessPages)!,
-                          ),
-                        ),
-
-                      if (_getPageBySlug('privacy-policy', splashController.defaultBusinessPages) != null)
-                        MenuItem(
-                          iconImage: Images.policySvg,
-                          label: getTranslated('privacy_policy', context)!,
-                          onTap: () => RouterHelper.getHtmlViewRoute(
-                            page: _getPageBySlug('privacy-policy', splashController.defaultBusinessPages)!,
-                          ),
-                        ),
-
-                      if (_getPageBySlug('refund-policy', splashController.defaultBusinessPages) != null)
-                        MenuItem(
-                          iconImage: Images.policySvg,
-                          label: getTranslated('refund_policy', context)!,
-                          onTap: () => RouterHelper.getHtmlViewRoute(
-                            page: _getPageBySlug('refund-policy', splashController.defaultBusinessPages)!,
-                          ),
-                        ),
-
-                      if (_getPageBySlug('return-policy', splashController.defaultBusinessPages) != null)
-                        MenuItem(
-                          iconImage: Images.policySvg,
-                          label: getTranslated('return_policy', context)!,
-                          onTap: () => RouterHelper.getHtmlViewRoute(
-                            page: _getPageBySlug('return-policy', splashController.defaultBusinessPages)!,
-                          ),
-                        ),
-
-                      if (_getPageBySlug('cancellation-policy', splashController.defaultBusinessPages) != null)
-                        MenuItem(
-                          iconImage: Images.policySvg,
-                          label: getTranslated('cancellation_policy', context)!,
-                          onTap: () => RouterHelper.getHtmlViewRoute(
-                            page: _getPageBySlug('cancellation-policy', splashController.defaultBusinessPages)!,
-                          ),
-                        ),
-
-                      if (_getPageBySlug('shipping-policy', splashController.defaultBusinessPages) != null)
-                        MenuItem(
-                          iconImage: Images.policySvg,
-                          label: getTranslated('shipping_policy', context)!,
-                          onTap: () => RouterHelper.getHtmlViewRoute(
-                            page: _getPageBySlug('shipping-policy', splashController.defaultBusinessPages)!,
-                          ),
-                        ),
-                    ],
-
-                    MenuItem(
-                      iconImage: Images.faqSvg,
-                      label: getTranslated('faq', context)!,
-                      onTap: () => RouterHelper.getFaqRoute(action: RouteAction.push),
-                    ),
-
-                    if (_getPageBySlug('about-us', splashController.defaultBusinessPages) != null)
-                      MenuItem(
-                        iconImage: Images.aboutUsSvg,
-                        label: getTranslated('about_us', context)!,
-                        onTap: () => RouterHelper.getHtmlViewRoute(
-                          page: _getPageBySlug('about-us', splashController.defaultBusinessPages)!,
-                        ),
-                      ),
-
-                    if (splashController.businessPages != null && splashController.businessPages!.isNotEmpty)
-                      ...splashController.businessPages!.map((page) => MenuItem(
-                        iconImage: Images.loyaltyPointsIcon,
-                        label: page.title ?? '',
-                        onTap: () => RouterHelper.getHtmlViewRoute(page: page),
-                      )),
-
-                    const SizedBox(height: Dimensions.paddingSizeDefault),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Dimensions.paddingSizeDefault,
-                        vertical: Dimensions.paddingSizeSmall,
-                      ),
-                      child: Row(
-                        children: [
-                          Consumer<ThemeController>(
-                            builder: (context, themeController, _) => Row(
-                              children: [
-                                Icon(Icons.wb_sunny_outlined,
-                                    size: Dimensions.iconSizeSmall,
-                                    color: Theme.of(context).hintColor),
-                                Switch(
-                                  value: themeController.darkTheme,
-                                  onChanged: (_) => themeController.toggleTheme(),
-                                  activeThumbColor: Theme.of(context).colorScheme.primary,
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                Icon(Icons.nightlight_round, size: Dimensions.iconSizeSmall, color: Theme.of(context).hintColor),
-                              ],
-                            ),
-                          ),
-                          const Spacer(),
-                          Consumer<SplashController>(
-                            builder: (context, splashController, _) =>
-                                Text('${getTranslated('version', context)!} ${splashController.configModel?.softwareVersion ?? ''}',
-                                  style: titilliumRegular.copyWith(
-                                    fontSize: Dimensions.fontSizeSmall,
-                                    color: Theme.of(context).textTheme.bodySmall?.color,
-                                  ),
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-
                     const SizedBox(height: Dimensions.paddingSizeLarge),
                   ],
                 ),
-              ),
-            ),
-          ],
         ),
       ),
     ));
@@ -734,42 +775,37 @@ class RailBadge extends StatelessWidget {
 }
 
 
-class RailItem extends StatelessWidget {
-  final IconData icon;
-  final Widget? badge;
-  final bool isSelected;
-  final VoidCallback onTap;
+class SettingsGroup extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+  final bool initiallyExpanded;
 
-  const RailItem({
+  const SettingsGroup({
     super.key,
-    required this.icon,
-    this.badge,
-    this.isSelected = false,
-    required this.onTap,
+    required this.title,
+    required this.children,
+    this.initiallyExpanded = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(Dimensions.paddingSizeEight),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          shape: BoxShape.circle,
+    return Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        initiallyExpanded: initiallyExpanded,
+        tilePadding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+        childrenPadding: EdgeInsets.zero,
+        shape: const Border(),
+        collapsedShape: const Border(),
+        iconColor: Theme.of(context).colorScheme.primary,
+        collapsedIconColor: Theme.of(context).hintColor,
+        title: Text(title,
+          style: titilliumBold.copyWith(
+            fontSize: Dimensions.fontSizeSmall,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
         ),
-        child: Stack(clipBehavior: Clip.none,
-          children: [
-            Icon(
-              icon,
-              size: Dimensions.iconSizeDefault,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            if (badge != null)
-              Positioned(top: -8, right: -6, child: badge!),
-          ],
-        ),
+        children: children,
       ),
     );
   }
@@ -792,6 +828,52 @@ class SectionHeader extends StatelessWidget {
         style: titilliumRegular.copyWith(
           fontSize: Dimensions.fontSizeSmall,
           color: Theme.of(context).textTheme.bodySmall?.color,
+        ),
+      ),
+    );
+  }
+}
+
+class QuickActionItem extends StatelessWidget {
+  final String iconImage;
+  final String label;
+  final VoidCallback onTap;
+
+  const QuickActionItem({
+    super.key,
+    required this.iconImage,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CustomAssetImageWidget(
+              iconImage,
+              width: Dimensions.iconSizeLarge,
+              height: Dimensions.iconSizeLarge,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: titilliumRegular.copyWith(
+                fontSize: Dimensions.fontSizeSmall,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -860,6 +942,12 @@ class MenuItem extends StatelessWidget {
               )
             else if (trailing != null)
               trailing!,
+            const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: Dimensions.iconSizeDefault,
+              color: Theme.of(context).hintColor,
+            ),
           ],
         ),
       ),

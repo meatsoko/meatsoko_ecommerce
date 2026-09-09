@@ -25,6 +25,9 @@ class ApiErrorHandler {
             case DioExceptionType.receiveTimeout:
               errorDescription = "Receive timeout in connection with API server";
               break;
+            case DioExceptionType.transformTimeout:
+              errorDescription = "Receive timeout in connection with API server";
+              break;
             case DioExceptionType.badResponse:
               switch (error.response!.statusCode) {
               case 403:

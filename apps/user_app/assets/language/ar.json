@@ -1397,5 +1397,12 @@
   "trusted_by_sellers": "موثوق من أكثر من 3,000 بائع",
   "get_it_now": "احصل عليه الآن!",
   "auction_addon_warning": "MeatSoko Auction هو إضافة (Add-on) لـ MeatSoko، قم بشراء الإضافة لتفعيلها في نظامك المباشر.",
-  "auction_addon_bold": "إضافة"
+  "auction_addon_bold": "إضافة",
+  "menu": "القائمة",
+  "shopping": "التسوق",
+  "orders_and_wallet": "الطلبات والمحفظة",
+  "legal_and_policies": "القانونية والسياسات",
+  "id": "المعرف",
+  "payment": "الدفع",
+  "my_profile": "ملفي الشخصي"
 }

@@ -211,19 +211,18 @@ class AuthRepository implements AuthRepositoryInterface{
       print('=====> ${request.url.path}\n${request.fields}');
     }
 
-    http.StreamedResponse response = await request.send();
-    var res = await http.Response.fromStream(response);
-    if (kDebugMode) {
-      print('=====Response body is here==>${res.body}');
-    }
-
     try {
+      http.StreamedResponse response = await request.send().timeout(const Duration(seconds: 60));
+      var res = await http.Response.fromStream(response);
+      if (kDebugMode) {
+        print('=====Response body is here==>${res.body}');
+      }
+
       return ApiResponse.withSuccess(Response(statusCode: response.statusCode,
           requestOptions: RequestOptions(path: ''),
           statusMessage: response.reasonPhrase, data: res.body));
     } catch (e) {
       return ApiResponse.withError(ApiErrorHandler.getMessage(e));
-
     }
   }
 

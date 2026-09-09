@@ -1397,6 +1397,13 @@
   "trusted_by_sellers": "Trusted by 3,000+ Vendors",
   "get_it_now": "Get It Now!",
   "auction_addon_warning": "This is an Add-on for MeatSoko, get the add-on for your system.",
-  "auction_addon_bold": "Add-on"
+  "auction_addon_bold": "Add-on",
+  "menu": "Menu",
+  "shopping": "Shopping",
+  "orders_and_wallet": "Orders & Wallet",
+  "legal_and_policies": "Legal & Policies",
+  "id": "ID",
+  "payment": "Payment",
+  "my_profile": "My Profile"
 
 }

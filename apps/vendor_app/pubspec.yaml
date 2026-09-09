@@ -78,6 +78,7 @@ dependencies:
 
 dependency_overrides:
   syncfusion_flutter_core: ^33.2.8
+  html: 0.15.6
 
 
 dev_dependencies:

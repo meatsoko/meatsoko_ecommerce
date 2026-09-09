@@ -1397,5 +1397,12 @@
   "trusted_by_sellers": "Con la confianza de más de 3.000 vendedores",
   "get_it_now": "¡Consíguelo ahora!",
   "auction_addon_warning": "MeatSoko Auction es un complemento para MeatSoko. Compra el complemento para desbloquearlo en tu sistema en vivo.",
-  "auction_addon_bold": "Complemento"
+  "auction_addon_bold": "Complemento",
+  "menu": "Menú",
+  "shopping": "Compras",
+  "orders_and_wallet": "Pedidos y Billetera",
+  "legal_and_policies": "Legal y Políticas",
+  "id": "ID",
+  "payment": "Pago",
+  "my_profile": "Mi Perfil"
 }
