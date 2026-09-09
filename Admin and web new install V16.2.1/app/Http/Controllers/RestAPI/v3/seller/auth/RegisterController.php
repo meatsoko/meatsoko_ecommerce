@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
@@ -86,6 +87,16 @@ class RegisterController extends Controller
 
         } catch (\Exception $e) {
             DB::rollback();
+            // TODO(diagnostic, remove once root-caused): full trace for the
+            // intermittent "Shop apply fail!" seller-registration exceptions
+            // that aren't reproducible from local static tracing.
+            Log::error('Seller registration failed: ' . $e->getMessage(), [
+                'exception_class' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'message' => 'Shop apply fail!',
                 'error' => $e->getMessage(),

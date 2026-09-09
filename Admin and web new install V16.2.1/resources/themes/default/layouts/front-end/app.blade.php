@@ -72,6 +72,11 @@
 
     <link rel="stylesheet" href="{{theme_asset(path: 'public/assets/front-end/css/custom.css')}}">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Work+Sans:wght@400;600;700&display=swap">
+    <link rel="stylesheet" href="{{ theme_asset(path: 'public/assets/front-end/css/meatsoko-revamp.css') }}">
+
     {!! getSystemDynamicPartials(type: 'analytics_script') !!}
 
     @if(env('APP_MODE')=='demo')

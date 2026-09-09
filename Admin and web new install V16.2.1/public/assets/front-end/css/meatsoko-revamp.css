@@ -1,0 +1,971 @@
+/* ==========================================================================
+   MeatSoko revamp — visual skin layered on top of the existing theme.
+   Loaded last, so it wins the cascade without touching any markup/JS hooks.
+   Design tokens sourced from meatsoko-mockup/ (home.html etc).
+   ========================================================================== */
+
+:root {
+    --ms-ink: #14180f;
+    --ms-ink-soft: #202417;
+    --ms-stone: #edeee7;
+    --ms-stone-line: #dcded2;
+    --ms-paper: #fafaf6;
+    --ms-rust: #d61a1a;
+    --ms-rust-dark: #ad1414;
+    --ms-olive: #016b38;
+    --ms-olive-light: #1f8a54;
+    --ms-ochre: #b8842e;
+    --ms-cream: #f1f2ea;
+    --ms-ink-muted: #5f6357;
+    --ms-radius-card: 12px;
+    --ms-radius-btn: 8px;
+
+    /* Re-point the site-wide theme variables at the MeatSoko brand palette
+       so every existing --web-primary/--web-secondary consumer (buttons,
+       links, icons) picks up the new colors automatically. */
+    --base: var(--ms-olive);
+    --web-primary: var(--ms-olive);
+    --web-primary-rgb: 1, 107, 56;
+    --base-2: var(--ms-rust);
+    --web-secondary: var(--ms-rust);
+}
+
+body {
+    font-family: 'Work Sans', system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6,
+.categories-title, .arrival-title, .feature-product-title,
+.footer-cta-heading {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+}
+
+/* ---------- Header ---------- */
+.topbar {
+    background: var(--ms-ink) !important;
+    border-bottom: 1px solid rgba(241, 242, 234, 0.08);
+}
+
+.topbar .topbar-link,
+.topbar .topbar-text {
+    color: rgba(241, 242, 234, 0.75) !important;
+}
+
+.topbar .topbar-link:hover {
+    color: var(--ms-cream) !important;
+}
+
+.navbar-sticky.mobile-head {
+    background: var(--ms-ink) !important;
+}
+
+.navbar-sticky .navbar-brand img {
+    filter: brightness(0) invert(1);
+}
+
+.search-bar-input {
+    background: rgba(241, 242, 234, 0.09);
+    border: 1px solid rgba(241, 242, 234, 0.18);
+    border-radius: 999px 0 0 999px;
+    color: var(--ms-cream);
+}
+
+.search-bar-input::placeholder {
+    color: rgba(241, 242, 234, 0.5);
+}
+
+.search_button {
+    background-color: var(--ms-rust) !important;
+    border-radius: 0 999px 999px 0;
+}
+
+.navbar-toolbar .navbar-tool-icon-box {
+    background: transparent !important;
+    color: var(--ms-cream) !important;
+    border-radius: 999px;
+}
+
+.navbar-toolbar .navbar-tool-icon-box:hover {
+    background: rgba(241, 242, 234, 0.1) !important;
+}
+
+.navbar-tool .navbar-tool-label {
+    background-color: var(--ms-rust) !important;
+    color: var(--ms-cream) !important;
+}
+
+.navbar-tool-text {
+    color: var(--ms-cream) !important;
+}
+
+.navbar-stuck-menu {
+    background-color: var(--ms-ink-soft) !important;
+    border-top: 1px solid rgba(241, 242, 234, 0.08);
+}
+
+.navbar-stuck-menu .nav-link {
+    color: rgba(241, 242, 234, 0.82) !important;
+    font-weight: 600;
+}
+
+.navbar-stuck-menu .nav-link:hover,
+.navbar-stuck-menu .nav-item.active .nav-link {
+    color: var(--ms-cream) !important;
+}
+
+.navbar-stuck-menu .nav-item.active > .nav-link {
+    position: relative;
+}
+
+.navbar-stuck-menu .nav-item.active > .nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 2px;
+    background: var(--ms-rust);
+    border-radius: 2px;
+}
+
+.mega-nav .nav-item .nav-link {
+    color: rgba(241, 242, 234, 0.82) !important;
+}
+
+.navbar-stuck-menu .mega-nav {
+    background: transparent !important;
+}
+
+.category-menu-toggle-btn-text,
+.category-menu-toggle-btn svg path {
+    color: var(--ms-cream);
+}
+
+.megamenu-wrap {
+    background: var(--ms-paper);
+    border-top: 1px solid var(--ms-stone-line);
+}
+
+/* ---------- Buttons ---------- */
+.btn--primary,
+.btn-primary {
+    background-color: var(--ms-rust) !important;
+    border-color: var(--ms-rust) !important;
+    color: var(--ms-cream) !important;
+    border-radius: var(--ms-radius-btn);
+}
+
+.btn--primary:hover,
+.btn-primary:hover {
+    background-color: var(--ms-rust-dark) !important;
+    border-color: var(--ms-rust-dark) !important;
+}
+
+.web-text-primary,
+.text-primary {
+    color: var(--ms-olive) !important;
+}
+
+/* ---------- Section headers on the home page ---------- */
+.categories-title,
+.arrival-title,
+.feature-product-title,
+h2.text-black.font-bold {
+    color: var(--ms-ink);
+}
+
+.view-all-btn-text {
+    font-weight: 600;
+    color: var(--ms-rust) !important;
+}
+
+/* ---------- Hero / promo slider ---------- */
+.hero-slider {
+    border-radius: var(--ms-radius-card);
+    overflow: hidden;
+}
+
+.hero-slider .__slide-img {
+    border-radius: var(--ms-radius-card);
+}
+
+/* ---------- Category rail (category-section-home) ---------- */
+.categories-title .fw-bold {
+    letter-spacing: 0.01em;
+}
+
+.__cate-item .__img {
+    border-radius: 50%;
+    background: var(--ms-stone);
+    padding: 8px;
+}
+
+.__cate-item h3 {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    color: var(--ms-ink);
+}
+
+/* ---------- Product cards ---------- */
+.product-single-hover {
+    border-radius: var(--ms-radius-card);
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    overflow: hidden;
+}
+
+.product-single-hover .single-product-details h3 a {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    color: var(--ms-ink);
+}
+
+.product-single-hover .product-price .text-accent {
+    color: var(--ms-rust-dark) !important;
+    font-weight: 700;
+}
+
+.for-discount-value {
+    background: var(--ms-rust) !important;
+    color: var(--ms-cream) !important;
+}
+
+.flash_deal_product {
+    border-radius: var(--ms-radius-card);
+    border-color: var(--ms-stone-line) !important;
+}
+
+.flash-product-title {
+    font-family: 'Fraunces', serif;
+    color: var(--ms-ink);
+}
+
+.flash-product-price {
+    color: var(--ms-rust-dark) !important;
+}
+
+/* ---------- Company reliability strip -> trust cards ---------- */
+.shipping-method-system {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-card);
+    padding: 1.25rem 1rem;
+}
+
+.shopping-method-icon {
+    background: var(--ms-stone) !important;
+}
+
+/* ---------- Footer ---------- */
+.page-footer {
+    background: var(--ms-ink);
+    color: rgba(241, 242, 234, 0.65);
+}
+
+.page-footer .custom-light-primary-color-20 {
+    background: var(--ms-ink) !important;
+}
+
+.page-footer .footer-header {
+    color: var(--ms-cream);
+    font-family: 'Work Sans', sans-serif;
+    letter-spacing: 0.06em;
+}
+
+.page-footer .widget-list-link {
+    color: rgba(241, 242, 234, 0.65);
+}
+
+.page-footer .widget-list-link:hover {
+    color: var(--ms-cream);
+}
+
+.page-footer .subscribe-button {
+    background: var(--ms-rust);
+    color: var(--ms-cream);
+}
+
+.page-footer .social-btn {
+    background: rgba(241, 242, 234, 0.1) !important;
+}
+
+.page-footer .social-btn:hover {
+    background: var(--ms-rust) !important;
+}
+
+.page-footer .bg-white-overlay-50 {
+    background: var(--ms-ink-soft) !important;
+    border-top: 1px solid rgba(241, 242, 234, 0.08);
+}
+
+.footer-slide-item {
+    border-radius: var(--ms-radius-card);
+}
+
+/* ==========================================================================
+   Cross-page additions (breadcrumb, page head) — used by categories,
+   category listing, product, cart, checkout, etc.
+   ========================================================================== */
+.ms-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    font-size: 0.8rem;
+    color: var(--ms-ink-muted);
+    padding: 1rem 0;
+}
+
+.ms-breadcrumb a:hover {
+    color: var(--ms-olive);
+}
+
+.ms-breadcrumb .ms-sep {
+    opacity: 0.5;
+}
+
+.ms-breadcrumb .ms-current {
+    color: var(--ms-ink);
+    font-weight: 600;
+}
+
+.ms-page-head {
+    padding: 0.5rem 0 2.25rem;
+    border-bottom: 1px solid var(--ms-stone-line);
+    margin-bottom: 2.25rem;
+}
+
+.ms-page-head h1 {
+    font-size: clamp(1.9rem, 2.4vw + 1rem, 2.9rem);
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    color: var(--ms-ink);
+}
+
+.ms-page-head .ms-sub {
+    color: var(--ms-ink-muted);
+    margin-top: 0.5em;
+    max-width: 60ch;
+}
+
+/* ---------- Categories overview page: real-data card grid ---------- */
+.ms-cat-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 980px) {
+    .ms-cat-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 560px) {
+    .ms-cat-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.ms-cat-card {
+    position: relative;
+    display: block;
+    border-radius: var(--ms-radius-card);
+    overflow: hidden;
+    aspect-ratio: 3/3.6;
+    background: var(--ms-stone);
+    transition: transform 0.2s ease;
+}
+
+.ms-cat-card:hover {
+    transform: translateY(-3px);
+}
+
+.ms-cat-card img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ms-cat-card .ms-cat-label {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1rem 1rem 1rem;
+    background: linear-gradient(0deg, rgba(20, 24, 15, 0.86), rgba(20, 24, 15, 0));
+    color: var(--ms-cream);
+}
+
+.ms-cat-card .ms-cat-label .ms-name {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: clamp(1.15rem, 0.9vw + 0.9rem, 1.4rem);
+}
+
+/* ---------- Product listing page (filter sidebar + grid) ---------- */
+.cz-sidebar {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line) !important;
+    border-radius: var(--ms-radius-card) !important;
+}
+
+.shop-sidebar-scroll h5,
+.shop-sidebar-scroll h6 {
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ms-ink);
+}
+
+.menu--caret-accordion .for-hover-label {
+    font-size: 0.875rem;
+    color: var(--ms-ink);
+}
+
+.menu--caret-accordion .for-hover-label.text-primary {
+    color: var(--ms-olive) !important;
+    font-weight: 600;
+}
+
+#price_range_slider {
+    background: var(--ms-stone-line) !important;
+}
+
+#price_range_slider .slider-range {
+    background: var(--ms-olive) !important;
+}
+
+#price_range_slider .slider-thumb {
+    background: var(--ms-paper) !important;
+    border: 2.5px solid var(--ms-olive) !important;
+}
+
+.search-page-header {
+    border-bottom: 1px solid var(--ms-stone-line);
+    padding-bottom: 1rem;
+}
+
+.search-page-header h5 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    color: var(--ms-ink);
+}
+
+.sorting-item {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-btn);
+}
+
+.product-list-filter-input {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--ms-ink);
+}
+
+/* ---------- Product details page ---------- */
+.pd-img-wrap .swiper-container,
+.easyzoom img {
+    border-radius: var(--ms-radius-card) !important;
+}
+
+.discounted-unit-price {
+    color: var(--ms-rust-dark) !important;
+    font-family: 'Work Sans', sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+
+.quantity-box {
+    border-radius: var(--ms-radius-btn) !important;
+    border-color: var(--ms-stone-line) !important;
+}
+
+.product-action-add-wishlist .web-text-primary,
+.wishlist_icon_ {
+    color: var(--ms-rust) !important;
+}
+
+.chat_with_seller-buttons .btn {
+    border-radius: var(--ms-radius-btn);
+}
+
+/* ---------- Cart & order summary (shared with checkout) ---------- */
+.__card.cart_information,
+.cart_information {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line) !important;
+    border-radius: var(--ms-radius-card) !important;
+}
+
+.__cart-table thead {
+    background: var(--ms-stone) !important;
+}
+
+.qty .tio-add,
+.qty .tio-remove {
+    color: var(--ms-olive);
+}
+
+.free-delivery-progress .progress-bar {
+    background-color: var(--ms-olive) !important;
+}
+
+.__cart-total {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-card);
+    padding: 1.5rem;
+}
+
+.cart_title {
+    color: var(--ms-ink-muted);
+    font-size: 0.875rem;
+}
+
+.cart_value {
+    color: var(--ms-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Generic form controls (checkout, auth, account, contact/FAQ) ---------- */
+.form-control,
+.form-select {
+    border-radius: var(--ms-radius-btn);
+    border-color: var(--ms-stone-line);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--ms-olive);
+    box-shadow: 0 0 0 0.2rem rgba(1, 107, 56, 0.15);
+}
+
+.form-check-input:checked,
+.custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--ms-olive) !important;
+    border-color: var(--ms-olive) !important;
+}
+
+.card.__card,
+.card__card,
+.card {
+    border-radius: var(--ms-radius-card) !important;
+    border-color: var(--ms-stone-line) !important;
+}
+
+.__color-0f9d58 {
+    color: var(--ms-olive) !important;
+}
+
+/* ---------- Auth pages (login / register) — two-panel swap layout ---------- */
+.login-card {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-card);
+    padding: 2rem;
+}
+
+.login-card img[src*="user-vector"] {
+    filter: brightness(0) saturate(100%) invert(23%) sepia(45%) saturate(1200%) hue-rotate(110deg);
+}
+
+.ms-auth-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 560px;
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-card);
+    overflow: hidden;
+    background: var(--ms-paper);
+}
+
+@media (max-width: 860px) {
+    .ms-auth-layout {
+        grid-template-columns: 1fr;
+        min-height: 0;
+    }
+}
+
+.ms-auth-side {
+    background: var(--ms-ink);
+    color: var(--ms-cream);
+    padding: 3rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    order: 1;
+}
+
+.ms-auth-layout--register .ms-auth-side {
+    order: 2;
+}
+
+.ms-auth-side h2 {
+    color: var(--ms-cream);
+    font-size: clamp(1.6rem, 1.6vw + 1rem, 2.2rem);
+    margin-bottom: 0.5em;
+}
+
+.ms-auth-side p {
+    color: rgba(241, 242, 234, 0.68);
+    margin-bottom: 1.5rem;
+    max-width: 38ch;
+}
+
+.ms-auth-side ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ms-auth-side li {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    font-size: 0.875rem;
+    color: rgba(241, 242, 234, 0.85);
+}
+
+.ms-auth-side li svg {
+    width: 17px;
+    height: 17px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--ms-rust);
+}
+
+.ms-auth-form-wrap {
+    padding: 3rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    order: 2;
+}
+
+.ms-auth-layout--register .ms-auth-form-wrap {
+    order: 1;
+}
+
+.ms-auth-tabs {
+    display: flex;
+    gap: 2rem;
+    border-bottom: 1px solid var(--ms-stone-line);
+    margin-bottom: 2rem;
+}
+
+.ms-auth-tab {
+    background: none;
+    border: none;
+    padding: 0.2em 0 0.9em;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--ms-ink-muted);
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -1px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.ms-auth-tab:hover {
+    color: var(--ms-ink);
+    text-decoration: none;
+}
+
+.ms-auth-tab.active {
+    color: var(--ms-ink);
+    border-color: var(--ms-rust);
+}
+
+.ms-auth-panel {
+    position: relative;
+}
+
+.ms-auth-panel > .row:not(.or-sign-in-with-row) {
+    max-width: 460px;
+}
+
+/* ---------- Business pages / FAQ / contact ---------- */
+.btnF:hover span,
+.btnF:not(.collapsed) span {
+    color: var(--ms-olive);
+}
+
+.business-pages-banner-section h1 {
+    color: var(--ms-cream);
+}
+
+/* ---------- Account dashboard sidebar ---------- */
+.user-profile-aside {
+    border-radius: var(--ms-radius-card);
+}
+
+.aside-link.active-menu,
+.aside-link.active-menu i {
+    color: var(--ms-olive) !important;
+    font-weight: 600;
+}
+
+/* ---------- Checkout step indicator ---------- */
+.checkout-steps-custom {
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    padding: 1rem 0;
+}
+
+.checkout-steps-custom .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0.55;
+}
+
+.checkout-steps-custom .step.completed {
+    opacity: 1;
+}
+
+.checkout-steps-custom .step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ms-stone);
+    color: var(--ms-ink-muted);
+}
+
+.checkout-steps-custom .step.completed .step-circle {
+    background: var(--ms-olive);
+    color: var(--ms-cream);
+}
+
+/* ==========================================================================
+   New static sections added to the home page — no dynamic-data equivalent
+   existed before, styled to match the mockup's component classes.
+   ========================================================================== */
+.ms-wrap {
+    max-width: 1520px;
+    margin: 0 auto;
+    padding: 0 1.75rem;
+}
+
+@media (max-width: 640px) {
+    .ms-wrap {
+        padding: 0 1rem;
+    }
+}
+
+.ms-section {
+    padding: 3rem 0;
+}
+
+.ms-section.ms-on-ink {
+    background: var(--ms-ink);
+    color: var(--ms-cream);
+}
+
+.ms-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ms-rust);
+    margin-bottom: 0.75rem;
+}
+
+.ms-on-ink .ms-eyebrow {
+    color: #ef9c9c;
+}
+
+.ms-eyebrow::before {
+    content: '';
+    width: 18px;
+    height: 1.5px;
+    background: currentColor;
+}
+
+.ms-section-head {
+    margin-bottom: 2rem;
+}
+
+.ms-section-head.ms-section-head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.ms-section-head h2 {
+    font-size: clamp(1.9rem, 2.4vw + 1rem, 2.9rem);
+}
+
+.ms-on-ink .ms-section-head h2 {
+    color: var(--ms-cream);
+}
+
+.ms-section-head .ms-sub {
+    color: var(--ms-ink-muted);
+    margin-top: 0.4em;
+    max-width: 46ch;
+}
+
+.ms-view-all {
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    border-bottom: 1.5px solid currentColor;
+    padding-bottom: 2px;
+    flex-shrink: 0;
+    color: inherit;
+}
+
+.ms-trust-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 860px) {
+    .ms-trust-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .ms-trust-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ms-trust-card {
+    background: var(--ms-paper);
+    border: 1px solid var(--ms-stone-line);
+    border-radius: var(--ms-radius-card);
+    padding: 1.5rem;
+}
+
+.ms-trust-card h3 {
+    font-size: 1.15rem;
+    margin-bottom: 0.35em;
+    color: var(--ms-ink);
+}
+
+.ms-trust-card p {
+    font-size: 0.875rem;
+    color: var(--ms-ink-muted);
+    margin: 0;
+}
+
+.ms-why-grid,
+.ms-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2.25rem;
+}
+
+.ms-steps {
+    gap: 1.5rem;
+    counter-reset: step;
+}
+
+@media (max-width: 860px) {
+    .ms-why-grid,
+    .ms-steps {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .ms-why-grid,
+    .ms-steps {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ms-why-item .ms-num {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--ms-rust);
+    display: block;
+    margin-bottom: 0.6em;
+    letter-spacing: 0.02em;
+}
+
+.ms-why-item h3 {
+    font-size: clamp(1.4rem, 1.2vw + 1rem, 1.85rem);
+    margin-bottom: 0.4em;
+    color: var(--ms-cream);
+}
+
+.ms-why-item p {
+    color: rgba(241, 242, 234, 0.66);
+    font-size: 0.875rem;
+    max-width: 32ch;
+}
+
+.ms-step {
+    padding-top: 1.5rem;
+    border-top: 1.5px solid var(--ms-stone-line);
+}
+
+.ms-step .ms-step-no {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--ms-rust);
+    display: block;
+    margin-bottom: 0.5em;
+}
+
+.ms-step h3 {
+    font-size: clamp(1.15rem, 0.9vw + 0.9rem, 1.4rem);
+    margin-bottom: 0.3em;
+    color: var(--ms-ink);
+}
+
+.ms-step p {
+    color: var(--ms-ink-muted);
+    font-size: 0.875rem;
+}
+
+/* ---------- Footer: app download coming-soon badge ---------- */
+.ms-coming-soon-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    border: 1px solid rgba(241, 242, 234, 0.25);
+    border-radius: 999px;
+    padding: 0.55em 1.1em;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ms-cream);
+}
+
+.ms-coming-soon-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ms-rust);
+}

@@ -65,6 +65,28 @@
         @php($decimalPointSettings = !empty(getWebConfig(name: 'decimal_point_settings')) ? getWebConfig(name: 'decimal_point_settings') : 0)
 
         @include('web-views.partials._home-top-slider',['bannerTypeMainBanner'=>$bannerTypeMainBanner])
+
+        <section class="ms-section ms-trust-section">
+            <div class="ms-wrap ms-trust-grid">
+                <div class="ms-trust-card">
+                    <h3>Quality Assured</h3>
+                    <p>Clear product information and trusted, verified sellers.</p>
+                </div>
+                <div class="ms-trust-card">
+                    <h3>Fresh &amp; Carefully Handled</h3>
+                    <p>Appropriate handling and packaging for fresh products.</p>
+                </div>
+                <div class="ms-trust-card">
+                    <h3>Reliable Delivery</h3>
+                    <p>Clear delivery information and order tracking.</p>
+                </div>
+                <div class="ms-trust-card">
+                    <h3>Secure Payments</h3>
+                    <p>Safe and convenient payment options, including M-Pesa.</p>
+                </div>
+            </div>
+        </section>
+
         @if ($flashDeal['flashDeal'] && $flashDeal['flashDealProducts'] && count($flashDeal['flashDealProducts']) > 0)
             @include('web-views.partials._flash-deal', ['decimal_point_settings'=>$decimalPointSettings])
         @endif
@@ -131,7 +153,30 @@
             </div>
         @endif
 
-        @include('web-views.partials._category-section-home')
+        @if ($categories->count() > 0)
+            <section class="ms-section" id="shop-meat">
+                <div class="ms-wrap">
+                    <div class="ms-section-head ms-section-head-row">
+                        <div>
+                            <span class="ms-eyebrow">The consumer shopping path</span>
+                            <h2>{{ translate('categories') }}</h2>
+                            <p class="ms-sub">{{ translate('Find_your_favorite_categories') }}</p>
+                        </div>
+                        <a href="{{ route('categories') }}" class="ms-view-all">{{ translate('View_All') }} →</a>
+                    </div>
+                    <div class="ms-cat-grid">
+                        @foreach($categories as $key => $category)
+                            @if ($key < 6)
+                                <a href="{{ route('category-products', ['slug' => $category['slug']]) }}" class="ms-cat-card">
+                                    <img loading="lazy" src="{{ getStorageImages(path: $category->icon_full_url, type: 'category') }}" alt="{{ $category->name }}">
+                                    <div class="ms-cat-label"><div class="ms-name">{{ Str::limit($category->name, 20) }}</div></div>
+                                </a>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endif
 
          @if(getFeaturedDealsProductList() && (count(getFeaturedDealsProductList()) > 0))
             <section class="featured_deal pb-3">
@@ -280,11 +325,51 @@
             </section>
         @endif
 
-        @if ($homeCategories->count() > 0)
-            @foreach($homeCategories as $category)
-                @include('web-views.partials._category-wise-product', ['decimal_point_settings'=>$decimalPointSettings])
-            @endforeach
-        @endif
+        <section class="ms-section ms-on-ink">
+            <div class="ms-wrap">
+                <div class="ms-section-head">
+                    <span class="ms-eyebrow">The brand promise</span>
+                    <h2>Why shop with MeatSoko?</h2>
+                </div>
+                <div class="ms-why-grid">
+                    <div class="ms-why-item">
+                        <span class="ms-num">Quality</span>
+                        <h3>Know what you're buying.</h3>
+                        <p>Clear product details from verified sellers, not guesswork at the counter.</p>
+                    </div>
+                    <div class="ms-why-item">
+                        <span class="ms-num">Convenience</span>
+                        <h3>Order from wherever you are.</h3>
+                        <p>Browse, order and pay in minutes — no queues, no phone tag.</p>
+                    </div>
+                    <div class="ms-why-item">
+                        <span class="ms-num">Delivery</span>
+                        <h3>Track your order.</h3>
+                        <p>Know exactly where your order is and what to expect next.</p>
+                    </div>
+                    <div class="ms-why-item">
+                        <span class="ms-num">Choice</span>
+                        <h3>One marketplace, more than meat.</h3>
+                        <p>Meat, dairy, livestock and farm supplies — all in one place.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="ms-section">
+            <div class="ms-wrap">
+                <div class="ms-section-head">
+                    <span class="ms-eyebrow">Four steps</span>
+                    <h2>How It Works</h2>
+                </div>
+                <div class="ms-steps">
+                    <div class="ms-step"><span class="ms-step-no">01</span><h3>Choose</h3><p>Find the products you need across meat and farm categories.</p></div>
+                    <div class="ms-step"><span class="ms-step-no">02</span><h3>Order</h3><p>Add products to your cart and confirm your delivery details.</p></div>
+                    <div class="ms-step"><span class="ms-step-no">03</span><h3>Pay</h3><p>Complete your payment securely, including M-Pesa.</p></div>
+                    <div class="ms-step"><span class="ms-step-no">04</span><h3>Receive</h3><p>Get your order delivered and track it the whole way.</p></div>
+                </div>
+            </div>
+        </section>
 
         @php($companyReliability = getWebConfig(name: 'company_reliability'))
         @if($companyReliability != null)

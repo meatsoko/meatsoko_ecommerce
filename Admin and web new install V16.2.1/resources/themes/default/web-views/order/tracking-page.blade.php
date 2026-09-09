@@ -15,7 +15,14 @@
 @endpush
 
 @section('content')
-    <div class="container rtl pt-4 pb-5 text-align-direction tracking-page">
+    <div class="container rtl pt-2 text-align-direction">
+        <nav class="ms-breadcrumb" aria-label="Breadcrumb">
+            <a href="{{ route('home') }}">{{ translate('home') }}</a>
+            <span class="ms-sep">/</span>
+            <span class="ms-current">{{ translate('track_order') }}</span>
+        </nav>
+    </div>
+    <div class="container rtl pb-5 text-align-direction tracking-page">
         <div class="card border-0 box-shadow-lg">
             <div class="card-body py-5">
                 <div class="">

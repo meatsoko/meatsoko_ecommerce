@@ -9,9 +9,23 @@
 
 @section('content')
     <div class="container py-4 __inline-7 text-align-direction">
-        <div class="login-card">
-            <div class="mx-auto __max-w-760">
-                <h2 class="text-center h4 mb-4 font-bold text-capitalize fs-18-mobile">{{ translate('sign_up') }}</h2>
+        <div class="ms-auth-layout ms-auth-layout--register">
+            <div class="ms-auth-side">
+                <span class="ms-eyebrow">Why create an account</span>
+                <h2>Shop faster, next time.</h2>
+                <p>An account lets you check out quicker and keep track of your orders.</p>
+                <ul>
+                    <li><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/></svg>Save your delivery address for faster checkout</li>
+                    <li><svg viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2-7 4 14 2-7h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Track every order in one place</li>
+                    <li><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.7"/></svg>Secure M-Pesa payments tied to your number</li>
+                </ul>
+            </div>
+            <div class="ms-auth-form-wrap">
+                <div class="ms-auth-tabs">
+                    <a href="{{ route('customer.auth.login') }}" class="ms-auth-tab">{{ translate('Sign_In') }}</a>
+                    <span class="ms-auth-tab active">{{ translate('sign_up') }}</span>
+                </div>
+            <div class="ms-auth-panel mx-auto __max-w-760">
                 <form class="needs-validation_" id="customer-register-form" action="{{ route('customer.auth.sign-up') }}"
                     method="post">
                     @csrf
@@ -198,6 +212,7 @@
                     </div>
 
                 </form>
+            </div>
             </div>
         </div>
     </div>

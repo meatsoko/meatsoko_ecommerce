@@ -1,5 +1,31 @@
 # CLAUDE.md
 
+## Project overview
+
+Laravel-based web storefront + admin panel for **MeatSoko**, a Kenyan meat/livestock
+e-commerce marketplace, built on the licensed **6valley** multi-vendor commerce
+template (6amTech) — this is a customization of a purchased template, not built
+from scratch. Multi-vendor: customers, vendors (sellers), and admin all served from
+this one Laravel app, plus `nwidart/laravel-modules` add-ons (see Modules below).
+
+Two companion Flutter mobile apps (customer + vendor) exist and talk to this
+backend's API (`routes/rest_api/v{1,2,3}`), but as of 2026-08-30 they live in a
+**separate repo** (`github.com/meatsoko/mobile_app.git`, previously `User app/` and
+`Vendor app/` in this repo) so mobile and web/backend can be versioned and deployed
+independently. See that repo's own `CLAUDE.md` for mobile-specific context.
+
+**Branch status (check before assuming what's "current"):**
+- `app_review` (this branch) — MeatSoko brand reskin of the storefront (home page,
+  navbar, categories, login/register) plus various feature work. Currently the
+  active working branch for storefront/UX changes.
+- `main` — has diverged: includes M-Pesa gateway refactoring and some fixes not on
+  `app_review`, but **not** the storefront reskin.
+- `origin/upgrade/v16.5-features` — built on `main`, not `app_review`. Adds a V16.5
+  courier/delivery-partner add-on (9 providers), an AI shopping assistant +
+  personalized homepage, 6amERP integration, and an Equity Bank payment gateway.
+  **Not merged anywhere yet** — `app_review` and this branch will need reconciling
+  before both the reskin and the V16.5 features can ship together.
+
 ## Project Rules
 @.claude/rules/translate.md
 @.claude/rules/response-style.md

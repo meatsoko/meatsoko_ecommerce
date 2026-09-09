@@ -295,8 +295,14 @@
 
                     @php($categories = \App\Utils\CategoryManager::getCategoriesWithCountingAndPriorityWiseSorting(dataLimit: 11))
 
+                    <ul class="navbar-nav d-none d-md-block">
+                        <li class="nav-item dropdown {{request()->is('/')?'active':''}}">
+                            <a class="nav-link fw-semibold" href="{{route('home')}}">{{ translate('home')}}</a>
+                        </li>
+                    </ul>
+
                     <ul class="navbar-nav mega-nav pr-lg-2 pl-lg-2 mr-2 d-none d-md-block __mega-nav">
-                        <li class="nav-item {{!request()->is('/')?'dropdown':''}}">
+                        <li class="nav-item {{!request()->is('/')?'dropdown':''}} {{ request()->routeIs('categories', 'category-products') ? 'active' : '' }}">
 
                             <a class="nav-link fw-semibold dropdown-toggle category-menu-toggle-btn ps-0"
                                href="javascript:">
@@ -382,12 +388,8 @@
                     </ul>
 
                     <ul class="navbar-nav">
-                        <li class="nav-item dropdown d-none d-md-block {{request()->is('/')?'active':''}}">
-                            <a class="nav-link fw-semibold" href="{{route('home')}}">{{ translate('home')}}</a>
-                        </li>
-
                         @if(getWebConfig(name: 'product_brand'))
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown {{ request()->routeIs('brands', 'brand-products') ? 'active' : '' }}">
                                 <a class="nav-link fw-semibold dropdown-toggle" href="#"
                                    data-toggle="dropdown">{{ translate('brand') }}</a>
                                 <ul class="text-align-direction dropdown-menu __dropdown-menu-sizing dropdown-menu-{{Session::get('direction') === "rtl" ? 'right' : 'left'}} scroll-bar">
@@ -424,7 +426,7 @@
                         @if(
                             count(getFeaturedDealsProductList()) > 0 &&
                             !(($web_config['flash_deals'] || count($web_config['flash_deals_products']) > 0) || $web_config['discount_product'] > 0 || $web_config['clearance_sale_product_count'] > 0))
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown {{ request()->routeIs('featured-deal-products') ? 'active' : '' }}">
                                 <a class="nav-link fw-semibold text-capitalize"
                                    href="{{ route('featured-deal-products') }}">
                                     {{ translate('featured_Deal')}}
@@ -434,7 +436,7 @@
                             ($web_config['flash_deals'] && count($web_config['flash_deals_products']) > 0) &&
                             !(count(getFeaturedDealsProductList()) > 0 || $web_config['discount_product'] > 0 || $web_config['clearance_sale_product_count'] > 0)
                             )
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown {{ request()->routeIs('flash-deals') ? 'active' : '' }}">
                                 <a class="nav-link fw-semibold text-capitalize"
                                    href="{{ route('flash-deals', ['id' => $web_config['flash_deals']['id'] ?? 0]) }}">
                                     {{ translate('flash_deal')}}
@@ -444,7 +446,7 @@
                             ($web_config['discount_product'] > 0) &&
                             !(count(getFeaturedDealsProductList()) > 0 || ($web_config['flash_deals'] && count($web_config['flash_deals_products']) > 0) || $web_config['clearance_sale_product_count'] > 0)
                             )
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown {{ request()->routeIs('discounted-products') ? 'active' : '' }}">
                                 <a class="nav-link fw-semibold text-capitalize"
                                    href="{{ route('discounted-products') }}">
                                     {{ translate('discounted_products')}}
@@ -454,7 +456,7 @@
                             ($web_config['clearance_sale_product_count'] > 0) &&
                             !(count(getFeaturedDealsProductList()) > 0 || ($web_config['flash_deals'] || count($web_config['flash_deals_products']) > 0) || $web_config['discount_product'] > 0)
                             )
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown {{ request()->routeIs('clearance-sale-products') ? 'active' : '' }}">
                                 <a class="nav-link fw-semibold text-capitalize"
                                    href="{{ route('clearance-sale-products') }}">
                                     {{ translate('clearance_Sale')}}
@@ -509,7 +511,7 @@
 
                         @if ($web_config['digital_product_setting'] && count($web_config['publishing_houses_header']) == 1)
                             @php($firstPublisherID = is_array($web_config['publishing_houses_header']) && isset($web_config['publishing_houses_header']['id']) ? $web_config['publishing_houses_header']['id'] : $web_config['publishing_houses_header']?->first()?->id)
-                            <li class="nav-item dropdown {{request()->is('/')?'active':''}}">
+                            <li class="nav-item dropdown {{ request()->routeIs('products') && request('data_from') == 'publishing_house' ? 'active' : '' }}">
                                 <a class="nav-link fw-semibold" href="{{ route('products',['data_from' => 'publishing_house', 'publishing_house_id' => $firstPublisherID, 'product_type' => 'digital', 'page'=>1]) }}">
                                     {{ translate('Publication_House') }}
                                 </a>
@@ -553,7 +555,7 @@
 
                         @php($businessMode = getWebConfig(name: 'business_mode'))
                         @if ($businessMode == 'multi')
-                            <li class="nav-item dropdown {{request()->is('/')?'active':''}}">
+                            <li class="nav-item dropdown {{ request()->routeIs('vendors', 'vendor-shop', 'seller-profile') ? 'active' : '' }}">
                                 <a class="nav-link fw-semibold text-capitalize"
                                    href="{{route('vendors')}}">{{ translate('all_vendors')}}</a>
                             </li>

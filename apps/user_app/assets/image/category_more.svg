@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 142" role="img" aria-label="Four colored shapes">
+  <defs>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#10A8F5"/>
+      <stop offset="1" stop-color="#087BDE"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#12C86A"/>
+      <stop offset="1" stop-color="#00A855"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF7414"/>
+      <stop offset="1" stop-color="#FF4A00"/>
+    </linearGradient>
+    <radialGradient id="purple" cx="35%" cy="25%" r="75%">
+      <stop offset="0" stop-color="#8939E6"/>
+      <stop offset="1" stop-color="#6925C7"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="144" height="142" fill="white"/>
+
+  <rect x="36" y="36" width="42" height="43" rx="7"
+        fill="url(#blue)"/>
+  <rect x="82" y="36" width="43" height="43" rx="7"
+        fill="url(#green)"/>
+  <rect x="36" y="82" width="42" height="43" rx="7"
+        fill="url(#orange)"/>
+  <circle cx="103.5" cy="103.5" r="22"
+          fill="url(#purple)"/>
+</svg>

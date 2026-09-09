@@ -1,0 +1,3 @@
+import 'package:vendor_app/interface/repository_interface.dart';
+
+abstract class BusinessRepositoryInterface implements RepositoryInterface{}

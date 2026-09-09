@@ -2453,4 +2453,7 @@ ____________________________________________________on_search_engines_and_see_th
 	"register_as_an_affiliate" => "Register as an affiliate",
 	"withdraw_request_has_been_approved_automatically" => "Withdraw request has been approved automatically",
 	"insufficient_balance_or_invalid_amount" => "Insufficient balance or invalid amount",
+	"Sorry_no_data_found_related_to_your_search" => "Sorry no data found related to your search",
+	"Latest_Products" => "Latest Products",
+	"Already_have_account_" => "Already have account ",
 ];
