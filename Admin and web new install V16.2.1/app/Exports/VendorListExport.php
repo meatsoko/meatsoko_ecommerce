@@ -80,11 +80,12 @@ class VendorListExport implements FromView, ShouldAutoSize, WithStyles, WithColu
          */ function ($item, $index) use ($workSheet) {
 
             $tempImagePath = null;
-            $filePath = 'shop/' . $item?->shop->image_full_url['key'];
+            $imageFullUrl = $item?->shop?->image_full_url;
+            $filePath = 'shop/' . ($imageFullUrl['key'] ?? '');
             $fileCheck = fileCheck(disk: 'public', path: $filePath);
-            if ($item?->shop->image_full_url['path'] && !$fileCheck) {
-                $tempImagePath = getTemporaryImageForExport($item?->shop->image_full_url['path']);
-                $imagePath = getImageForExport($item?->shop->image_full_url['path']);
+            if (!empty($imageFullUrl['path']) && !$fileCheck) {
+                $tempImagePath = getTemporaryImageForExport($imageFullUrl['path']);
+                $imagePath = getImageForExport($imageFullUrl['path']);
                 $drawing = new MemoryDrawing();
                 $drawing->setImageResource($imagePath);
             } else {

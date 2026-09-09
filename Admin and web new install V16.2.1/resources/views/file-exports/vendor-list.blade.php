@@ -37,7 +37,7 @@
                 <tr>
                     <td> {{++$key}}	</td>
                     <td style="height: 70px"></td>
-                    <td> {{ucwords($item?->shop->name)}}</td>
+                    <td> {{ucwords($item?->shop?->name ?? '')}}</td>
                     <td> {{ucwords($item->f_name.' '.$item->l_name)}}</td>
                     <td> {{$item?->phone ?? translate('not_found')}}</td>
                     <td> {{ucwords($item->email)}}</td>
