@@ -35,7 +35,7 @@
         android:label="MeatSoko"
         android:name="${applicationName}"
         android:requestLegacyExternalStorage="true"
-        android:usesCleartextTraffic="true"
+        android:usesCleartextTraffic="false"
         android:extractNativeLibs="true"
         android:networkSecurityConfig="@xml/network_security_config"
         android:icon="@mipmap/ic_launcher"
@@ -82,7 +82,7 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
 
                 <data android:scheme="https"/>
-                <data android:scheme="http"/>
+                <!-- <data android:scheme="http"/> -->
                 <data android:host="shop.meatsokogroup.com"/>
 
                 <data android:pathPattern="/" />
