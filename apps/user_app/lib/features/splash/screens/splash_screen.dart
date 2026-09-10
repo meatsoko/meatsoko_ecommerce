@@ -309,20 +309,33 @@ class SplashWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Light (cream) rather than burgundy so the logo wordmark can keep its
+    // original brown/red. On burgundy those inks measured 1.5:1 and 2.0:1
+    // contrast; on cream they are 15.5:1 and 4.4:1.
     return ColoredBox(
-      color: BrandColors.burgundy,
+      color: BrandColors.cream,
       child: Column(mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
         Row(children: []),
+        // Brand mark, no badge needed now the background is light.
         BouncyWidget(
           duration: const Duration(milliseconds: 2000), lift: 50, ratio: 0.5, pause: 0.25,
-          child: SizedBox(width: 260, child: Image.asset(Images.logoWithNameImageWhite))
+          child: SizedBox(width: 190, child: Image.asset(Images.splashLogo))
+        ),
+        // Supplied transparent-background wordmark, used in its original
+        // brown/red exactly as designed — no recolouring or keying.
+        Padding(
+          padding: const EdgeInsets.only(top: Dimensions.paddingSizeDefault),
+          child: SizedBox(width: 215, child: Image.asset(Images.splashWordmark)),
         ),
         Padding(
           padding: const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
-          child: Text(AppConstants.slogan,style: textRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Colors.white))
+          child: Text(AppConstants.slogan,
+            style: textRegular.copyWith(
+              fontSize: Dimensions.fontSizeDefault,
+              color: BrandColors.burgundy.withValues(alpha: 0.75)))
         )
       ]),
     );

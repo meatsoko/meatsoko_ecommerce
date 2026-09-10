@@ -4,7 +4,7 @@ import 'package:user_app/common/enums/local_caches_type_enum.dart';
 
   class AppConstants {
   static const String appName = 'MeatSoko';
-  static const String slogan = 'E-Commerce Marketplace';
+  static const String slogan = 'Fresh Meat, Delivered';
   static const String appVersion = '1.0.0'; ///Flutter SDK 3.44.2
   static const bool demo = false;
 

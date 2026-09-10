@@ -98,9 +98,25 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.33.0
   build_runner: ^2.15.0
+  icons_launcher: ^3.0.0
 
   flutter_test:
     sdk: flutter
+
+# Launcher icon regeneration. The committed mipmap assets were generated from
+# these sources; re-run `dart run icons_launcher:create` after changing them.
+#   ic_launcher.png            = mark on white (legacy densities + store listing)
+#   ic_launcher_foreground.png = transparent mark, sized for the adaptive safe zone
+icons_launcher:
+  image_path: "assets/images/ic_launcher.png"
+  platforms:
+    android:
+      enable: true
+      adaptive_background_color: "#FFFFFF"
+      adaptive_foreground_image: "assets/images/ic_launcher_foreground.png"
+      adaptive_monochrome_image: "assets/images/ic_launcher_foreground.png"
+    ios:
+      enable: true
 
 
 

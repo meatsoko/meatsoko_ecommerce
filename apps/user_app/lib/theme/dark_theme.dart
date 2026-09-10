@@ -11,6 +11,10 @@ ThemeData dark = ThemeData(
   hintColor: const Color(0xFFc7c7c7),
   cardColor: const Color(0xFF242424),
   scaffoldBackgroundColor: const Color(0xFF000000),
+  // Bare `Material()` widgets (several wrap search fields and the home
+  // category tabs) fall back to canvasColor. Left unset it resolves to a
+  // light default, which rendered as white panels in dark mode.
+  canvasColor: const Color(0xFF121212),
   splashColor: Colors.transparent,
 
 

@@ -8,7 +8,8 @@ import 'package:user_app/features/home/widgets/redesign/discover_near_you_widget
 import 'package:user_app/features/home/widgets/redesign/home_category_content.dart';
 import 'package:user_app/features/home/widgets/redesign/banner_slider_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/featured_products_widget.dart';
-import 'package:user_app/features/home/widgets/redesign/flash_deal_section.dart';
+// Re-enable together with the FlashDealSection ("One Time Deal") usage below.
+// import 'package:user_app/features/home/widgets/redesign/flash_deal_section.dart';
 import 'package:user_app/features/home/widgets/redesign/search_bar_pill_widget.dart';
 import 'package:user_app/features/notification/controllers/notification_controller.dart';
 import 'package:user_app/features/notification/domain/models/notification_model.dart';
@@ -67,8 +68,11 @@ class _HomeExploreScreenState extends State<HomeExploreScreen>
       padding:
           const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
       child: SearchBarPillWidget(
-        onTap: () =>
-            RouterHelper.getCategoryScreenRoute(action: RouteAction.push),
+        // Opens Categories with its search field focused. Categories owns the
+        // app's live product search now, so this lands the user directly in
+        // that one input rather than a separate Search screen.
+        onTap: () => RouterHelper.getCategoryScreenRoute(
+            action: RouteAction.push, focusSearch: true),
       ),
     );
   }
@@ -316,7 +320,10 @@ class _HomeExploreScreenState extends State<HomeExploreScreen>
                   child: Column(
                     children: [
                       const DiscoverNearYouBody(),
-                      const FlashDealSection(),
+                      // "One Time Deal" (flash deal) section — hidden for
+                      // now. Re-enable by uncommenting; the widget and its
+                      // controller are untouched and still wired up.
+                      // const FlashDealSection(),
                       const FeaturedProductsWidget(),
                     ],
                   ),

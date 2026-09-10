@@ -14,11 +14,14 @@ import 'package:user_app/features/category/domain/models/category_model.dart';
 import 'package:user_app/features/clearance_sale/widgets/clearance_sale_list_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/banner_slider_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/new_user_exclusive_section.dart';
-import 'package:user_app/features/home/widgets/redesign/search_bar_pill_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/top_stores_widget.dart';
 import 'package:user_app/features/product/controllers/product_controller.dart';
 import 'package:user_app/features/product/domain/models/product_model.dart';
 import 'package:user_app/features/product/enums/product_type.dart';
+import 'package:user_app/features/search_product/controllers/search_product_controller.dart';
+import 'package:user_app/features/search_product/widgets/search_product_widget.dart';
+import 'package:user_app/common/basewidget/product_shimmer_widget.dart';
+import 'package:user_app/helper/debounce_helper.dart';
 import 'package:user_app/features/splash/controllers/splash_controller.dart';
 import 'package:user_app/helper/product_type_extension.dart';
 import 'package:user_app/helper/responsive_helper.dart';
@@ -74,12 +77,16 @@ class CategoryScreen extends StatefulWidget {
   final bool isBacButtonExist;
   final int? initialCategoryId;
   final String? initialCategoryName;
+  /// Open with the search field already focused (keyboard up) — used when
+  /// arriving from Home's search bar, so the user types straight away.
+  final bool initialFocusSearch;
 
   const CategoryScreen({
     super.key,
     this.isBacButtonExist = true,
     this.initialCategoryId,
     this.initialCategoryName,
+    this.initialFocusSearch = false,
   });
 
   @override
@@ -91,6 +98,12 @@ class _CategoryScreenState extends State<CategoryScreen> {
   ProductType _selectedProductType = ProductType.newArrival;
   final ScrollController _scrollController = ScrollController();
   late final bool _singleVendor;
+  // Inline live search — this page's own search bar is the real input; there
+  // is no hand-off to the separate Search screen.
+  final TextEditingController _searchController = TextEditingController();
+  final DebounceHelper _searchDebounce = DebounceHelper(milliseconds: 400);
+  final FocusNode _searchFocus = FocusNode();
+  String _query = '';
 
   @override
   void initState() {
@@ -98,12 +111,45 @@ class _CategoryScreenState extends State<CategoryScreen> {
     _selectedCategoryId = widget.initialCategoryId;
     final splash = Provider.of<SplashController>(context, listen: false);
     _singleVendor = splash.configModel?.businessMode == 'single';
+
+    if (widget.initialFocusSearch) {
+      // After first frame so the field exists and the route transition has
+      // settled — focusing mid-push makes the keyboard animation stutter.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _searchFocus.requestFocus();
+      });
+    }
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() {});                     // refresh the clear affordance
+    _searchDebounce.run(() {
+      if (!mounted) return;
+      final q = value.trim();
+      if (q == _query) return;
+      setState(() => _query = q);
+      final search = Provider.of<SearchProductController>(context, listen: false);
+      if (q.isEmpty) {
+        search.cleanSearchProduct(notify: true);
+      } else {
+        search.searchProduct(query: q, offset: 1);
+      }
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() => _query = '');
+    Provider.of<SearchProductController>(context, listen: false)
+        .cleanSearchProduct(notify: true);
   }
 
   // Real cuts like "Goat"/"Mutton"/"Offal" live as *subcategory* names under
@@ -180,15 +226,15 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: Dimensions.homePagePadding),
-                  child: SearchBarPillWidget(
-                    onTap: () =>
-                        RouterHelper.getSearchRoute(action: RouteAction.push),
-                  ),
+                  child: _buildLiveSearchField(context),
                 ),
               ),
               const SliverToBoxAdapter(
                   child: SizedBox(height: Dimensions.paddingSizeSmall)),
-              if (_selectedCategoryId != null)
+              // Live results replace the browse content while a query is active.
+              if (_query.isNotEmpty)
+                ..._searchResultSlivers()
+              else if (_selectedCategoryId != null)
                 _CategorySliverGrid(
                     categoryId: _selectedCategoryId!,
                     scrollController: _scrollController)
@@ -217,6 +263,78 @@ class _CategoryScreenState extends State<CategoryScreen> {
         );
       },
     );
+  }
+
+  /// The page's one and only search bar: a real input styled as the same
+  /// rounded pill used elsewhere. Deliberately no trailing burgundy submit
+  /// button and no navigation — searching happens live, in place, so there is
+  /// never a second search bar to tap through to.
+  Widget _buildLiveSearchField(BuildContext context) {
+    return TextField(
+      controller: _searchController,
+      focusNode: _searchFocus,
+      textInputAction: TextInputAction.search,
+      onChanged: _onSearchChanged,
+      onSubmitted: _onSearchChanged,
+      style: textMedium.copyWith(fontSize: Dimensions.fontSizeDefault),
+      decoration: InputDecoration(
+        isDense: true,
+        filled: true,
+        fillColor: Theme.of(context).cardColor,
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: Dimensions.paddingSizeDefault, vertical: 14),
+        prefixIcon: Icon(Icons.search, color: Theme.of(context).hintColor, size: 22),
+        suffixIcon: _searchController.text.isEmpty
+            ? null
+            : IconButton(
+                icon: Icon(Icons.clear, size: 20, color: Theme.of(context).hintColor),
+                onPressed: _clearSearch,
+              ),
+        hintText: getTranslated('search_hint', context) ?? 'Search for products...',
+        hintStyle: textRegular.copyWith(
+            color: Theme.of(context).hintColor, fontSize: Dimensions.fontSizeDefault),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+            borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+            borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+            borderSide: BorderSide.none),
+      ),
+    );
+  }
+
+  /// Results for the active query, rendered in place of the browse content.
+  List<Widget> _searchResultSlivers() {
+    return [
+      Consumer<SearchProductController>(
+        builder: (context, search, _) {
+          final loading = search.isLoading && search.searchedProduct == null;
+          if (loading) {
+            return const SliverToBoxAdapter(
+                child: ProductShimmer(isHomePage: false, isEnabled: true));
+          }
+          // SearchProductWidget lays out a fixed header + Expanded list, so it
+          // needs a bounded height — SliverFillRemaining supplies the rest of
+          // the viewport. A SliverToBoxAdapter would leave it unbounded.
+
+          final hasResults = (search.searchedProduct?.products?.isNotEmpty ?? false) ||
+              search.isFilterApplied || search.isSortingApplied;
+          if (!hasResults) {
+            return SliverFillRemaining(
+              hasScrollBody: false,
+              child: NoInternetOrDataScreenWidget(
+                  isNoInternet: false,
+                  message: getTranslated('no_products_found', context)),
+            );
+          }
+          return const SliverFillRemaining(
+              hasScrollBody: true, child: SearchProductWidget());
+        },
+      ),
+    ];
   }
 
   Widget _buildProductTypeFilterBar(BuildContext context) {

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Adaptive launcher icon background. White matches the MeatSoko logo's
+         intended presentation; the mark itself carries the brand red. -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- Native launch splash: matches BrandColors.cream so the pre-Flutter
+         window and the Flutter splash are the same colour (no white flash).
+         Light, so the logo wordmark keeps its original brown/red. -->
+    <color name="splash_background">#FAF3E5</color>
+</resources>

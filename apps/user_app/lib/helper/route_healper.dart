@@ -734,10 +734,11 @@ class RouterHelper {
   // highlight on open. Not yet consumed by CategoryScreen — that's a
   // separate, deliberately deferred change; this only makes sure Home sends
   // the data correctly.
-  static String getCategoryScreenRoute({RouteAction action = RouteAction.push, int? categoryId, String? categoryName}) {
+  static String getCategoryScreenRoute({RouteAction action = RouteAction.push, int? categoryId, String? categoryName, bool focusSearch = false}) {
     final params = <String, String>{
       if (categoryId != null) 'categoryId': '$categoryId',
       if (categoryId != null && categoryName != null) 'categoryName': Uri.encodeComponent(categoryName),
+      if (focusSearch) 'focusSearch': 'true',
     };
     final query = params.isNotEmpty ? '?${params.entries.map((e) => '${e.key}=${e.value}').join('&')}' : '';
     return _navigateRoute('$categoryScreen$query', route: action);
@@ -1410,6 +1411,7 @@ class RouterHelper {
         return CategoryScreen(
           initialCategoryId: int.tryParse(qp['categoryId'] ?? ''),
           initialCategoryName: qp['categoryName'] != null ? Uri.decodeComponent(qp['categoryName']!) : null,
+          initialFocusSearch: qp['focusSearch'] == 'true',
         );
       }),
       GoRoute(

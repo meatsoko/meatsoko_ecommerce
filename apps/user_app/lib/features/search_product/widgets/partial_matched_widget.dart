@@ -136,13 +136,13 @@ class _SearchSuggestionState extends State<SearchSuggestion> {
                           contentPadding: const EdgeInsets.only(left: Dimensions.paddingSizeLarge),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                            borderSide: BorderSide(color: Colors.grey[300]!)),
+                            borderSide: BorderSide(color: Theme.of(context).hintColor.withValues(alpha: 0.35))),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                            borderSide: BorderSide(color: Colors.grey[300]!)),
+                            borderSide: BorderSide(color: Theme.of(context).hintColor.withValues(alpha: 0.35))),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                            borderSide: BorderSide(color: Colors.grey[300]!)),
+                            borderSide: BorderSide(color: Theme.of(context).hintColor.withValues(alpha: 0.35))),
                           hintText: getTranslated('search_product', context),
                           hintStyle: textRegular.copyWith(color: Theme.of(context).hintColor),
                          suffixIcon: SizedBox(width: controller.text.isNotEmpty? 70 : 50,
