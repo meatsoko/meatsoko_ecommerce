@@ -42,7 +42,7 @@
         android:allowBackup="false"
         android:fullBackupContent="false">
 
-        <meta-data android:name="com.google.android.geo.API_KEY" android:value="YOUR_MAP_KEY_HERE" />
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyB0dOjYOfaG7W9GCL5YNOsZzyccO5yKJVY" />
 
         <activity
             android:name=".MainActivity"
@@ -82,7 +82,7 @@
 
                 <data android:scheme="https"/>
                 <data android:scheme="http"/>
-                <data android:host="YOUR_DOMAIN_HERE"/>
+                <data android:host="shop.meatsokogroup.com"/>
 
                 <data android:pathPattern="/" />
                 <data android:pathPattern="" />

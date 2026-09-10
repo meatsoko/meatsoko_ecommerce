@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:user_app/features/auth/controllers/auth_controller.dart';
-import 'package:user_app/features/splash/controllers/splash_controller.dart';
-import 'package:user_app/features/splash/domain/models/business_pages_model.dart';
 import 'package:user_app/helper/route_healper.dart';
 import 'package:user_app/localization/language_constrants.dart';
 import 'package:user_app/utill/custom_themes.dart';
@@ -15,8 +13,6 @@ class ConditionCheckBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final SplashController splashController = Provider.of<SplashController>(context, listen: false);
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
       child: Consumer<AuthController>(
@@ -39,9 +35,7 @@ class ConditionCheckBox extends StatelessWidget {
               color: Theme.of(context).textTheme.bodyLarge?.color,
             )),
             InkWell(
-              onTap: ()=> RouterHelper.getHtmlViewRoute(
-                page: getPageBySlug('terms-and-conditions', splashController.defaultBusinessPages)!,
-              ),
+              onTap: ()=> RouterHelper.getTermsAndConditionsRoute(),
 
               child: Padding(
                 padding: const EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
@@ -56,19 +50,6 @@ class ConditionCheckBox extends StatelessWidget {
       ),
     );
   }
-
-  BusinessPageModel? getPageBySlug(String slug, List<BusinessPageModel>? pagesList) {
-    BusinessPageModel? pageModel;
-    if(pagesList != null && pagesList.isNotEmpty){
-      for (var page in pagesList) {
-        if(page.slug == slug) {
-          pageModel = page;
-        }
-      }
-    }
-
-    return pageModel;
-  }
 }
 
 
@@ -77,8 +58,6 @@ class ConditionCheckBoxTwoLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final SplashController splashController = Provider.of<SplashController>(context, listen: false);
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
       child: Consumer<AuthController>(
@@ -110,9 +89,7 @@ class ConditionCheckBoxTwoLine extends StatelessWidget {
               )),
 
               InkWell(
-                onTap: ()=> RouterHelper.getHtmlViewRoute(
-                  page: getPageBySlug('terms-and-conditions', splashController.defaultBusinessPages)!,
-                ),
+                onTap: ()=> RouterHelper.getTermsAndConditionsRoute(),
                 child: Text(getTranslated('terms_condition', context)!, style: textMedium.copyWith(
                   fontSize: Dimensions.fontSizeSmall,
                   color: Theme.of(context).primaryColor.withValues(alpha: 0.8),
@@ -126,17 +103,5 @@ class ConditionCheckBoxTwoLine extends StatelessWidget {
         },
       ),
     );
-  }
-
-  BusinessPageModel? getPageBySlug(String slug, List<BusinessPageModel>? pagesList) {
-    BusinessPageModel? pageModel;
-    if(pagesList != null && pagesList.isNotEmpty){
-      for (var page in pagesList) {
-        if(page.slug == slug) {
-          pageModel = page;
-        }
-      }
-    }
-    return pageModel;
   }
 }

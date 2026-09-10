@@ -25,8 +25,13 @@ class _SearchSuggestionState extends State<SearchSuggestion> {
   void initState() {
     super.initState();
 
+    // Delayed rather than immediate so the keyboard doesn't pop up mid the
+    // Hero-tag('search') transition into this screen.
     Future.delayed((const Duration(milliseconds: 500))).then((_) {
-       // FocusScope.of(Get.context!).requestFocus(Provider.of<SearchProductController>(Get.context!, listen: false).searchFocusNode);
+      if (!mounted) return;
+      FocusScope.of(context).requestFocus(
+          Provider.of<SearchProductController>(context, listen: false)
+              .searchFocusNode);
     });
   }
 
