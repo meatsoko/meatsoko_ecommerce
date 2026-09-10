@@ -121,16 +121,35 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                     buttonText: getTranslated('send', context),
                     onTap: () async {
                       if(forgetFormKey.currentState?.validate() ?? false) {
-                        if(!(config.emailVerification ?? false) && !(config.phoneVerification ?? false) && config.customerVerification?.phone == 0 && config.customerVerification?.firebase == 0 && config.customerVerification?.email == 0) {
+                        // Gate on `forgot_password_verification` — the setting
+                        // that actually governs this feature. It previously
+                        // checked the *signup* verification flags
+                        // (email/phone/customerVerification), which are all off
+                        // in production, so this screen always bailed out with
+                        // "configuration is not set" and never called the API,
+                        // even though forgot_password_verification is "email".
+                        final String resetMethod =
+                            (config.forgotPasswordVerification ?? '').trim().toLowerCase();
+
+                        // Phone-only setups still can't accept an email, and
+                        // vice versa; anything else means nothing is configured.
+                        final bool emailAllowed = resetMethod == 'email';
+                        final bool phoneAllowed = resetMethod == 'phone';
+                        final String typedInput = _userInputController!.text.trim();
+                        final bool typedIsNumber = NumberCheckerHelper.isNumber(typedInput);
+
+                        if(!emailAllowed && !phoneAllowed) {
                           showCustomSnackBarWidget(getTranslated('forgot_password_configuration_is_not', context), context, snackBarType: SnackBarType.warning);
-                        } else if (_userInputController!.text.isEmpty) {
+                        } else if (typedInput.isEmpty) {
                           showCustomSnackBarWidget(getTranslated('enter_email_or_phone', context), context, snackBarType: SnackBarType.warning);
-                        } else if(!NumberCheckerHelper.isNumber(_userInputController!.text.trim())) {
+                        } else if(phoneAllowed && !typedIsNumber) {
                           showCustomSnackBarWidget(getTranslated('enter_phone_number', context), context, snackBarType: SnackBarType.warning);
+                        } else if(emailAllowed && typedIsNumber) {
+                          showCustomSnackBarWidget(getTranslated('enter_email_or_phone', context), context, snackBarType: SnackBarType.warning);
                         } else {
 
-                          String userInput = _userInputController!.text.trim();
-                          bool isNumber = NumberCheckerHelper.isNumber(userInput);
+                          String userInput = typedInput;
+                          final bool isNumber = typedIsNumber;
 
                           if(isNumber) {
                             userInput = _countryCode! + userInput;
