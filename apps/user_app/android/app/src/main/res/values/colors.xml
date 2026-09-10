@@ -6,5 +6,5 @@
     <!-- Native launch splash: matches BrandColors.cream so the pre-Flutter
          window and the Flutter splash are the same colour (no white flash).
          Light, so the logo wordmark keeps its original brown/red. -->
-    <color name="splash_background">#FAF3E5</color>
+    <color name="splash_background">#E8D9BE</color>
 </resources>

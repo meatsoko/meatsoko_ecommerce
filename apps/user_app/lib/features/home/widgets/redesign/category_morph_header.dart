@@ -340,7 +340,7 @@ class _CategoryTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: textBold.copyWith(
-                    fontSize: Dimensions.fontSizeExtraSmall,
+                    fontSize: Dimensions.fontSizeSmall,
                     color: isSelected
                         ? BrandColors.burgundy
                         : Theme.of(context).textTheme.bodyLarge?.color,

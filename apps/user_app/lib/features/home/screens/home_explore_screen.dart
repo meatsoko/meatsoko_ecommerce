@@ -179,14 +179,19 @@ class _HomeExploreScreenState extends State<HomeExploreScreen>
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            AppConstants.appName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: titilliumBold.copyWith(
-                              color: Colors.white,
-                              fontSize: Dimensions.fontSizeLarge,
-                            ),
+                          // Brand wordmark rather than typed text, so the app
+                          // bar uses the logo's real letterforms — same asset
+                          // as the splash, recoloured white for the burgundy
+                          // bar (10.45:1 contrast).
+                          Image.asset(
+                            Images.wordmarkWhite,
+                            // 38px inside the bar's ~45px content area (65
+                            // toolbar - 20 vertical padding); the 40px
+                            // notification button still sets the row height,
+                            // so the bar itself is unchanged.
+                            height: 38,
+                            fit: BoxFit.contain,
+                            semanticLabel: AppConstants.appName,
                           ),
                           Consumer<NotificationController>(
                             builder: (context, notificationController, _) {

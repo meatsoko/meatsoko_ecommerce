@@ -309,11 +309,12 @@ class SplashWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Light (cream) rather than burgundy so the logo wordmark can keep its
-    // original brown/red. On burgundy those inks measured 1.5:1 and 2.0:1
-    // contrast; on cream they are 15.5:1 and 4.4:1.
+    // Light rather than burgundy so the logo wordmark can keep its original
+    // brown/red. On burgundy those inks measured 1.5:1 and 2.0:1 contrast; on
+    // this sand they are 12.3:1 and 3.5:1 — the darkest tone that still keeps
+    // the red above the 3:1 large-text floor.
     return ColoredBox(
-      color: BrandColors.cream,
+      color: BrandColors.sand,
       child: Column(mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -335,7 +336,7 @@ class SplashWidget extends StatelessWidget {
           child: Text(AppConstants.slogan,
             style: textRegular.copyWith(
               fontSize: Dimensions.fontSizeDefault,
-              color: BrandColors.burgundy.withValues(alpha: 0.75)))
+              color: BrandColors.burgundy))
         )
       ]),
     );

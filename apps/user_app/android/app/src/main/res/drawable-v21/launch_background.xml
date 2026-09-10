@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Colour only, no logo. The Flutter splash draws the lockup a moment
+         later; showing it here too read as two separate logo screens. Keeping
+         the same background colour means the handover is invisible. -->
     <item android:drawable="@color/splash_background" />
-    <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@drawable/splash_logo" />
-    </item>
 </layer-list>
