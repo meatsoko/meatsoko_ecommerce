@@ -9,6 +9,7 @@ import 'package:user_app/features/home/widgets/redesign/home_category_content.da
 import 'package:user_app/features/home/widgets/redesign/banner_slider_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/featured_products_widget.dart';
 import 'package:user_app/features/home/widgets/redesign/flash_deal_section.dart';
+import 'package:user_app/features/home/widgets/redesign/search_bar_pill_widget.dart';
 import 'package:user_app/features/notification/controllers/notification_controller.dart';
 import 'package:user_app/features/notification/domain/models/notification_model.dart';
 import 'package:user_app/features/splash/controllers/splash_controller.dart';
@@ -65,69 +66,9 @@ class _HomeExploreScreenState extends State<HomeExploreScreen>
       color: Theme.of(context).scaffoldBackgroundColor,
       padding:
           const EdgeInsets.symmetric(horizontal: Dimensions.homePagePadding),
-      child: Row(
-        children: [
-          Expanded(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-              onTap: () => RouterHelper.getCategoryScreenRoute(
-                  action: RouteAction.push, focusSearch: true),
-              child: Container(
-                height: 48,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: Dimensions.paddingSizeDefault),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2))
-                  ],
-                ),
-                child: Row(children: [
-                  Icon(Icons.search,
-                      color: Theme.of(context).hintColor, size: 22),
-                  const SizedBox(width: Dimensions.paddingSizeSmall),
-                  Expanded(
-                    child: Text(
-                      getTranslated('search_hint', context) ??
-                          'Search for products...',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textRegular.copyWith(
-                          color: Theme.of(context).hintColor,
-                          fontSize: Dimensions.fontSizeDefault),
-                    ),
-                  ),
-                ]),
-              ),
-            ),
-          ),
-          const SizedBox(width: Dimensions.paddingSizeSmall),
-          InkWell(
-            onTap: () => RouterHelper.getSearchRoute(action: RouteAction.push),
-            borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-            child: Container(
-              height: 48,
-              width: 48,
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2))
-                ],
-              ),
-              child: Icon(Icons.filter_list,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                  size: 20),
-            ),
-          ),
-        ],
+      child: SearchBarPillWidget(
+        onTap: () =>
+            RouterHelper.getCategoryScreenRoute(action: RouteAction.push),
       ),
     );
   }

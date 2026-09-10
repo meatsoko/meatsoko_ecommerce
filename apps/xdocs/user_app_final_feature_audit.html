@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MeatSoko User App — Final Feature Audit</title>
+<style>
+  :root{
+    --ink:#16181d; --muted:#5b6270; --line:#e3e6ec; --bg:#ffffff; --panel:#f7f8fa;
+    --burgundy:#7a1f3d; --burgundy-l:#f3e7ec;
+    --green:#1a7f4b; --green-bg:#e6f4ec;
+    --blue:#1d5fa8; --blue-bg:#e7f0fa;
+    --amber:#8a6100; --amber-bg:#fdf3dd;
+    --grey:#4d5460; --grey-bg:#eceef2;
+    --red:#a81d1d; --red-bg:#fae8e8;
+    --black:#33383f; --black-bg:#e8e9ec;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.62 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px 80px}
+
+  /* ---- toolbar ---- */
+  .toolbar{
+    position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);
+    backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid var(--line);
+    padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;
+  }
+  .toolbar .t-title{font-weight:700;font-size:14px;letter-spacing:.02em;color:var(--muted)}
+  .btn-pdf{
+    appearance:none;border:0;cursor:pointer;background:var(--burgundy);color:#fff;
+    font:600 14px/1 inherit;padding:11px 18px;border-radius:8px;display:inline-flex;
+    align-items:center;gap:8px;box-shadow:0 1px 2px rgba(0,0,0,.16);
+  }
+  .btn-pdf:hover{background:#65192f}
+  .btn-pdf:active{transform:translateY(1px)}
+  .btn-pdf svg{width:16px;height:16px;fill:currentColor}
+
+  /* ---- header ---- */
+  header.doc{padding:40px 0 22px;border-bottom:3px solid var(--burgundy);margin-bottom:30px}
+  header.doc h1{margin:0 0 8px;font-size:31px;letter-spacing:-.02em;line-height:1.2}
+  header.doc .sub{color:var(--muted);font-size:14.5px}
+  header.doc .sub b{color:var(--ink)}
+
+  h2{
+    margin:44px 0 14px;font-size:20.5px;letter-spacing:-.01em;
+    padding-bottom:8px;border-bottom:1px solid var(--line);
+  }
+  h3{margin:26px 0 10px;font-size:16.5px;letter-spacing:-.005em}
+  p{margin:0 0 13px}
+  ul,ol{margin:0 0 13px;padding-left:22px}
+  li{margin:5px 0}
+  code{
+    font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    background:var(--panel);padding:1.5px 5px;border-radius:4px;border:1px solid var(--line);
+    word-break:break-word;
+  }
+
+  /* ---- verdict ---- */
+  .verdict{
+    border-radius:12px;padding:22px 26px;margin:26px 0;border:1px solid;
+    background:var(--red-bg);border-color:#f0c9c9;
+  }
+  .verdict .label{font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:6px}
+  .verdict .headline{font-size:24px;font-weight:800;letter-spacing:-.015em;color:var(--red);margin-bottom:10px}
+  .verdict p{margin:0;font-size:14.5px;color:#5f2020}
+  .verdict p + p{margin-top:8px}
+
+  /* ---- stat strip ---- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0 8px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px 16px}
+  .stat .n{font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+  .stat .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:5px;font-weight:600}
+  .stat.ok .n{color:var(--green)} .stat.warn .n{color:var(--amber)}
+  .stat.bad .n{color:var(--red)} .stat.info .n{color:var(--blue)}
+  .stat.neutral .n{color:var(--grey)}
+
+  /* ---- badges ---- */
+  .b{
+    display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.02em;
+    padding:3px 9px;border-radius:20px;white-space:nowrap;border:1px solid transparent;
+  }
+  .b-ok{background:var(--green-bg);color:var(--green);border-color:#bfe0cd}
+  .b-impl{background:var(--blue-bg);color:var(--blue);border-color:#c5daf0}
+  .b-part{background:var(--amber-bg);color:var(--amber);border-color:#eeddb0}
+  .b-off{background:var(--grey-bg);color:var(--grey);border-color:#d6dae1}
+  .b-block{background:var(--red-bg);color:var(--red);border-color:#f0c9c9}
+  .b-dead{background:var(--black-bg);color:var(--black);border-color:#d3d5da}
+
+  /* ---- tables ---- */
+  .tw{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:10px}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:640px}
+  th{
+    background:var(--panel);text-align:left;padding:11px 13px;font-weight:700;
+    font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+    border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  td{padding:10px 13px;border-bottom:1px solid #eef0f4;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#fafbfc}
+  td.feat{font-weight:600;white-space:nowrap}
+
+  /* ---- callouts ---- */
+  .note{border-left:3px solid var(--blue);background:var(--blue-bg);padding:13px 17px;border-radius:0 8px 8px 0;margin:16px 0;font-size:14px}
+  .note.warn{border-left-color:var(--amber);background:var(--amber-bg)}
+  .note.crit{border-left-color:var(--red);background:var(--red-bg)}
+  .note strong{display:block;margin-bottom:3px}
+
+  /* ---- priority blocks ---- */
+  .pri{margin:18px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .pri > .head{padding:10px 15px;font-weight:700;font-size:13.5px;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+  .pri.p0 > .head{background:var(--red-bg);color:var(--red)}
+  .pri.p1 > .head{background:var(--amber-bg);color:var(--amber)}
+  .pri.p2 > .head{background:var(--blue-bg);color:var(--blue)}
+  .pri.p3 > .head{background:var(--grey-bg);color:var(--grey)}
+  .pri ol,.pri ul{margin:12px 0;padding-left:34px}
+  .pri li{font-size:14px}
+
+  /* ---- QA checklist ---- */
+  .qa{border:1px solid var(--line);border-radius:10px;padding:6px 18px;margin:14px 0;background:#fff}
+  .qa h4{margin:15px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--burgundy)}
+  .qa ol{padding-left:20px;margin:0 0 14px}
+  .qa li{font-size:14px;margin:7px 0;padding-left:4px}
+  .qa .crit{font-weight:600}
+  .chk{display:inline-block;width:13px;height:13px;border:1.5px solid #b9bfc9;border-radius:3px;margin-right:9px;vertical-align:-1px}
+
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+
+  /* ================= PRINT / A4 ================= */
+  @page{size:A4;margin:14mm 12mm}
+  @media print{
+    :root{--line:#ccc}
+    body{font-size:10.2pt;line-height:1.45;color:#000;background:#fff}
+    .wrap{max-width:none;padding:0}
+    .toolbar,.no-print{display:none !important}
+    header.doc{padding:0 0 12px;margin-bottom:16px;border-bottom-width:2px}
+    header.doc h1{font-size:19pt}
+    h2{font-size:13pt;margin:18pt 0 7pt;page-break-after:avoid;break-after:avoid}
+    h3{font-size:11pt;margin:12pt 0 5pt;page-break-after:avoid;break-after:avoid}
+    table{font-size:8.4pt;min-width:0}
+    th{padding:5pt 6pt;font-size:7.4pt}
+    td{padding:4.5pt 6pt}
+    .tw{overflow:visible;border-radius:0}
+    tr,li,.stat,.note,.pri,.qa{page-break-inside:avoid;break-inside:avoid}
+    thead{display:table-header-group}
+    .verdict,.note,.stat,.pri > .head,.b{
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    }
+    .verdict{padding:12pt 14pt;margin:12pt 0}
+    .verdict .headline{font-size:15pt}
+    .stats{gap:6pt}
+    .stat .n{font-size:16pt}
+    a{color:#000;text-decoration:none}
+    footer{margin-top:18pt;font-size:8pt}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar no-print">
+  <span class="t-title">MeatSoko · User App Final Feature Audit</span>
+  <button class="btn-pdf" onclick="window.print()" aria-label="Download this report as PDF">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13.2 5.6 8.8l1.3-1.3 2.2 2.2V2h1.8v7.7l2.2-2.2 1.3 1.3L10 13.2ZM3.5 17.5v-4h1.8v2.2h9.4V13.5h1.8v4H3.5Z"/></svg>
+    Download PDF
+  </button>
+</div>
+
+<div class="wrap">
+
+<header class="doc">
+  <h1>User App — Final Feature Audit</h1>
+  <div class="sub">
+    <b>MeatSoko</b> customer Android app · <b>57</b> feature modules · <b>899</b> Dart files<br>
+    Last updated <b>2026-09-10</b> · Living document · Verified against current codebase and live production
+  </div>
+</header>
+
+<div class="verdict">
+  <div class="label">Final Recommendation</div>
+  <div class="headline">NOT READY — 1 blocker remains</div>
+  <p><strong>Blocker:</strong> the launcher icon is still 6valley template artwork, with no adaptive icon and no generator configuration in the app's <code>pubspec.yaml</code>.</p>
+  <p>Once resolved, the gate becomes <b>READY AFTER MANUAL QA</b> — specifically the 21 test cases in this report, of which the six payment cases are non-negotiable.</p>
+</div>
+
+<div class="stats">
+  <div class="stat ok"><div class="n">8</div><div class="l">Confirmed working</div></div>
+  <div class="stat info"><div class="n">21</div><div class="l">Manual QA cases</div></div>
+  <div class="stat bad"><div class="n">1</div><div class="l">Release blocker</div></div>
+  <div class="stat neutral"><div class="n">7</div><div class="l">Disabled / deferred</div></div>
+  <div class="stat ok"><div class="n">0</div><div class="l">Compile errors</div></div>
+  <div class="stat warn"><div class="n">16</div><div class="l">Known issues</div></div>
+</div>
+
+<h2>Executive Summary</h2>
+<p>The app is <strong>functionally complete and structurally sound</strong> for a first release. Static analysis reports <strong>zero compile errors</strong> (28 warnings, 37 informational — all lint-level). The production backend is healthy, not in maintenance mode, and correctly configured for Kenya: KES currency, multi-vendor mode, guest checkout enabled. App Links are live and independently verified by Google's own Digital Asset Links API. Release signing, Maps, and policy pages are all complete.</p>
+
+<p>The largest risk is <strong>not code quality but unverified runtime behaviour</strong>. Payments are the clearest example: M-Pesa and Paystack have <strong>no native implementation in the app at all</strong> — checkout hands off to a server-hosted payment page inside a WebView. That is a legitimate design, but it means the single most business-critical flow cannot be validated by code inspection and must be tested end-to-end on a device against a real transaction before launch.</p>
+
+<p>There is also <strong>no crash reporting</strong> in the build. Combined with no automated test coverage, the first production issue will surface as a customer complaint rather than a dashboard alert.</p>
+
+<h2>Status Legend</h2>
+<div class="tw"><table>
+<thead><tr><th style="width:170px">Badge</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><span class="b b-ok">✅ Verified</span></td><td>Confirmed via code <em>and</em> configuration or live evidence</td></tr>
+<tr><td><span class="b b-impl">🔵 Implemented</span></td><td>Code complete; requires device / manual runtime verification</td></tr>
+<tr><td><span class="b b-part">🟡 Partial</span></td><td>Some functionality incomplete or deliberately narrowed</td></tr>
+<tr><td><span class="b b-off">⚪ Config-disabled</span></td><td>Implemented, switched off in production today</td></tr>
+<tr><td><span class="b b-block">🔴 Blocker</span></td><td>Confirmed functional or release defect</td></tr>
+<tr><td><span class="b b-dead">⚫ Dead / legacy</span></td><td>Present but not part of the active product flow</td></tr>
+</tbody></table></div>
+
+<h2>Feature Matrix</h2>
+<div class="tw"><table>
+<thead><tr><th>Feature</th><th style="width:150px">Status</th><th>Evidence</th><th>Production State</th><th style="width:96px">Manual Test</th></tr></thead>
+<tbody>
+<tr><td class="feat">Email/password login</td><td><span class="b b-impl">Implemented</span></td><td><code>features/auth/</code></td><td>Enabled</td><td>Yes</td></tr>
+<tr><td class="feat">Registration</td><td><span class="b b-impl">Implemented</span></td><td><code>features/auth/</code></td><td>Enabled</td><td>Yes</td></tr>
+<tr><td class="feat">OTP verification</td><td><span class="b b-impl">Implemented</span></td><td><code>features/auth/</code></td><td>Config-driven</td><td>Yes</td></tr>
+<tr><td class="feat">Password reset</td><td><span class="b b-impl">Implemented</span></td><td><code>features/auth/</code></td><td>Enabled</td><td>Yes</td></tr>
+<tr><td class="feat">Google login</td><td><span class="b b-impl">Implemented</span></td><td><code>only_social_login_widget.dart:70</code></td><td><code>google=true</code></td><td>Yes</td></tr>
+<tr><td class="feat">Facebook login</td><td><span class="b b-off">Config-disabled</span></td><td><code>only_social_login_widget.dart:69</code> hardcoded <code>0</code></td><td>Server <code>true</code>; client forces off</td><td>No</td></tr>
+<tr><td class="feat">Apple login</td><td><span class="b b-impl">Implemented</span></td><td><code>only_social_login_widget.dart:215</code> iOS-gated</td><td><code>apple=true</code></td><td>N/A</td></tr>
+<tr><td class="feat">Guest access / checkout</td><td><span class="b b-impl">Implemented</span></td><td><code>shipping_details_widget.dart:31</code></td><td><code>guest_checkout=1</code></td><td>Yes</td></tr>
+<tr><td class="feat">Logout</td><td><span class="b b-part">Partial</span></td><td>Fix applied, never cleanly confirmed</td><td>—</td><td><b>Yes</b></td></tr>
+<tr><td class="feat">Profile view/edit</td><td><span class="b b-impl">Implemented</span></td><td><code>features/profile/</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Account deletion</td><td><span class="b b-impl">Implemented</span></td><td><code>app_constants.dart:108</code></td><td>—</td><td>Yes (Play req.)</td></tr>
+<tr><td class="feat">Addresses</td><td><span class="b b-impl">Implemented</span></td><td><code>features/address/</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Home</td><td><span class="b b-ok">Verified</span></td><td><code>home_explore_screen.dart</code></td><td>6 banners live</td><td>Yes</td></tr>
+<tr><td class="feat">Categories</td><td><span class="b b-impl">Implemented</span></td><td><code>category_screen.dart</code></td><td>401 without auth — unverified</td><td>Yes</td></tr>
+<tr><td class="feat">Product listing/details</td><td><span class="b b-impl">Implemented</span></td><td><code>features/product_details/</code></td><td>Unverified (auth-gated)</td><td>Yes</td></tr>
+<tr><td class="feat">Product search</td><td><span class="b b-impl">Implemented</span></td><td><code>features/search_product/</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Related products</td><td><span class="b b-off">Config-disabled</span></td><td><code>product_details_screen.dart:74-75</code></td><td>Off by code</td><td>No</td></tr>
+<tr><td class="feat">Reviews / ratings</td><td><span class="b b-impl">Implemented</span></td><td><code>features/review/</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Wishlist</td><td><span class="b b-impl">Implemented</span></td><td><code>features/wishlist/</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Shop / vendor browsing</td><td><span class="b b-impl">Implemented</span></td><td><code>features/shop/</code></td><td><code>business_mode=multi</code></td><td>Yes</td></tr>
+<tr><td class="feat">Cart</td><td><span class="b b-impl">Implemented</span></td><td><code>features/cart/</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Coupons</td><td><span class="b b-impl">Implemented</span></td><td><code>features/coupon/</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Delivery fees</td><td><span class="b b-impl">Implemented</span></td><td><code>features/shipping/</code></td><td><code>inhouse_shipping</code>, free delivery on</td><td>Yes</td></tr>
+<tr><td class="feat">Checkout consent</td><td><span class="b b-ok">Verified</span></td><td><code>checkout_condition_checkbox.dart</code></td><td>T&amp;C / Privacy live</td><td>Yes</td></tr>
+<tr><td class="feat">M-Pesa (STK Push)</td><td><span class="b b-impl">Implemented</span></td><td>No native code; WebView <code>:73</code></td><td><code>mpesa_stk</code> configured</td><td><b>Critical</b></td></tr>
+<tr><td class="feat">Paystack</td><td><span class="b b-impl">Implemented</span></td><td>Same WebView path</td><td>Configured</td><td><b>Critical</b></td></tr>
+<tr><td class="feat">Cash on delivery</td><td><span class="b b-impl">Implemented</span></td><td><code>features/checkout/</code></td><td><code>true</code></td><td>Yes</td></tr>
+<tr><td class="feat">Wallet payment</td><td><span class="b b-impl">Implemented</span></td><td><code>wallet_payment_widget.dart</code></td><td><code>wallet_status=1</code></td><td>Yes</td></tr>
+<tr><td class="feat">Offline payment</td><td><span class="b b-off">Config-disabled</span></td><td><code>offline_payment_widget.dart</code></td><td><code>null</code></td><td>No</td></tr>
+<tr><td class="feat">Order history / details</td><td><span class="b b-impl">Implemented</span></td><td><code>features/order/</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Order tracking</td><td><span class="b b-impl">Implemented</span></td><td><code>features/tracking/</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Order cancellation</td><td><span class="b b-impl">Implemented</span></td><td><code>app_constants.dart:102</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Refund / return</td><td><span class="b b-impl">Implemented</span></td><td><code>refund_request_widget.dart</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Reorder</td><td><span class="b b-impl">Implemented</span></td><td><code>cancel_and_support_center_widget.dart</code></td><td>—</td><td>Yes</td></tr>
+<tr><td class="feat">Maps / location</td><td><span class="b b-impl">Implemented</span></td><td><code>features/location/</code></td><td><code>map_api_status=1</code>; key set</td><td><b>Yes</b></td></tr>
+<tr><td class="feat">Banners</td><td><span class="b b-ok">Verified</span></td><td><code>banner_slider_widget.dart</code></td><td>6 published records</td><td>No</td></tr>
+<tr><td class="feat">Push notifications</td><td><span class="b b-impl">Implemented</span></td><td><code>main.dart:106-111</code></td><td>Firebase configured</td><td><b>Yes</b></td></tr>
+<tr><td class="feat">Referral</td><td><span class="b b-impl">Implemented</span></td><td><code>features/refer_and_earn/</code></td><td><code>ref_earning_status=1</code></td><td>Yes</td></tr>
+<tr><td class="feat">Loyalty points</td><td><span class="b b-impl">Implemented</span></td><td><code>features/loyaltyPoint/</code></td><td><code>loyalty_point_status=1</code></td><td>Yes</td></tr>
+<tr><td class="feat">Flash deals</td><td><span class="b b-impl">Implemented</span></td><td><code>flash_deal_section.dart</code></td><td>Endpoint empty</td><td>Yes</td></tr>
+<tr><td class="feat">Announcements</td><td><span class="b b-off">Config-disabled</span></td><td>—</td><td><code>status=null</code></td><td>No</td></tr>
+<tr><td class="feat">Auctions (10 modules)</td><td><span class="b b-off">Config-disabled</span></td><td>18 gate checks</td><td><code>false</code></td><td>No</td></tr>
+<tr><td class="feat">AI shopping assistant</td><td><span class="b b-off">Config-disabled</span></td><td><code>features/ai/</code></td><td><code>0</code></td><td>No</td></tr>
+<tr><td class="feat">Deep links</td><td><span class="b b-ok">Verified</span></td><td><code>main.dart:182-189</code>; manifest <code>:85</code></td><td>Google DAL: <code>errorCode: none</code></td><td>Yes</td></tr>
+<tr><td class="feat">Localization</td><td><span class="b b-part">Partial</span></td><td>5 locales × 1406 keys</td><td>No Swahili</td><td>No</td></tr>
+<tr><td class="feat">Version / update gate</td><td><span class="b b-impl">Implemented</span></td><td><code>update_screen.dart</code></td><td><code>1.0.0</code>, <code>link=""</code></td><td>Yes</td></tr>
+<tr><td class="feat">Crash reporting</td><td><span class="b b-block">Absent</span></td><td>No <code>firebase_crashlytics</code></td><td>—</td><td>—</td></tr>
+</tbody></table></div>
+
+<h2>Payments — Most Important Finding</h2>
+<div class="note crit">
+  <strong>M-Pesa and Paystack have no native implementation in the app.</strong>
+  Searching the entire codebase for <code>mpesa</code> returns <em>zero</em> matches. <code>paystack</code> appears exactly once — as an image asset path.
+</div>
+<p>Payment is generic: checkout opens a screen that loads a <strong>server-hosted payment page in a WebView</strong> and detects completion by inspecting the URL for <code>success</code> / <code>fail</code> / <code>cancel</code> plus a token.</p>
+<p>Three consequences for release:</p>
+<ul>
+  <li>Gateway behaviour is entirely backend-owned — correctness cannot be inferred from app source.</li>
+  <li>Completion detection is string-matching on URLs, which is brittle if backend callback URLs change.</li>
+  <li>The payment WebView runs under a globally permissive cleartext-HTTP policy (see issue P1 #3).</li>
+</ul>
+
+<h2>Deep Links — Verified</h2>
+<p>The manifest declares <code>shop.meatsokogroup.com</code> in an auto-verifying filter covering product, vendor-shop, order-tracking, referral-login, and auction paths. The live <code>assetlinks.json</code> serves valid JSON with the correct package name and production certificate fingerprint, and <strong>Google's Digital Asset Links API resolves the statement with no errors</strong>.</p>
+<div class="note warn">
+  <strong>Play App Signing caveat</strong>
+  Only the upload certificate is currently listed. If you enrol in Play App Signing, Google re-signs the app and devices check <em>its</em> fingerprint instead — deep links would keep working for sideloaded builds but silently fail for everyone installing from the Play Store. Add that fingerprint on enrolment.
+</div>
+
+<h2>Android / Play Store Readiness</h2>
+<div class="tw"><table>
+<thead><tr><th style="width:250px">Item</th><th style="width:120px">State</th><th>Detail</th></tr></thead>
+<tbody>
+<tr><td class="feat">Application ID / namespace</td><td><span class="b b-ok">Done</span></td><td><code>com.meatsokogroup.user</code>, consistent with Firebase config</td></tr>
+<tr><td class="feat">Compile / target SDK</td><td><span class="b b-ok">Done</span></td><td>36 / 36 — ahead of Play's minimum</td></tr>
+<tr><td class="feat">Release signing</td><td><span class="b b-ok">Done</span></td><td>Release config wired; <code>key.properties</code> present and gitignored</td></tr>
+<tr><td class="feat">Maps API key</td><td><span class="b b-ok">Done</span></td><td>Real key configured</td></tr>
+<tr><td class="feat">App Links + assetlinks</td><td><span class="b b-ok">Done</span></td><td>Verified live via Google DAL API</td></tr>
+<tr><td class="feat">Privacy policy / T&amp;C</td><td><span class="b b-ok">Done</span></td><td>Live URLs plus bundled in-app copies</td></tr>
+<tr><td class="feat">Launcher icon</td><td><span class="b b-block">Blocker</span></td><td>Template artwork; no adaptive icon; no generator config</td></tr>
+<tr><td class="feat">Cleartext HTTP</td><td><span class="b b-part">Partial</span></td><td>Permitted globally for all domains</td></tr>
+<tr><td class="feat">Minify / shrink</td><td><span class="b b-part">Partial</span></td><td>Not configured for release builds</td></tr>
+<tr><td class="feat">Crash reporting</td><td><span class="b b-block">Absent</span></td><td>No Crashlytics integration</td></tr>
+<tr><td class="feat">Version numbers</td><td><span class="b b-ok">Done</span></td><td><code>1.0.0+1</code>; in sync with in-app constant</td></tr>
+<tr><td class="feat">Play update URL</td><td><span class="b b-part">Partial</span></td><td>Empty — set after first publish</td></tr>
+<tr><td class="feat">Firebase</td><td><span class="b b-ok">Done</span></td><td>Correctly initialised</td></tr>
+<tr><td class="feat">Debug config in release</td><td><span class="b b-ok">Clean</span></td><td>None found</td></tr>
+</tbody></table></div>
+
+<h2>Confirmed Working</h2>
+<p>Only items backed by code <em>and</em> live or configuration evidence:</p>
+<ol>
+  <li><strong>Deep links / App Links</strong> — Google's Digital Asset Links API confirms, no errors.</li>
+  <li><strong>Home banners</strong> — six published records served live.</li>
+  <li><strong>Privacy policy &amp; Terms</strong> — live URLs plus bundled in-app copies.</li>
+  <li><strong>Release signing</strong> — keystore valid to 2054, wired to the release build type.</li>
+  <li><strong>Package identity &amp; Firebase</strong> — consistent across Gradle, manifest, and Firebase config.</li>
+  <li><strong>Backend health</strong> — config responds; maintenance off; Kenya / KES / multi-vendor correct.</li>
+  <li><strong>Localization integrity</strong> — 5 locales, 1406 keys each, no drift.</li>
+  <li><strong>Static code health</strong> — zero compile errors.</li>
+</ol>
+
+<h2>Manual QA Checklist</h2>
+<p>21 concrete test cases. The six payment cases are non-negotiable before release.</p>
+
+<div class="qa">
+  <h4>Payments — critical, nothing here is statically verifiable</h4>
+  <ol>
+    <li class="crit"><span class="chk"></span>Complete a real M-Pesa STK Push order end-to-end; confirm the WebView returns and the order is created.</li>
+    <li class="crit"><span class="chk"></span>Cancel an M-Pesa payment mid-flow; confirm the app recovers and does not create a phantom order.</li>
+    <li class="crit"><span class="chk"></span>Complete a Paystack order end-to-end.</li>
+    <li class="crit"><span class="chk"></span>Place a cash-on-delivery order.</li>
+    <li class="crit"><span class="chk"></span>Pay using wallet balance.</li>
+    <li class="crit"><span class="chk"></span>Force a payment failure; confirm success/fail/cancel detection fires correctly.</li>
+  </ol>
+
+  <h4>Authentication</h4>
+  <ol start="7">
+    <li><span class="chk"></span>Register a new account; confirm the session persists across an app restart.</li>
+    <li><span class="chk"></span>Google Sign-In on a real device.</li>
+    <li><span class="chk"></span><b>Logout via the account screen</b> — confirm both "Sign Out" and "Cancel" respond (known-flaky).</li>
+    <li><span class="chk"></span>Password reset via OTP.</li>
+    <li><span class="chk"></span>Guest browse → add to cart → guest checkout.</li>
+    <li><span class="chk"></span>Account deletion (Play Store compliance requirement).</li>
+  </ol>
+
+  <h4>Shopping &amp; orders</h4>
+  <ol start="13">
+    <li><span class="chk"></span>Browse categories and confirm real catalog data loads (not verifiable anonymously).</li>
+    <li><span class="chk"></span>Search, open a product, add to cart with variations.</li>
+    <li><span class="chk"></span>Apply a coupon; confirm totals recalculate.</li>
+    <li><span class="chk"></span>Place order → view history → open details → track.</li>
+    <li><span class="chk"></span>Cancel an order; request a refund from order details.</li>
+  </ol>
+
+  <h4>Maps, notifications, deep links</h4>
+  <ol start="18">
+    <li><span class="chk"></span>Grant location permission; confirm the map renders with the new API key.</li>
+    <li><span class="chk"></span>Pick a delivery address on the map; confirm geocoding resolves.</li>
+    <li><span class="chk"></span>Receive a push notification in foreground <em>and</em> background; confirm tap-through.</li>
+    <li><span class="chk"></span>Open a product link from an external app — must open the app, not a browser.</li>
+  </ol>
+</div>
+
+<h2>Known Issues by Priority</h2>
+
+<div class="pri p0">
+  <div class="head">P0 — Release blocker</div>
+  <ol>
+    <li><strong>Launcher icon is 6valley template artwork.</strong> No adaptive icon variant. The app's <code>pubspec.yaml</code> has no icon-generator configuration and no source icon asset exists — this needs artwork <em>and</em> configuration before a generator can run.</li>
+  </ol>
+</div>
+
+<div class="pri p1">
+  <div class="head">P1 — Should fix before launch</div>
+  <ol start="2">
+    <li><strong>No crash reporting.</strong> Firebase Core is already wired, so adding Crashlytics is a small change with high operational value.</li>
+    <li><strong>Cleartext HTTP permitted globally</strong> — especially relevant since payments run inside a WebView.</li>
+    <li><strong>Facebook placeholders</strong> remain in Android string resources, masked by a hardcoded client-side override. Get real credentials or remove the feature.</li>
+    <li><strong>Blank error messages</strong> on certificate and connection failures — users see nothing when the network fails.</li>
+    <li><strong>Logout unconfirmed</strong>, plus roughly 17 unaudited modal call sites sharing the suspected root cause.</li>
+    <li><strong>No release minification or shrinking</strong> — larger artifact, no obfuscation.</li>
+  </ol>
+</div>
+
+<div class="pri p2">
+  <div class="head">P2 — Post-launch</div>
+  <ol start="8">
+    <li>Empty Play update link — set immediately after first publish, or the next version bump strands users on a dead prompt.</li>
+    <li>Only the upload certificate in <code>assetlinks.json</code> — add Play App Signing's fingerprint on enrolment.</li>
+    <li>Permissions hygiene: no version caps on storage permissions; legacy Bluetooth permissions against a modern target SDK.</li>
+    <li>Zero automated test coverage beyond the default scaffold smoke test.</li>
+    <li>28 unguarded debug print statements.</li>
+  </ol>
+</div>
+
+<div class="pri p3">
+  <div class="head">P3 — Polish</div>
+  <ol start="13">
+    <li>Five zero-byte Dart files.</li>
+    <li>No Swahili localization for a Kenya-first product.</li>
+    <li>14 substantive TODO/FIXME comments (excluding 157 template CRUD stubs).</li>
+    <li>Hardcoded auction filter caps.</li>
+  </ol>
+</div>
+
+<h2>Disabled / Deferred Features</h2>
+<div class="note">
+  <strong>These are intentional — do not treat them as bugs.</strong>
+  Documented so future developers don't "fix" a deliberate decision.
+</div>
+<div class="tw"><table>
+<thead><tr><th style="width:280px">Feature</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td class="feat">Facebook login</td><td>Placeholder App ID; deliberately forced off client-side</td></tr>
+<tr><td class="feat">Related products + 5 product-detail sections</td><td>Removed as part of the product-details redesign</td></tr>
+<tr><td class="feat">All auction features (10 modules)</td><td>Disabled in production configuration</td></tr>
+<tr><td class="feat">AI shopping assistant</td><td>Disabled in production configuration</td></tr>
+<tr><td class="feat">Offline payment</td><td>Not configured in production</td></tr>
+<tr><td class="feat">Announcements</td><td>Not configured in production</td></tr>
+<tr><td class="feat">Address quick-action card</td><td>Commented out with an explicit re-enable note</td></tr>
+</tbody></table></div>
+
+<h2>Dead / Legacy Code</h2>
+<ul>
+  <li><strong>~157 template CRUD stubs</strong> across repository classes implementing a generic interface that throws immediately. Never called today — but a landmine: any future code calling through the generic interface crashes with no guardrail.</li>
+  <li><strong>Five zero-byte Dart files</strong> left over from the template.</li>
+  <li>An empty duplicate product-listing screen; the working one lives elsewhere and is what routing actually uses.</li>
+</ul>
+
+<h2>Production Configuration</h2>
+<p>Verified live against the production configuration endpoint. Non-secret values only.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:300px">Setting</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td class="feat">Country / currency</td><td>Kenya (KE) / KES</td></tr>
+<tr><td class="feat">Business mode</td><td>Multi-vendor</td></tr>
+<tr><td class="feat">Guest checkout</td><td>Enabled</td></tr>
+<tr><td class="feat">Payment methods</td><td>M-Pesa STK Push, Paystack</td></tr>
+<tr><td class="feat">Cash on delivery</td><td>Enabled</td></tr>
+<tr><td class="feat">Wallet / loyalty / referral</td><td>All enabled</td></tr>
+<tr><td class="feat">Shipping</td><td>In-house; free delivery enabled</td></tr>
+<tr><td class="feat">Maps API</td><td>Enabled</td></tr>
+<tr><td class="feat">Auctions (customer)</td><td>Disabled</td></tr>
+<tr><td class="feat">AI shopping assistant</td><td>Disabled</td></tr>
+<tr><td class="feat">Maintenance mode</td><td>Off</td></tr>
+<tr><td class="feat">Version gate</td><td>1.0.0 — update link empty</td></tr>
+</tbody></table></div>
+
+<h2>Final Recommendation</h2>
+<div class="verdict">
+  <div class="label">Verdict</div>
+  <div class="headline">NOT READY — BLOCKERS REMAIN</div>
+  <p><strong>1. P0 — Launcher icon is still 6valley template artwork</strong>, with no adaptive icon and no generator configuration in the app.</p>
+  <p>Once that ships, the gate becomes <b>READY AFTER MANUAL QA</b> — the 21 test cases above, with payments (cases 1–6) non-negotiable, since M-Pesa and Paystack have no native code and cannot be validated by inspection.</p>
+  <p><strong>Strongly recommended in the same release:</strong> add Crashlytics. Without it, launch-day issues stay invisible until customers complain.</p>
+</div>
+
+<footer>
+  MeatSoko · User App Final Feature Audit · Living document, last updated 2026-09-10.<br>
+  Generated from static code inspection, Android release configuration review, and live production verification.
+  Kept in sync with <code>apps/xdocs/user_app_final_feature_audit.md</code>.
+</footer>
+
+</div>
+</body>
+</html>

@@ -5,9 +5,9 @@
         ],
         "target": {
             "namespace": "android_app",
-            "package_name": "",
+            "package_name": "com.meatsokogroup.user",
             "sha256_cert_fingerprints": [
-                ""
+                "B5:8A:28:70:27:52:C8:96:F5:1D:20:8D:6F:19:BB:10:D9:AA:73:4E:AA:DA:8A:76:AD:B7:DD:A6:44:97:A4:A8"
             ]
         }
     }
