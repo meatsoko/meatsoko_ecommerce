@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 
 
-Color _primaryColor = const Color(0xFF1455AC);
-Color _secondaryColor = const Color(0xFFF58300);
+// Brighter than the light theme's BrandColors.burgundyDark on purpose:
+// against this theme's dark surfaces (~0xFF242424), burgundyDark reads as
+// near-black and buttons/accents lose contrast. BrandColors.burgundy is the
+// same shade user_app uses for its own dark theme, already proven legible.
+Color _primaryColor = const Color(0xFF7A1C1C); // BrandColors.burgundy
+Color _secondaryColor = const Color(0xFFE5A93C); // BrandColors.ochre
 
 ThemeData dark = ThemeData(
   fontFamily: 'TitilliumWeb',
@@ -27,15 +31,15 @@ ThemeData dark = ThemeData(
       primary: _primaryColor,  // Primary Color
       secondary: _secondaryColor,  // Secondary Color
       tertiary: const Color(0xFFFFBB38), // Warning Color
-      tertiaryContainer: const Color(0xFF6C7A8E),
+      tertiaryContainer: const Color(0xFF8E6C74),
       onTertiaryContainer: const Color(0xFF04BB7B), // Success Color
       primaryContainer: const Color(0xFF208458),
       secondaryContainer: const Color(0xFFF2F2F2),
       surface: const Color(0xFF242424),
       outline: const Color(0xff5C8FFC), // Info Color / Pending color
       surfaceTint: const Color(0xff5C8FFC),
-      onPrimary: const Color(0xFFF2F2F2),
-      onSecondary: const Color(0xFFFC9926),
+      onPrimary: const Color(0xFFE8B4B4),
+      onSecondary: const Color(0xFF3D0C0C),
       error: const Color(0xFFFF4040), // Danger Color
   ),
 
