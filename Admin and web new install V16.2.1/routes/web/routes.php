@@ -15,7 +15,6 @@ use App\Http\Controllers\Payment_Methods\BkashPaymentController;
 use App\Http\Controllers\Payment_Methods\FlutterwaveV3Controller;
 use App\Http\Controllers\Payment_Methods\LiqPayController;
 use App\Http\Controllers\Payment_Methods\MercadoPagoController;
-use App\Http\Controllers\Payment_Methods\MpesaC2bController;
 use App\Http\Controllers\Payment_Methods\MpesaStkController;
 use App\Http\Controllers\Payment_Methods\PaymobController;
 use App\Http\Controllers\Payment_Methods\PaypalPaymentController;
@@ -506,18 +505,6 @@ if (!$isGatewayPublished) {
                 ->withoutMiddleware([VerifyCsrfToken::class])
                 ->middleware(['mpesa.ip', 'throttle:60,1']);
             Route::get('status', [MpesaStkController::class, 'status'])->name('status');
-        });
-
-        //MPESA C2B (PAYBILL/TILL)
-        Route::group(['prefix' => 'mpesa-c2b', 'as' => 'mpesa-c2b.'], function () {
-            Route::get('pay', [MpesaC2bController::class, 'index'])->name('pay');
-            Route::post('validation', [MpesaC2bController::class, 'validation'])->name('validation')
-                ->withoutMiddleware([VerifyCsrfToken::class])
-                ->middleware(['mpesa.ip', 'throttle:60,1']);
-            Route::post('confirmation', [MpesaC2bController::class, 'confirmation'])->name('confirmation')
-                ->withoutMiddleware([VerifyCsrfToken::class])
-                ->middleware(['mpesa.ip', 'throttle:60,1']);
-            Route::get('status', [MpesaC2bController::class, 'status'])->name('status');
         });
 
         //Liqpay

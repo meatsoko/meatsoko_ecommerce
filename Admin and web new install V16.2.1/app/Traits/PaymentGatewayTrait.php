@@ -24,9 +24,6 @@ trait PaymentGatewayTrait
             "mpesa_stk" => [
                 "KES" => "Kenyan Shilling"
             ],
-            "mpesa_c2b" => [
-                "KES" => "Kenyan Shilling"
-            ],
             "cashfree" => [
                 "INR" => "Indian Rupee"
             ],

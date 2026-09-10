@@ -43,6 +43,13 @@
                                         <span class="fs-12">{{ translate('export') }}</span>
                                     </a>
                                 </div>
+                                <div class="dropdown">
+                                    <a type="button" class="btn btn-outline-primary"
+                                        href="{{ route('admin.brand.import') }}">
+                                        <i class="fi fi-sr-inbox-out"></i>
+                                        <span class="fs-12">{{ translate('import') }}</span>
+                                    </a>
+                                </div>
                                 <button class="btn btn-primary" title="{{ translate('Add') }}"
                                         data-bs-toggle="offcanvas" href="#brandAddOffcanvas"
                                 > + {{ translate('Add_New') }}</button>

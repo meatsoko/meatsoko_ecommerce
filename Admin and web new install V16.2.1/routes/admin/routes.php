@@ -301,6 +301,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
             Route::post('update/{id}', 'update');
             Route::post('delete', 'delete')->name('delete');
             Route::get('export', 'exportList')->name('export');
+            Route::get('import', 'getImportView')->name('import');
+            Route::get('import-template', 'downloadImportTemplate')->name('import-template');
+            Route::post('import', 'import')->name('import.store');
             Route::post('status-update', 'updateStatus')->name('status-update');
             Route::post('load-more-brands', 'loadMoreBrands')->name('load-more-brands');
         });
@@ -916,7 +919,6 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['admin', '
                     Route::get('/', 'index')->name('index');
                     Route::put('addon-payment-set', 'UpdatePaymentConfig')->name('addon-payment-set');
                     Route::post('payment-status', 'UpdateStatus')->name('payment-status');
-                    Route::post('register-c2b-urls', 'registerC2bUrls')->name('register-c2b-urls');
                 });
             });
 

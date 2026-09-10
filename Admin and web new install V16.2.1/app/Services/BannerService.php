@@ -8,12 +8,13 @@ class BannerService
 {
     use FileManagerTrait;
 
-    public function getProcessedData(object $request, ?string $bannerUrl = null, ?string $image = null): array
+    public function getProcessedData(object $request, ?string $bannerUrl = null, ?string $image = null, $file = null): array
     {
+        $uploadedFile = $file ?? $request->file('image');
         if ($image) {
-            $imageName = $request->file('image') ? $this->update(dir:'banner/', oldImage:$image, format: 'webp', image: $request->file('image')) : $image;
+            $imageName = $uploadedFile ? $this->update(dir:'banner/', oldImage:$image, format: 'webp', image: $uploadedFile) : $image;
         }else {
-            $imageName = $this->upload(dir:'banner/', format: 'webp', image: $request->file('image'));
+            $imageName = $this->upload(dir:'banner/', format: 'webp', image: $uploadedFile);
         }
 
         return [

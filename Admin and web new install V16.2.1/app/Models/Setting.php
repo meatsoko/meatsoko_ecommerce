@@ -14,8 +14,8 @@ class Setting extends Model
     protected $table = 'addon_settings';
 
     protected $casts = [
-        'live_values' => 'array',
-        'test_values' => 'array',
+        'live_values' => 'encrypted:array',
+        'test_values' => 'encrypted:array',
         'is_active' => 'integer',
     ];
 

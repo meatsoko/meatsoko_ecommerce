@@ -50,7 +50,6 @@ trait Payment
             'mercadopago' => 'payment/mercadopago/pay',
             'bkash' => 'payment/bkash/make-payment',
             'mpesa_stk' => 'payment/mpesa-stk/pay',
-            'mpesa_c2b' => 'payment/mpesa-c2b/pay',
             'paystack' => 'payment/paystack/pay',
             'fatoorah' => 'payment/fatoorah/pay',
             'xendit' => 'payment/xendit/pay',

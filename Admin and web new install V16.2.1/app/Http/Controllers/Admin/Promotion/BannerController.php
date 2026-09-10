@@ -69,8 +69,11 @@ class BannerController extends BaseController
             return redirect()->route('admin.banner.list');
         }
 
-        $data = $this->bannerService->getProcessedData(request: $request, bannerUrl: $banner['banner_url']);
-        $this->bannerRepo->add(data: $data);
+        foreach ($request->file('image') as $image) {
+            $data = $this->bannerService->getProcessedData(request: $request, bannerUrl: $banner['banner_url'], file: $image);
+            $this->bannerRepo->add(data: $data);
+        }
+
         ToastMagic::success(translate('banner_added_successfully'));
         return redirect()->route('admin.banner.list');
     }
