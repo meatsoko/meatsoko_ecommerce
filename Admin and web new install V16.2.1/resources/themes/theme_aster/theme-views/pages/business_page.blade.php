@@ -15,7 +15,7 @@
 
             <div class="card my-4">
                 <div class="card-body p-lg-4 text-dark page-paragraph">
-                    {!! $businessPage?->description !!}
+                    {!! \App\Utils\BusinessPageContent::render($businessPage?->description) !!}
                 </div>
             </div>
         </div>

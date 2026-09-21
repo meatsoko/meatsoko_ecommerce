@@ -20,7 +20,7 @@
             <div class="card my-4">
                 <div class="card-body">
                     <div class="for-padding">
-                        {!! $businessPage?->description !!}
+                        {!! \App\Utils\BusinessPageContent::render($businessPage?->description) !!}
                     </div>
                 </div>
             </div>
